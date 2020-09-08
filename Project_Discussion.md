@@ -16,8 +16,8 @@ Concordia 2020 Capstone Project
 5. IoT things using a prototype of downsized model house
   Using internet connectivity to connect different house components to a main hub or to your cellphone.
 
-6. [Mobile app for Student Tutoring] (https://users.encs.concordia.ca/~eceweb/capstone/projectshow.php?id=497)
+6. [Mobile app for Student Tutoring](https://users.encs.concordia.ca/~eceweb/capstone/projectshow.php?id=497)
   From the page: On-demand mobile app for university students to find local study groups and tutors. Promotes local tutors with hands-on experience to find students in need of service, and vice-versa. Students are encouraged to sign up as tutors on the platform. Intends to offer its users full autonomy over schedule, rates, and teaching style.
   
-7. [Tree Planting Robot] (https://users.encs.concordia.ca/~eceweb/capstone/projectshow.php?id=500)
+7. [Tree Planting Robot](https://users.encs.concordia.ca/~eceweb/capstone/projectshow.php?id=500)
   From the page: Significant robotic challenges: traversing over rugged terrain that includes rocks and fallen logs, identifying spots in the soil suitable for plunging a spade and inserting a sapling. This project will address these challenges through examination of responsive control of a locomotion system and tool insertion system. In the case of lack of lab access due to COVID, locomotion systems will be developed and tested in simulation, while other subsystems (graphical user interface, communications, digging tool) may be developed separately and integrated virtually online.
