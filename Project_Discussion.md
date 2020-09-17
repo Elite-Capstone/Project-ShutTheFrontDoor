@@ -13,8 +13,10 @@ The AI will be able to distinguish people wearing the required headgear for the 
 3. Hydrolic wall as a solution to residential floodings in Quebec
 
 The wall will be used to block the water from the flood from entering the protected residence. The wall will be moved/actuated by a system of motors/hydrolics and may be controlled with an IoT system. Such that the homeowner may decide to activate/deactivate the wall system. Automatic flood detection will be required to be entirely succesful. Information from Environment Canada could be used.
+
+The wall could be designed a lock ("écluse" in french), the walls are on the side and rotate inwards to isolate the house from the street. This can double as a gate.
   
-4. Aerogel for smarthome (expensive. 500$ for a 30cm x 30cm x 0.5cm)
+4. Solar Charging Phone case with possibility to add wireless charging.
 
 5. IoT things using a prototype of downsized model house
 
