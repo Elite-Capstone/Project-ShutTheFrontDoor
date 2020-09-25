@@ -84,6 +84,9 @@ lint/outputs/
 lint/tmp/
 # lint/reports/
 
+# macOS Files
+*.DS_Store
+.DS_Store
 
 # Xcode
 #
