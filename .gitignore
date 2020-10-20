@@ -206,3 +206,5 @@ hs_err_pid*
 
 # Vue 
 nodes_modules/
+
+Front End/Web/Portal/.vscode/
