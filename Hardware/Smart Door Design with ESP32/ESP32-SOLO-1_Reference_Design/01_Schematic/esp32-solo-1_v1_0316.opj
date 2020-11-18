@@ -1,0 +1,87 @@
+(ExpressProject ""
+  (ProjectVersion "19981106")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\smartdoor.olb"
+        (Type "Schematic Library")))
+    (File ".\esp32-solo-1_v1_0316.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (NoModify)
+    (RootChangedForceReNetlist "x"))
+  (Folder "Outputs")
+  (Folder "Referenced Projects")
+  (PartMRUSelector
+    (LCKCONN
+      (FullPartName "LCKCONN.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (GND
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (0
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (VCC
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("Electric 6-pin Door Lock"
+      (FullPartName "Electric 6-pin Door Lock.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (CAMCONN
+      (FullPartName "CAMCONN.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("CMOS OV2640"
+      (FullPartName "CMOS OV2640.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0")))
+  (MPSSessionName "b_lanth")
+  (LastUsedLibraryBrowseDirectory
+     "C:\Cadence\SPB_17.2-silent\tools\capture\library\pspice")
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn")
+      (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Smart Door")
+      (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Components")
+      (Path "Design Resources" "Library")
+      (Path "Design Resources" "Library" ".\smartdoor.olb")
+      (Select "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Components"
+         "ESP32-SOLO-1_V1"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -31 0 200 0 288"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -31 52 1238 52 303")
+        (Scroll "-84 0")
+        (Zoom "100")
+        (Occurrence "/"))
+      (Path
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\ESP32-SOLO-1_V1_0316.DSN")
+      (Schematic "Smart Door")
+      (Page "Overall Design"))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 -8 -31 78 1238 78 352")
+        (Scroll "901 370")
+        (Zoom "100"))
+      (Path
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\ESP32-SOLO-1_V1_0316.DSN")
+      (Schematic "Components")
+      (Page "ESP32-SOLO-1_V1"))))
