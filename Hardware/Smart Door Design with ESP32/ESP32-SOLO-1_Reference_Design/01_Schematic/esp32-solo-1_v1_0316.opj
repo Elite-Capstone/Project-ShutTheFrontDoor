@@ -13,13 +13,93 @@
   (Folder "Outputs")
   (Folder "Referenced Projects")
   (PartMRUSelector
-    (VCC
+    (R
+      (FullPartName "R.Normal")
       (LibraryName
-         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (SWITCH
+      (FullPartName "SWITCH.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    ("DIODE SCHOTTKY"
+      (FullPartName "DIODE SCHOTTKY.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    ("SC 1X1"
+      (FullPartName "SC 1X1.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (XFRM_LINEAR
+      (FullPartName "XFRM_LINEAR.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (C
+      (FullPartName "C.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
+      (DeviceIndex "0"))
+    (L
+      (FullPartName "L.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\PSPICE\ANALOG.OLB")
       (DeviceIndex "0"))
     (GND
       (LibraryName
          "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("Doorbell junction"
+      (FullPartName "Doorbell junction.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("PLUG MALE"
+      (FullPartName "PLUG MALE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (VCC
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (OPTO-L
+      (FullPartName "OPTO-L.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    ("METER AMP"
+      (FullPartName "METER AMP.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (Sw_tClose
+      (FullPartName "Sw_tClose.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\PSPICE\EVAL.OLB")
+      (DeviceIndex "0"))
+    (VAC
+      (FullPartName "VAC.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\PSPICE\SOURCE.OLB")
+      (DeviceIndex "0"))
+    (2N1595
+      (FullPartName "2N1595.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\PSPICE\EVAL.OLB")
+      (DeviceIndex "0"))
+    ("12V DC Power Supply"
+      (FullPartName "12V DC Power Supply.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("DC Power Supply"
+      (FullPartName "DC Power Supply.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
       (DeviceIndex "0"))
     (FemaleConn
       (FullPartName "FemaleConn.Normal")
@@ -54,15 +134,10 @@
     (0
       (LibraryName
          "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
-      (DeviceIndex "0"))
-    (CAMCONN
-      (FullPartName "CAMCONN.Normal")
-      (LibraryName
-         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
       (DeviceIndex "0")))
   (MPSSessionName "b_lanth")
   (LastUsedLibraryBrowseDirectory
-     "C:\Cadence\SPB_17.2-silent\tools\capture\library\pspice")
+     "C:\Cadence\SPB_17.2-silent\tools\capture\library\iec")
   (GlobalState
     (FileView
       (Path "Design Resources")
@@ -81,8 +156,8 @@
       (Type "COrSchematicDoc")
       (Frame
         (Placement "44 0 1 -1 -1 -8 -31 78 1264 78 329")
-        (Scroll "36 105")
-        (Zoom "122")
+        (Scroll "0 393")
+        (Zoom "244")
         (Occurrence "/"))
       (Path
          "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\ESP32-SOLO-1_V1_0316.DSN")
@@ -91,10 +166,20 @@
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -8 -31 78 918 78 402")
-        (Scroll "2676 1122")
+        (Placement "44 0 1 -1 -1 -8 -31 104 2086 104 597")
+        (Scroll "0 304")
         (Zoom "200"))
       (Path
          "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\ESP32-SOLO-1_V1_0316.DSN")
       (Schematic "Components")
-      (Page "ESP32-SOLO-1_V1"))))
+      (Page "7-12V in Boost"))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -31 130 2112 130 623")
+        (Scroll "0 304")
+        (Zoom "200"))
+      (Path
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\ESP32-SOLO-1_V1_0316.DSN")
+      (Schematic "Components")
+      (Page "Doorbell Junction"))))
