@@ -29,6 +29,16 @@
   (Folder "Outputs")
   (Folder "Referenced Projects")
   (PartMRUSelector
+    ("BATTERY ELEM"
+      (FullPartName "BATTERY ELEM.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (LP3962
+      (FullPartName "LP3962.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
     (R
       (FullPartName "R.Normal")
       (LibraryName
@@ -74,11 +84,6 @@
       (DeviceIndex "0"))
     ("PLUG AC MALE"
       (FullPartName "PLUG AC MALE.Normal")
-      (LibraryName
-         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
-      (DeviceIndex "0"))
-    ("BATTERY ELEM"
-      (FullPartName "BATTERY ELEM.Normal")
       (LibraryName
          "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
       (DeviceIndex "0"))
@@ -143,11 +148,6 @@
       (FullPartName "AMS1117.Normal")
       (LibraryName
          "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
-      (DeviceIndex "0"))
-    (SWITCH
-      (FullPartName "SWITCH.Normal")
-      (LibraryName
-         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
       (DeviceIndex "0")))
   (MPSSessionName "b_lanth")
   (LastUsedLibraryBrowseDirectory
@@ -159,19 +159,20 @@
       (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Smart Door")
       (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Components")
       (Path "Design Resources" "Library")
+      (Path "Design Resources" "Library" ".\smartdoor.olb")
       (Select "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Smart Door"
          "Overall Design"))
     (HierarchyView)
     (Doc
       (Type "COrCapturePMDoc")
       (Frame
-        (Placement "44 2 3 -1 -1 -8 -31 0 336 0 469"))
+        (Placement "44 0 1 -1 -1 -8 -31 0 336 0 469"))
       (Tab 0))
     (Doc
       (Type "COrSchematicDoc")
       (Frame
-        (Placement "44 0 1 -1 -1 -8 -31 156 1534 156 615")
-        (Scroll "0 119")
+        (Placement "44 2 3 -1 -1 -8 -31 156 1534 156 615")
+        (Scroll "-234 408")
         (Zoom "174")
         (Occurrence "/"))
       (Path

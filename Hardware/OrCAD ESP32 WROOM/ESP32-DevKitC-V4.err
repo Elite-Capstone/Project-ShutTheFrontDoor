@@ -1,8 +1,0 @@
-STATUS: PSpice Schematics to Capture translator (16.6.0.d001)
-STATUS:  
-STATUS: Translator started at Tuesday, November 17, 2020 01:03:23
-STATUS: C:\OrCAD\OrCAD_16.6_Lite\tools\capture\sch2cap -f "C:\Users\benji\Desktop\School material\COEN-ELEC490\Project-ShutTheFrontDoor\Hardware\OrCAD ESP32\ESP32-DevKitC-V4_Reference_Design\01_Schematic\ESP32-DevKitC-V4_20180607A.DSN" -o "C:\Users\benji\Desktop\School material\COEN-ELEC490\Project-ShutTheFrontDoor\Hardware\OrCAD ESP32\ESP32-DevKitC-V4.OPJ" -i C:\SPB_Data\cdssetup\OrCAD_PSpice/16.6.0/PSpice.ini -d 00120996 -h  -p  -c  -z 
-INFO(ORSCH-1029): Using existing library 'C:\OrCAD\OrCAD_16.6_Lite\tools\Capture\Library\PSpice\modeled.etc'.
-INFO(ORSCH-1031): Created new library 'C:\Users\benji\Desktop\School material\COEN-ELEC490\Project-ShutTheFrontDoor\Hardware\OrCAD ESP32\ESP32-DevKitC-V4.olb'.
-STATUS: Translator stopped at Tuesday, November 17, 2020 01:03:23
-STATUS: 0 Error messages, 0 Warning messages
