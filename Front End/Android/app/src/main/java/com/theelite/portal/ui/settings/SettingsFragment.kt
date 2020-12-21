@@ -19,8 +19,7 @@ class SettingsFragment : Fragment() {
             container: ViewGroup?,
             savedInstanceState: Bundle?
     ): View? {
-        settingsViewModel =
-                ViewModelProviders.of(this).get(SettingsViewModel::class.java)
+        settingsViewModel = ViewModelProviders.of(this).get(SettingsViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_settings, container, false)
         val textView: TextView = root.findViewById(R.id.text_dashboard)
         settingsViewModel.text.observe(viewLifecycleOwner, Observer {
