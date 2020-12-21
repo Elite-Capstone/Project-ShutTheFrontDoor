@@ -14,7 +14,7 @@ class RegisterActivity : AppCompatActivity() {
         setContentView(R.layout.activity_register)
         registerButton = findViewById(R.id.registerButton)
         registerButton.setOnClickListener {
-            println("Clicked on Button!")
+//            println("Clicked on Button!")
             val mainActivity = Intent(this, MainActivity::class.java)
             startActivity(mainActivity)
             this.finish()
