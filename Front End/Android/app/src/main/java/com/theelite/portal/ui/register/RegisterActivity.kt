@@ -1,8 +1,10 @@
 package com.theelite.portal.ui.register
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
+import com.theelite.portal.MainActivity
 import com.theelite.portal.R
 
 class RegisterActivity : AppCompatActivity() {
@@ -13,6 +15,9 @@ class RegisterActivity : AppCompatActivity() {
         registerButton = findViewById(R.id.registerButton)
         registerButton.setOnClickListener {
             println("Clicked on Button!")
+            val mainActivity = Intent(this, MainActivity::class.java)
+            startActivity(mainActivity)
+            this.finish()
         }
     }
 }
