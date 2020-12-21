@@ -7,7 +7,13 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
     <!-- For rounded corners -->
-<!--    <style name="AppTheme.RoundedCornerMaterialButton" parent="Widget.AppCompat.Button.Colored">-->
-<!--        <item name="android:background">@drawable/rounded_shape</item>-->
-<!--    </style>-->
+    <!--    <style name="AppTheme.RoundedCornerMaterialButton" parent="Widget.AppCompat.Button.Colored">-->
+    <!--        <item name="android:background">@drawable/rounded_shape</item>-->
+    <!--    </style>-->
+
+    <!-- For no action bar in activities-->
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
 </resources>
