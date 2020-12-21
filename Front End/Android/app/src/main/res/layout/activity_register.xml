@@ -63,12 +63,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
+        android:inputType="textPassword"
         app:layout_constraintTop_toBottomOf="@id/emailTextField"
         app:passwordToggleEnabled="true"
         >
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
+            android:inputType="textPassword"
             android:layout_height="wrap_content" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -77,19 +79,20 @@
         android:id="@+id/confirmPasswordTextField"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="40dp"
         android:layout_marginLeft="25dp"
+        android:layout_marginTop="40dp"
         android:layout_marginRight="25dp"
         android:hint="@string/confirm_password_hint"
+        android:inputType="textPassword"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/passwordTextField"
-        app:passwordToggleEnabled="true"
-        >
+        app:passwordToggleEnabled="true">
 
         <com.google.android.material.textfield.TextInputEditText
             android:layout_width="match_parent"
+            android:inputType="textPassword"
             android:layout_height="wrap_content" />
 
     </com.google.android.material.textfield.TextInputLayout>
@@ -102,7 +105,8 @@
         android:layout_marginTop="50dp"
         android:text="@string/register"
         android:textSize="15sp"
-        app:layout_constraintTop_toBottomOf="@id/confirmPasswordTextField" />
+        app:layout_constraintTop_toBottomOf="@id/confirmPasswordTextField"
+        tools:layout_editor_absoluteX="25dp" />
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
