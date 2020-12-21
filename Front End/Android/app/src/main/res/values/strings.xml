@@ -9,4 +9,7 @@
     <string name="confirm_password_hint">Confirm Password</string>
     <string name="register">Register</string>
     <string name="register_title">Register Your Account</string>
+    <string name="login">Login</string>
+    <string name="new_user">New User ?</string>
+
 </resources>
