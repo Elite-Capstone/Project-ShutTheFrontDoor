@@ -1,5 +1,6 @@
 package com.theelite.portal.ui.settings
 
+import android.media.Image
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -28,11 +29,32 @@ class SettingsFragment : Fragment() {
         settingsRecyclerView = root.findViewById(R.id.settingsRecyclerView)
         settingsRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        val options = ArrayList<String>()
-        options.add("Account")
-        options.add("Notifications")
-        options.add("Help")
-        options.add("Log out")
+
+        val options = ArrayList<SettingsModel>()
+
+        val accountLogoId = this.getResources().getIdentifier(
+            "account", "drawable",
+            context?.getPackageName()
+        )
+        options.add(SettingsModel("Account", accountLogoId))
+
+        val notificationLogoId = this.getResources().getIdentifier(
+            "notification", "drawable",
+            context?.getPackageName()
+        )
+        options.add(SettingsModel("Notifications", notificationLogoId))
+
+        val helpLogoId = this.getResources().getIdentifier(
+            "help", "drawable",
+            context?.getPackageName()
+        )
+        options.add(SettingsModel("Help", helpLogoId))
+
+        val logOutLogoId = this.getResources().getIdentifier(
+            "log_out", "drawable",
+            context?.getPackageName()
+        )
+        options.add(SettingsModel("Log out", logOutLogoId))
         val settingsAdapter = SettingsAdapter(options)
         settingsRecyclerView.adapter = settingsAdapter
         //        val textView: TextView = root.findViewById(R.id.text_dashboard)

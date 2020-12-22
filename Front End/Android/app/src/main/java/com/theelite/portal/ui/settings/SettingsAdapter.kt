@@ -1,13 +1,16 @@
 package com.theelite.portal.ui.settings
 
+import android.content.res.Resources
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.R
 
-class SettingsAdapter(private val dataSet: ArrayList<String>) :
+class SettingsAdapter(private val dataSet: ArrayList<SettingsModel>) :
     RecyclerView.Adapter<SettingsAdapter.ViewHolder>() {
 
     /**
@@ -16,10 +19,12 @@ class SettingsAdapter(private val dataSet: ArrayList<String>) :
      */
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val textView: TextView
+        val imageView: ImageView
 
         init {
             // Define click listener for the ViewHolder's View.
-            textView = view.findViewById(R.id.textView)
+            textView = view.findViewById(R.id.settingsCustomCellTextView)
+            imageView = view.findViewById(R.id.settingsCustomCellImageView)
         }
     }
 
@@ -37,7 +42,9 @@ class SettingsAdapter(private val dataSet: ArrayList<String>) :
 
         // Get element from your dataset at this position and replace the
         // contents of the view with that element
-        viewHolder.textView.text = dataSet[position]
+        viewHolder.textView.text = dataSet[position].name
+
+        viewHolder.imageView.setImageResource(dataSet[position].imageId)
     }
 
     // Return the size of your dataset (invoked by the layout manager)
