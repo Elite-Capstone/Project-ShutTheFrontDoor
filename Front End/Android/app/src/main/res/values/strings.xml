@@ -11,5 +11,6 @@
     <string name="register_title">Register Your Account</string>
     <string name="login">Login</string>
     <string name="new_user">New User ?</string>
+    <string name="test">Testing Test!!!</string>
 
 </resources>
