@@ -1,5 +1,6 @@
 package com.theelite.portal.ui.settings
 
+import android.content.Intent
 import android.media.Image
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,8 +14,9 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.R
+import com.theelite.portal.ui.login.LoginActivity
 
-class SettingsFragment : Fragment() {
+class SettingsFragment : Fragment(), ClickListener {
 
     private lateinit var settingsViewModel: SettingsViewModel
     private lateinit var settingsRecyclerView: RecyclerView
@@ -55,7 +57,7 @@ class SettingsFragment : Fragment() {
             context?.getPackageName()
         )
         options.add(SettingsModel("Log out", logOutLogoId))
-        val settingsAdapter = SettingsAdapter(options)
+        val settingsAdapter = SettingsAdapter(options, this)
         settingsRecyclerView.adapter = settingsAdapter
         //        val textView: TextView = root.findViewById(R.id.text_dashboard)
 //        settingsViewModel.text.observe(viewLifecycleOwner, Observer {
@@ -64,6 +66,18 @@ class SettingsFragment : Fragment() {
         return root
     }
 
+    override fun onItemClicked(name: String) {
+        println("Clicked on $name from settings")
+        when (name) {
+            "Account" -> {
+            }
+            "Log out" -> {
+                val intent = Intent(this.context, LoginActivity::class.java)
+                this.startActivity(intent)
+                this.activity?.finish()
+            }
+        }
+    }
 //    override fun onCreate(savedInstanceState: Bundle?) {
 //        super.onCreate(savedInstanceState)
 //        settingsRecyclerView = findViewById(R.id.settingsRecyclerView)
