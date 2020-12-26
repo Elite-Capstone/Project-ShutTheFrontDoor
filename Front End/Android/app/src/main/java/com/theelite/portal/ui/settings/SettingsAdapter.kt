@@ -49,9 +49,7 @@ class SettingsAdapter(private val dataSet: ArrayList<SettingsModel>, var context
         viewHolder.textView.text = dataSet[position].name
         viewHolder.imageView.setImageResource(dataSet[position].imageId)
         viewHolder.itemView.setOnClickListener {
-            viewHolder.itemView.setOnClickListener {
-                context.onItemClicked(dataSet[position].name)
-            }
+            context.onItemClicked(dataSet[position].name)
         }
     }
 
