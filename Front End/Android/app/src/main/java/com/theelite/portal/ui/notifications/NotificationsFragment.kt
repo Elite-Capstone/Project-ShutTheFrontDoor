@@ -37,9 +37,9 @@ class NotificationsFragment : Fragment() {
 
     private fun getNotifications(): ArrayList<String> {
         val notifications = ArrayList<String>()
-        var index = 10
-        while (index-- >= 0) {
-            notifications.add("Received notifications $index")
+        var index = 5
+        while (index >= 0) {
+            notifications.add("Received notifications ${index--}")
         }
         return notifications
     }

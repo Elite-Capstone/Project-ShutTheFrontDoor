@@ -30,7 +30,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="10dp"
                 android:text="@string/random_description"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
 
@@ -40,7 +40,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="16sp"
                 android:paddingBottom="13dp"
-                android:layout_marginTop="15dp"
+                android:layout_marginTop="10dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption" />
         </LinearLayout>
     </androidx.cardview.widget.CardView>
