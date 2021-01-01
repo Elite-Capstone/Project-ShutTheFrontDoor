@@ -18,7 +18,7 @@ import com.theelite.portal.ui.login.LoginActivity
 
 class SettingsFragment : Fragment(), ClickListener {
 
-    private lateinit var settingsViewModel: SettingsViewModel
+//    private lateinit var settingsViewModel: SettingsViewModel
     private lateinit var settingsRecyclerView: RecyclerView
 
     override fun onCreateView(
@@ -32,38 +32,32 @@ class SettingsFragment : Fragment(), ClickListener {
         settingsRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
 
-        val options = ArrayList<SettingsModel>()
+        val settingsOptions = arrayOf("Account", "Notification", "Help", "Log Out")
+        val settingsOptionsIcons = arrayOf("account", "notification", "help", "log_out")
 
-        val accountLogoId = this.getResources().getIdentifier(
-            "account", "drawable",
-            context?.getPackageName()
-        )
-        options.add(SettingsModel("Account", accountLogoId))
-
-        val notificationLogoId = this.getResources().getIdentifier(
-            "notification", "drawable",
-            context?.getPackageName()
-        )
-        options.add(SettingsModel("Notifications", notificationLogoId))
-
-        val helpLogoId = this.getResources().getIdentifier(
-            "help", "drawable",
-            context?.getPackageName()
-        )
-        options.add(SettingsModel("Help", helpLogoId))
-
-        val logOutLogoId = this.getResources().getIdentifier(
-            "log_out", "drawable",
-            context?.getPackageName()
-        )
-        options.add(SettingsModel("Log out", logOutLogoId))
-        val settingsAdapter = SettingsAdapter(options, this)
+        val settingsAdapter =
+            SettingsAdapter(getListOfSettingsOptions(settingsOptions, settingsOptionsIcons), this)
         settingsRecyclerView.adapter = settingsAdapter
         //        val textView: TextView = root.findViewById(R.id.text_dashboard)
 //        settingsViewModel.text.observe(viewLifecycleOwner, Observer {
 //            textView.text = it
 //        })
         return root
+    }
+
+    private fun getListOfSettingsOptions(
+        options: Array<String>,
+        icons: Array<String>
+    ): ArrayList<SettingsModel> {
+        val settingsOptions = ArrayList<SettingsModel>()
+        val resources = this.resources
+
+        for (i in options.indices) {
+            val logo = resources.getIdentifier(icons[i], "drawable", context?.packageName)
+            settingsOptions.add(SettingsModel(options[i], logo))
+        }
+
+        return settingsOptions
     }
 
     override fun onItemClicked(name: String) {
