@@ -70,7 +70,7 @@ class SettingsFragment : Fragment(), ClickListener {
             }
             "Notifications" -> {
             }
-            "Log out" -> {
+            "Log Out" -> {
                 val intent = Intent(this.context, LoginActivity::class.java)
                 this.startActivity(intent)
                 this.activity?.finish()
