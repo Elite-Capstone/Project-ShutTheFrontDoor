@@ -17,10 +17,10 @@
         android:textSize="20sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-         />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.cardview.widget.CardView
+        android:id="@+id/homeCardViewForDoor"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
@@ -50,11 +50,45 @@
             android:layout_marginLeft="110dp"
             android:layout_marginTop="120dp"
             android:layout_marginRight="110dp"
-            android:text="UNLOCK"
-            android:textSize="20sp"
             android:elevation="15dp"
+            android:text="@string/unlock"
+            android:textSize="20sp"
             android:textStyle="bold"
             app:layout_constraintTop_toTopOf="@+id/doorImageView" />
         <!--        </ImageView>-->
     </androidx.cardview.widget.CardView>
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="45dp"
+        android:layout_marginRight="10dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="10dp"
+        app:layout_constraintTop_toBottomOf="@+id/homeCardViewForDoor">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="right"
+            >
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="2dp"
+                android:text="@string/more_videos"
+                android:layout_marginEnd="2dp" />
+
+        </LinearLayout>
+
+        <VideoView
+            android:translationZ="-1dp"
+            android:id="@+id/homeVideoView"
+            android:layout_width="match_parent"
+            android:layout_height="250dp" />
+    </androidx.cardview.widget.CardView>
+
+
 </androidx.constraintlayout.widget.ConstraintLayout>
