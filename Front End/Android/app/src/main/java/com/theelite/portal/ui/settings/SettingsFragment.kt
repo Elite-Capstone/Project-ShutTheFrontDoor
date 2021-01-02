@@ -14,11 +14,12 @@ import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.R
+import com.theelite.portal.ui.accountSettings.AccountSettings
 import com.theelite.portal.ui.login.LoginActivity
 
 class SettingsFragment : Fragment(), ClickListener {
 
-//    private lateinit var settingsViewModel: SettingsViewModel
+    //    private lateinit var settingsViewModel: SettingsViewModel
     private lateinit var settingsRecyclerView: RecyclerView
 
     override fun onCreateView(
@@ -32,7 +33,7 @@ class SettingsFragment : Fragment(), ClickListener {
         settingsRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
 
-        val settingsOptions = arrayOf("Account", "Notification", "Help", "Log Out")
+        val settingsOptions = arrayOf("Account", "Notifications", "Help", "Log Out")
         val settingsOptionsIcons = arrayOf("account", "notification", "help", "log_out")
 
         val settingsAdapter =
@@ -64,6 +65,10 @@ class SettingsFragment : Fragment(), ClickListener {
         println("Clicked on $name from settings")
         when (name) {
             "Account" -> {
+                val accountIntent = Intent(this.context, AccountSettings::class.java)
+                this.startActivity(accountIntent)
+            }
+            "Notifications" -> {
             }
             "Log out" -> {
                 val intent = Intent(this.context, LoginActivity::class.java)
