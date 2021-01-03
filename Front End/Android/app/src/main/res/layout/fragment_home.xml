@@ -74,13 +74,10 @@
             android:gravity="end"
             >
 
-            <ImageButton
-                android:id="@+id/homeButtonMoreVideos"
-                android:layout_width="45dp"
-                android:layout_height="45dp"
-                style="?android:attr/borderlessButtonStyle"
-                android:src="@drawable/more_videos"
-                android:tint="@color/cardview_shadow_start_color"
+            <ImageButton android:id="@+id/homeButtonMoreVideos"
+                android:layout_width="50dp"
+                android:layout_height="45dp" style="?android:attr/borderlessButtonStyle"
+                android:src="@drawable/more_videos" android:tint="@color/cardview_shadow_start_color"
                 android:scaleType="fitXY"
                 android:contentDescription="@string/see_saved_videos" />
 
