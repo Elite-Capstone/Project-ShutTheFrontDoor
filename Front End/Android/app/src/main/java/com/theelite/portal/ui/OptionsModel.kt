@@ -13,7 +13,6 @@ class OptionsList {
             icons: Array<String>, resources: Resources
         ): ArrayList<OptionsModel> {
             val settingsOptions = ArrayList<OptionsModel>()
-//        val resources = this.resources
 
             for (i in options.indices) {
                 val logo = resources.getIdentifier(icons[i], "drawable", context?.packageName)

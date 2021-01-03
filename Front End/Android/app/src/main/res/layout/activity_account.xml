@@ -4,15 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-<!--    <TextView-->
-<!--        android:id="@+id/accountSettingsTitleLabel"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:layout_margin="25dp"-->
-<!--        android:text="@string/login"-->
-<!--        android:textAppearance="@style/TextAppearance.AppCompat.Display1"-->
-<!--        app:layout_constraintTop_toTopOf="parent" />-->
-
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/accountSettingsRecyclerView"
         android:layout_width="match_parent"

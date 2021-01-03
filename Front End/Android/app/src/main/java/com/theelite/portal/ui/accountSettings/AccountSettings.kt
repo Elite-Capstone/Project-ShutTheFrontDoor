@@ -39,11 +39,6 @@ class AccountSettings : AppCompatActivity(), ClickListener {
         recyclerView.adapter = optionsAdapter
     }
 
-//    override fun onBackPressed() {
-//        println("Pressed on back arrow from account Settings")
-//        this.finish()
-//        super.onBackPressed()
-//    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         println("Pressed on back arrow from account Settings")
@@ -52,7 +47,7 @@ class AccountSettings : AppCompatActivity(), ClickListener {
     }
 
     override fun onItemClicked(name: String) {
-//        TODO("Not yet implemented")
+//        TODO Not yet implemented
         when (name) {
             "Profile" -> println("Clicked on $name")
             "Users" -> println("Clicked on $name")

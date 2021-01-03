@@ -49,9 +49,10 @@ class LoginActivity : AppCompatActivity() {
     private fun login() {
 
 //        if (::loginEmailTextField.isInitialized) print("They null"); return
-        println("Email is ${loginEmailTextField.text}")
-        println("Password is ${loginPasswordTextField.text}")
+//        println("Email is ${loginEmailTextField.text}")
+//        println("Password is ${loginPasswordTextField.text}")
         val queue = Volley.newRequestQueue(this)
+        //TODO refactor all urls in one single place
         val url = "http://3.131.85.201/api/profile/authenticate"
         val params = JSONObject()
         params.put("email", loginEmailTextField.text.toString())
