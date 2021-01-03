@@ -1,4 +1,4 @@
-package com.theelite.portal.ui.settings
+package com.theelite.portal.ui
 
 interface ClickListener {
     fun onItemClicked(name: String)

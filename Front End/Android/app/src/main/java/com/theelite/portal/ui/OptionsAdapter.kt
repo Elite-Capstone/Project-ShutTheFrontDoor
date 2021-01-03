@@ -1,20 +1,15 @@
-package com.theelite.portal.ui.settings
+package com.theelite.portal.ui
 
-import android.content.Context
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.R
-import com.theelite.portal.ui.login.LoginActivity
-import java.security.AccessController.getContext
 
-class SettingsAdapter(private val dataSet: ArrayList<SettingsModel>, var context: ClickListener) :
-    RecyclerView.Adapter<SettingsAdapter.ViewHolder>() {
+class OptionsAdapter(private val dataSet: ArrayList<OptionsModel>, var context: ClickListener) :
+    RecyclerView.Adapter<OptionsAdapter.ViewHolder>() {
 
     /**
      * Provide a reference to the type of views that you are using
@@ -36,7 +31,7 @@ class SettingsAdapter(private val dataSet: ArrayList<SettingsModel>, var context
     override fun onCreateViewHolder(viewGroup: ViewGroup, viewType: Int): ViewHolder {
         // Create a new view, which defines the UI of the list item
         val view = LayoutInflater.from(viewGroup.context)
-            .inflate(R.layout.settings_custom_cell, viewGroup, false)
+            .inflate(R.layout.options_recycler_cell, viewGroup, false)
 
         return ViewHolder(view)
     }

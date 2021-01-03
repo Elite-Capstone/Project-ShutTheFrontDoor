@@ -60,14 +60,14 @@ class LoginActivity : AppCompatActivity() {
 
 
 //        println("params in strings is ${params.toString()}")
-        val jSonObjectRequest = BooleanRequest(
-            Request.Method.POST,
-            url, params.toString(),
-            Response.Listener { authenticated -> if (authenticated) moveToHomePage() else displayError() },
-            Response.ErrorListener { error -> println("error happend during get ${error.message}") }
-        )
-        queue.add(jSonObjectRequest)
-
+//        val jSonObjectRequest = BooleanRequest(
+//            Request.Method.POST,
+//            url, params.toString(),
+//            Response.Listener { authenticated -> if (authenticated) moveToHomePage() else displayError() },
+//            Response.ErrorListener { error -> println("error happend during get ${error.message}") }
+//        )
+//        queue.add(jSonObjectRequest)
+        moveToHomePage()
     }
 
     private fun moveToHomePage() {
