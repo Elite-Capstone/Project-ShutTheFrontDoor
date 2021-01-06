@@ -25,7 +25,8 @@ class HomeFragment : Fragment() {
 //                ViewModelProviders.of(this).get(HomeViewModel::class.java)
         val root = inflater.inflate(R.layout.fragment_home, container, false)
         textView = root.findViewById(R.id.text_home)
-        textView.text = arguments.toString()
+        println("The arguments is ${arguments?.get("Login")}")
+        textView.text = arguments?.get("Login").toString()
 //        homeViewModel.text.observe(viewLifecycleOwner, Observer {
 //            textView.text = it
 //        })

@@ -19,10 +19,10 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
-        var home = fragmentManager.findFragmentById(R.id.nav_host_fragment)
-        if (!home.equals(null)) {
-            home.arguments = intent.extras
-        }
+
+        val home = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
+        println("intent argument is : ${intent.extras?.get("Login")}")
+        home?.arguments = intent.extras
 
         val navController = findNavController(R.id.nav_host_fragment)
         // Passing each menu ID as a set of Ids because each

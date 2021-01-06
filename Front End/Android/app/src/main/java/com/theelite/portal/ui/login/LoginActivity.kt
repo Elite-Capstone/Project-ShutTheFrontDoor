@@ -76,13 +76,15 @@ class LoginActivity : AppCompatActivity() {
 
     private fun moveToHomePage() {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
-        var greeting = R.string.login_message1.toString()
+        var greeting: String
         when(Random(System.currentTimeMillis()).nextInt(3)) {
             2    -> greeting = R.string.login_message2.toString()
             3    -> greeting = R.string.login_message3.toString()
             else -> greeting = R.string.login_message1.toString()
         }
+        println("The greeting is $greeting")
         mainActivityIntent.putExtra("Login", greeting)
+        println("Login intent argument is : ${mainActivityIntent.extras?.get("Login")}")
         startActivity(mainActivityIntent)
         this.finish()
     }
