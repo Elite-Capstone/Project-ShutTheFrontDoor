@@ -17,7 +17,7 @@ class RegisterActivity : AppCompatActivity() {
             //TODO Implement
 //            println("Clicked on Button!")
             val mainActivity = Intent(this, MainActivity::class.java)
-            mainActivity.putExtra("Login", R.string.registration_message)
+            mainActivity.putExtra("Home_Greeting", R.string.registration_message)
             startActivity(mainActivity)
             this.finish()
         }

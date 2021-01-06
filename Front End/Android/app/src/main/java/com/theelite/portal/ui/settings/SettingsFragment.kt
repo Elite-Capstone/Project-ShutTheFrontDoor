@@ -52,7 +52,6 @@ class SettingsFragment : Fragment(), ClickListener {
             "Notifications" -> {
                 val intent = Intent(this.context, NotificationsActivity::class.java)
                 this.startActivity(intent)
-                this.activity?.finish()
             }
             "Log Out" -> {
                 val intent = Intent(this.context, LoginActivity::class.java)
