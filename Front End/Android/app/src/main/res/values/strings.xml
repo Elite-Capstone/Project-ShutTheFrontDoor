@@ -21,5 +21,6 @@
     <string name="login_message1">Welcome back pleb!</string>
     <string name="login_message2">Welcome home!</string>
     <string name="login_message3">Now\'s the time to go to the washroom</string>
+    <string name="peek">peek</string>
 
 </resources>
