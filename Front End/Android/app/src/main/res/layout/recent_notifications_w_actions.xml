@@ -14,10 +14,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="@dimen/padding"
-            android:paddingLeft="@dimen/padding"
-            android:paddingEnd="@dimen/padding"
-            android:paddingRight="@dimen/padding">
+            android:paddingStart="@dimen/general_padding"
+            android:paddingLeft="@dimen/general_padding"
+            android:paddingEnd="@dimen/general_padding"
+            android:paddingRight="@dimen/general_padding">
 
             <TextView
                 android:id="@+id/recentNotificationsWActionsTitleLabel"
@@ -57,8 +57,8 @@
                     android:id="@+id/recentNotificationsWActionsPeekButton"
                     android:layout_width="155dp"
                     android:layout_height="@dimen/button_height"
-                    android:layout_marginEnd="@dimen/padding"
-                    android:layout_marginRight="@dimen/padding"
+                    android:layout_marginEnd="@dimen/general_padding"
+                    android:layout_marginRight="@dimen/general_padding"
                     android:background="@color/colorPrimary"
                     android:text="@string/peek" />
 
