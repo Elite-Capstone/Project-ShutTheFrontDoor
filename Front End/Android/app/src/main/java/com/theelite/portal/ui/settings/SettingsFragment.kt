@@ -8,6 +8,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.theelite.portal.MainActivity
 import com.theelite.portal.R
 import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.OptionsAdapter
@@ -15,6 +16,7 @@ import com.theelite.portal.ui.OptionsList
 
 import com.theelite.portal.ui.accountSettings.AccountSettings
 import com.theelite.portal.ui.login.LoginActivity
+import com.theelite.portal.ui.notifications.NotificationsFragment
 
 class SettingsFragment : Fragment(), ClickListener {
 
@@ -48,6 +50,9 @@ class SettingsFragment : Fragment(), ClickListener {
                 this.startActivity(accountIntent)
             }
             "Notifications" -> {
+                val intent = Intent(this.context, NotificationsActivity::class.java)
+                this.startActivity(intent)
+                this.activity?.finish()
             }
             "Log Out" -> {
                 val intent = Intent(this.context, LoginActivity::class.java)

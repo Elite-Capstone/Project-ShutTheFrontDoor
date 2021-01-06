@@ -7,7 +7,9 @@ import androidx.lifecycle.ViewModel
 class HomeViewModel : ViewModel() {
 
     private val _text = MutableLiveData<String>().apply {
-        value = "This is home Fragment"
+        // TODO: Can contain information about app, such as # of new notifications or
+        //  # of recent actions in logs or if actions were performed
+        value = "Welcome to Doorhub!"
     }
     val text: LiveData<String> = _text
 }
