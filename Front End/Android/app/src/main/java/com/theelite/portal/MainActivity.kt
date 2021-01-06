@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
         val navView: BottomNavigationView = findViewById(R.id.nav_view)
 
         val home = supportFragmentManager.findFragmentById(R.id.nav_host_fragment)
-        println("intent argument is : ${intent.extras?.get("Login")}")
+        println("intent argument is : ${intent.extras?.get("Home_Greeting")}")
         home?.arguments = intent.extras
 
         val navController = findNavController(R.id.nav_host_fragment)
