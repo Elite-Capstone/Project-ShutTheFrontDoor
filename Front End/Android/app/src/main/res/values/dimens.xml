@@ -2,6 +2,8 @@
     <!-- Default screen margins -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="button_height">35dp</dimen>
+    <dimen name="general_padding">15dp</dimen>
     <dimen name="card_horizontal_padding">10dp</dimen>
     <dimen name="card_vertical_padding">5dp</dimen>
     <dimen name="activity_card_corner_radius">2dp</dimen>

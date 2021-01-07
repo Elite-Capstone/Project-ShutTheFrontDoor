@@ -25,6 +25,7 @@
     <string name="doorbell_device_name">Doorbell</string>
     <string name="motion_sensor_device_name">Motion Sensor</string>
     <string name="system_barcode_name">System Barcode</string>
+    <string name="peek">peek</string>
 
     <!-- Programmatically selected Display Strings -->
     <string name="registration_message">Welcome to Doorhub!</string>

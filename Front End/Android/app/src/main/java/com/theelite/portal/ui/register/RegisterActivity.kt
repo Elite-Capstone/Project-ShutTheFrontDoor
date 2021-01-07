@@ -15,7 +15,6 @@ class RegisterActivity : AppCompatActivity() {
         registerButton = findViewById(R.id.registerButton)
         registerButton.setOnClickListener {
             //TODO Implement
-//            println("Clicked on Button!")
             val mainActivity = Intent(this, MainActivity::class.java)
             mainActivity.putExtra("Home_Greeting", getString(R.string.registration_message))
             startActivity(mainActivity)
