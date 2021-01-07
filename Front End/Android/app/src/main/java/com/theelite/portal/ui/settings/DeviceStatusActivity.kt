@@ -2,26 +2,20 @@ package com.theelite.portal.ui.settings
 
 import android.os.Bundle
 import android.os.Handler
-import android.view.LayoutInflater
 import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.theelite.portal.Objects.DeviceDescription
+import com.theelite.portal.Objects.SystemDescription
 import com.theelite.portal.R
 import com.theelite.portal.ui.ClickListener
-import com.theelite.portal.ui.OptionsAdapter
-import com.theelite.portal.ui.OptionsList
-import com.theelite.portal.ui.adapters.SystemStatusAdapter
-import com.theelite.portal.ui.notifications.RecentNotificationsAdapter
-import kotlinx.android.synthetic.main.activity_main.*
+import com.theelite.portal.ui.adapters.SystemsStatusAdapter
 
 class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
-    private lateinit var systemStatusRecyclerView: RecyclerView
-//    private lateinit var root: View
+    private lateinit var activityStatusRecyclerView: RecyclerView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,15 +24,13 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     private fun setUpView() {
-//        root = this.layoutInflater
-//            .inflate(R.layout.activity_device_status_list, parent, false)
         setUpRecyclerView()
         setUpRefreshLayout()
     }
 
     //TODO: Allow user to fetch new status
     private fun setUpRefreshLayout() {
-        swipeRefreshLayout = findViewById(R.id.deviceStatusSwipeRefresh)
+        swipeRefreshLayout = findViewById(R.id.activityStatusSwipeRefresh)
         swipeRefreshLayout.setOnRefreshListener {
             println("Status update -- Starting to Refresh!!")
             val handler = Handler()
@@ -48,20 +40,20 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
         }
     }
 
+    // TODO: Each system is associated to a single instance within the adapter
     private fun setUpRecyclerView() {
-        systemStatusRecyclerView = findViewById(R.id.systemStatusRecyclerView)
-        systemStatusRecyclerView.layoutManager =
+        activityStatusRecyclerView = findViewById(R.id.systemStatusRecyclerView)
+        activityStatusRecyclerView.layoutManager =
             LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
-        val systems = getSmartDoorSystemList()
-        val systemStatusAdapter = SystemStatusAdapter(systems)
-        systemStatusRecyclerView.adapter = systemStatusAdapter
-//        }
+        val systems = getConnectedDevices()
+        val systemStatusAdapter = SystemsStatusAdapter(systems)
+        activityStatusRecyclerView.adapter = systemStatusAdapter
     }
 
-    private fun getConnectedDevices(): ArrayList<ArrayList<String>> {
-        val systems = ArrayList<ArrayList<String>>()
-//        systems.add(getSmartDoorSystemList())
+    private fun getConnectedDevices(): ArrayList<SystemDescription> {
+        val systems   = ArrayList<SystemDescription>()
+        systems.add(getSmartDoorSystemList())
         return systems
     }
 
@@ -76,38 +68,27 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     // Temporary elements
-    private fun getSmartDoorSystemList(): ArrayList<ArrayList<String>> {
-        val singleSys = ArrayList<ArrayList<String>>()
-        var device = ArrayList<String>()
+    private fun getSmartDoorSystemList(): SystemDescription {
+        val singleSys = SystemDescription("Smart Front Door",
+            "Fully operational as of " + System.currentTimeMillis() + " ms since 1970")
 
-        device.add("Smart Front Door")
-        device.add("Fully operational as of ${System.currentTimeMillis()} ms since 1970")
-        singleSys.add(device)
-        device = ArrayList()
-        device.add(getString(R.string.battery_device_name))
-        device.add("100%")
-        singleSys.add(device)
-        device = ArrayList()
-        device.add(getString(R.string.camera_device_name))
-        device.add("Connected and operational")
-        singleSys.add(device)
-        device = ArrayList()
-        device.add(getString(R.string.display_screen_device_name))
-        device.add("Connected and operational")
-        singleSys.add(device)
-        device = ArrayList()
-        device.add(getString(R.string.doorbell_device_name))
-        device.add("Connected and operational")
-        singleSys.add(device)
-        device = ArrayList()
-        device.add(getString(R.string.doorlock_device_name))
-        device.add("Connected and operational")
-        singleSys.add(device)
-        device = ArrayList()
-        device.add(getString(R.string.motion_sensor_device_name))
-        device.add("Connected and operational")
-        singleSys.add(device)
-//        device = ArrayList()
+        singleSys.addDeviceDesc(
+            DeviceDescription(getString(R.string.battery_device_name), "100%"))
+        singleSys.addDeviceDesc(
+            DeviceDescription(getString(R.string.camera_device_name),
+                "Connected and operational"))
+        singleSys.addDeviceDesc(
+            DeviceDescription(getString(R.string.display_screen_device_name),
+                "Connected and operational"))
+        singleSys.addDeviceDesc(
+            DeviceDescription(getString(R.string.doorbell_device_name),
+                "Connected and operational"))
+        singleSys.addDeviceDesc(
+            DeviceDescription(getString(R.string.doorlock_device_name),
+            "Connected and operational"))
+        singleSys.addDeviceDesc(DeviceDescription(
+            getString(R.string.motion_sensor_device_name),
+            "Connected and operational"))
 
         return singleSys
     }

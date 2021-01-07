@@ -1,4 +1,4 @@
-package com.theelite.portal.ui.notifications
+package com.theelite.portal.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
@@ -6,7 +6,6 @@ import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.R
-import kotlinx.android.synthetic.main.recent_notifications_no_actions.*
 
 class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
     RecyclerView.Adapter<RecentNotificationsAdapter.ViewHolder>() {

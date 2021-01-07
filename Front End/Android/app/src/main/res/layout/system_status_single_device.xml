@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/statusSingleDeviceNameTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_name"
+        android:textSize="@dimen/card_subtitle_size" />
+
+    <TextView
+        android:id="@+id/statusSingleDeviceDescTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/device_description"
+        android:textSize="@dimen/card_body_size" />
+</LinearLayout>

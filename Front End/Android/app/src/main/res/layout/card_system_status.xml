@@ -29,7 +29,7 @@
             android:paddingBottom="@dimen/card_vertical_padding">
 
             <TextView
-                android:id="@+id/deviceStatusTitleLabel"
+                android:id="@+id/systemStatusTitleLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="@dimen/card_vertical_padding"
@@ -38,7 +38,7 @@
                 android:textSize="@dimen/card_title_size" />
 
             <TextView
-                android:id="@+id/deviceStatusDescriptionLabel"
+                android:id="@+id/systemStatusDescriptionLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingBottom="@dimen/card_vertical_padding"
@@ -46,8 +46,13 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textSize="@dimen/card_subtitle_size" />
 
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/systemStatusRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
             <TextView
-                android:id="@+id/deviceStatusBarcodeLabel"
+                android:id="@+id/systemStatusBarcodeLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/card_vertical_padding"
@@ -56,7 +61,15 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textSize="@dimen/card_subtitle_size" />
 
-<!--            <ImageView-->
+            <ImageView
+                android:id="@+id/systemBarcodeImageView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/system_barcode_name"
+                app:srcCompat="@drawable/template_System_Barcode" />
+
+            <!--            <ImageView-->
 <!--                android:id="@+id/deviceStatusBarcodeImageView"-->
 <!--                android:layout_width="match_parent"-->
 <!--                android:layout_height="55dp"-->

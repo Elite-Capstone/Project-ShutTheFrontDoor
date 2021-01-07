@@ -18,6 +18,8 @@
     <string name="more_videos">more</string>
     <string name="see_saved_videos">To See Saved Videos</string>
     <string name="smart_door_system_name">Smart Front Door</string>
+    <string name="device_name">Device Name</string>
+    <string name="device_description">Device Description</string>
     <string name="battery_device_name">Battery</string>
     <string name="camera_device_name">Camera</string>
     <string name="display_screen_device_name">Display Screen</string>
