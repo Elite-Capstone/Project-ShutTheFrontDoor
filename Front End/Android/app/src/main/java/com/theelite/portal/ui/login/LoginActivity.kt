@@ -81,7 +81,6 @@ class LoginActivity : AppCompatActivity() {
             3    -> getString(R.string.login_message3)
             else -> getString(R.string.login_message1)
         }
-        println("The greeting is $greeting")
         mainActivityIntent.putExtra("Home_Greeting", greeting)
         println("Login intent argument is : ${mainActivityIntent.extras?.get("Home_Greeting")}")
         startActivity(mainActivityIntent)

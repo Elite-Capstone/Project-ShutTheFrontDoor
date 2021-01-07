@@ -11,10 +11,10 @@ class NotificationsActivity : AppCompatActivity(), ClickListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notif)
-        setupNotifView()
+        setupPageView()
     }
 
-    private fun setupNotifView() {
+    private fun setupPageView() {
 
     }
 

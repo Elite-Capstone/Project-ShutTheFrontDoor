@@ -1,4 +1,5 @@
 <resources>
+    <!-- XML Display Strings -->
     <string name="app_name">Doorhub</string>
     <string name="title_home">Home</string>
     <string name="title_settings">Settings</string>
@@ -16,10 +17,23 @@
     <string name="unlock">UNLOCK</string>
     <string name="more_videos">more</string>
     <string name="see_saved_videos">To See Saved Videos</string>
-    <string name="url">http://3.131.85.201/api/profile/authenticate</string>
+    <string name="smart_door_system_name">Smart Front Door</string>
+    <string name="battery_device_name">Battery</string>
+    <string name="camera_device_name">Camera</string>
+    <string name="display_screen_device_name">Display Screen</string>
+    <string name="doorlock_device_name">Door Lock</string>
+    <string name="doorbell_device_name">Doorbell</string>
+    <string name="motion_sensor_device_name">Motion Sensor</string>
+    <string name="system_barcode_name">System Barcode</string>
+
+    <!-- Programmatically selected Display Strings -->
     <string name="registration_message">Welcome to Doorhub!</string>
     <string name="login_message1">Welcome back pleb!</string>
     <string name="login_message2">Welcome home!</string>
     <string name="login_message3">Now\'s the time to go to the washroom</string>
+    <string name="smart_door_status_summary">Fully operational</string>
+
+    <!-- Programmatically used strings -->
+    <string name="url">http://3.131.85.201/api/profile/authenticate</string>
 
 </resources>

@@ -1,4 +1,4 @@
-package com.theelite.portal.ui.accountSettings
+package com.theelite.portal.ui.settings
 
 import android.os.Bundle
 import android.view.MenuItem
@@ -10,7 +10,7 @@ import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.OptionsAdapter
 import com.theelite.portal.ui.OptionsList
 
-class AccountSettings : AppCompatActivity(), ClickListener {
+class AccountSettingsActivity : AppCompatActivity(), ClickListener {
 
     private lateinit var recyclerView: RecyclerView
 

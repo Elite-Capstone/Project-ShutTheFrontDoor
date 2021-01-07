@@ -1,7 +1,6 @@
 package com.theelite.portal.ui.notifications
 
 import android.view.LayoutInflater
-import android.view.TextureView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
@@ -21,8 +20,8 @@ class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
         init {
             titleTextView = view.findViewById(R.id.recentNotificationsNoActionsTitleLabel)
             descriptionTextView =
-                view.findViewById(R.id.recentNotificationsNoActionsDescriptionLabel)
-            dateTextView = view.findViewById(R.id.recentNotificationsNoActionsDateLabel)
+                view.findViewById(R.id.notificationDescriptionLabel)
+            dateTextView = view.findViewById(R.id.notificationBodyText)
         }
 
     }
