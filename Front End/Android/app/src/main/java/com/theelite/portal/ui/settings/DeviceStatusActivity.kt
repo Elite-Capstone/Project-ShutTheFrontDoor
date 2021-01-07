@@ -21,7 +21,7 @@ import kotlinx.android.synthetic.main.activity_main.*
 class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var systemStatusRecyclerView: RecyclerView
-    private lateinit var root : View
+//    private lateinit var root: View
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,15 +30,15 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     private fun setUpView() {
-        root = this.layoutInflater
-            .inflate(R.layout.activity_device_status_list, container, false)
+//        root = this.layoutInflater
+//            .inflate(R.layout.activity_device_status_list, parent, false)
         setUpRecyclerView()
         setUpRefreshLayout()
     }
 
     //TODO: Allow user to fetch new status
     private fun setUpRefreshLayout() {
-        swipeRefreshLayout = root.findViewById(R.id.deviceStatusSwipeRefresh)
+        swipeRefreshLayout = findViewById(R.id.deviceStatusSwipeRefresh)
         swipeRefreshLayout.setOnRefreshListener {
             println("Status update -- Starting to Refresh!!")
             val handler = Handler()
@@ -49,19 +49,19 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     private fun setUpRecyclerView() {
-        systemStatusRecyclerView = root.findViewById(R.id.systemStatusRecyclerView)
+        systemStatusRecyclerView = findViewById(R.id.systemStatusRecyclerView)
         systemStatusRecyclerView.layoutManager =
             LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 
-        val systems = getConnectedDevices()
-        for (sys in systems) {
-            systemStatusRecyclerView.adapter = SystemStatusAdapter(sys)
-        }
+        val systems = getSmartDoorSystemList()
+        val systemStatusAdapter = SystemStatusAdapter(systems)
+        systemStatusRecyclerView.adapter = systemStatusAdapter
+//        }
     }
 
-    private fun getConnectedDevices(): ArrayList<ArrayList<ArrayList<String>>> {
-        val systems   = ArrayList<ArrayList<ArrayList<String>>>()
-        systems.add(getSmartDoorSystemList())
+    private fun getConnectedDevices(): ArrayList<ArrayList<String>> {
+        val systems = ArrayList<ArrayList<String>>()
+//        systems.add(getSmartDoorSystemList())
         return systems
     }
 
@@ -78,36 +78,36 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     // Temporary elements
     private fun getSmartDoorSystemList(): ArrayList<ArrayList<String>> {
         val singleSys = ArrayList<ArrayList<String>>()
-        val device    = ArrayList<String>()
+        var device = ArrayList<String>()
 
         device.add("Smart Front Door")
-        device.add("Fully operational as of " + System.currentTimeMillis() + " ms since 1970")
+        device.add("Fully operational as of ${System.currentTimeMillis()} ms since 1970")
         singleSys.add(device)
-        device.clear()
+        device = ArrayList()
         device.add(getString(R.string.battery_device_name))
         device.add("100%")
         singleSys.add(device)
-        device.clear()
+        device = ArrayList()
         device.add(getString(R.string.camera_device_name))
         device.add("Connected and operational")
         singleSys.add(device)
-        device.clear()
+        device = ArrayList()
         device.add(getString(R.string.display_screen_device_name))
         device.add("Connected and operational")
         singleSys.add(device)
-        device.clear()
+        device = ArrayList()
         device.add(getString(R.string.doorbell_device_name))
         device.add("Connected and operational")
         singleSys.add(device)
-        device.clear()
+        device = ArrayList()
         device.add(getString(R.string.doorlock_device_name))
         device.add("Connected and operational")
         singleSys.add(device)
-        device.clear()
+        device = ArrayList()
         device.add(getString(R.string.motion_sensor_device_name))
         device.add("Connected and operational")
         singleSys.add(device)
-        device.clear()
+//        device = ArrayList()
 
         return singleSys
     }

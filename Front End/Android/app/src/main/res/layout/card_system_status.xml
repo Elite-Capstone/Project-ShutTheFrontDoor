@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/activity_horizontal_margin"
     android:layout_marginLeft="@dimen/activity_horizontal_margin"
     android:layout_marginTop="@dimen/activity_vertical_margin"
@@ -56,14 +56,15 @@
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
                 android:textSize="@dimen/card_subtitle_size" />
 
-            <ImageView
-                android:id="@+id/deviceStatusBarcodeImageView"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|top"
-                android:adjustViewBounds="true"
-                android:contentDescription="@string/system_barcode_name"
-                tools:srcCompat="@drawable/Template_System_Barcode" />
+<!--            <ImageView-->
+<!--                android:id="@+id/deviceStatusBarcodeImageView"-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="55dp"-->
+<!--                android:layout_gravity="center_horizontal|top"-->
+<!--                android:adjustViewBounds="true"-->
+<!--                android:contentDescription="@string/system_barcode_name"-->
+
+<!--                />-->
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </FrameLayout>
