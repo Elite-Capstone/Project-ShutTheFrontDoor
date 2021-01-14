@@ -10,37 +10,35 @@ import com.theelite.portal.Objects.SystemDescription
 import com.theelite.portal.R
 
 class SystemsStatusAdapter(private val systemSet: ArrayList<SystemDescription>) :
-    RecyclerView.Adapter<SystemsStatusAdapter.ViewHolder>() {
+    RecyclerView.Adapter<SystemsStatusAdapter.SystemViewHolder>() {
 
     private lateinit var view: View
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
-        init {
+    class SystemViewHolder(_view: View) : RecyclerView.ViewHolder(_view) {
+        val view = _view
+        private lateinit var systemsRecyclerView: RecyclerView
+
+        // Used to attach the adapter to the recycler found within each instance
+        fun setUpRecyclerView(system: SystemDescription) {
+            systemsRecyclerView = view.findViewById(R.id.systemStatusRecyclerView)
+            systemsRecyclerView.layoutManager =
+                LinearLayoutManager(view.context, RecyclerView.VERTICAL, false)
+
+            systemsRecyclerView.adapter = SingleSysStatusAdapter(system)
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SystemViewHolder {
          view = LayoutInflater.from(parent.context)
             .inflate(R.layout.card_system_status, parent, false)
-        return ViewHolder(view)
+        return SystemViewHolder(view)
     }
 
-    // TODO: Create an instance for each system in the systemSet and attach an adapter
-    //  to the recycler view within the instance
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-
-    }
-
-    // Used to attach the adapter to the recycler found within each instance
-    private fun setUpRecyclerView(index: Int) {
-        val systemRecyclerView = view.findViewById<RecyclerView>(R.id.systemStatusRecyclerView)
-        systemRecyclerView.layoutManager =
-            LinearLayoutManager(view.context, RecyclerView.VERTICAL, false)
-
-        systemRecyclerView.adapter = SingleSysStatusAdapter(systemSet[index].getSysDevices())
+    override fun onBindViewHolder(holder: SystemViewHolder, position: Int) {
+        holder.setUpRecyclerView(systemSet[position])
     }
 
     override fun getItemCount(): Int {
-        return 2 + systemSet.size
+        return systemSet.size
     }
 }

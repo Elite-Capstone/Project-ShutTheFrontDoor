@@ -17,4 +17,9 @@
         android:layout_height="wrap_content"
         android:text="@string/device_description"
         android:textSize="@dimen/card_body_size" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/statusSingleDeviceExtraInfoRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </LinearLayout>

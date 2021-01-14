@@ -1,5 +1,6 @@
 package com.theelite.portal.ui.adapters
 
+import android.bluetooth.BluetoothClass
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,82 +11,49 @@ import com.theelite.portal.Objects.DeviceDescription
 import com.theelite.portal.Objects.SystemDescription
 import com.theelite.portal.R
 
-class SingleSysStatusAdapter(private val deviceSet : ArrayList<DeviceDescription>) :
-    RecyclerView.Adapter<SingleSysStatusAdapter.ViewHolder>() {
+class SingleSysStatusAdapter(private val system : SystemDescription) :
+    RecyclerView.Adapter<SingleSysStatusAdapter.SingleSysViewHolder>() {
 
     private lateinit var view: View
 
-    class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val titleTextView: TextView
-        val systemDescriptionTextView: TextView
-//        val params: ViewGroup.LayoutParams
-//        var deviceNameTextView: TextView
-//        var deviceDescTextView: TextView
-//        var it: Int
+    class SingleSysViewHolder(_view: View) : RecyclerView.ViewHolder(_view) {
+        val view = _view
+        val statusTitleTextView: TextView
+        val statusDescritpionTextView: TextView
+        private lateinit var systemRecyclerView: RecyclerView
 
         init {
-            titleTextView = view.findViewById(R.id.systemStatusTitleLabel)
-            systemDescriptionTextView =
-                view.findViewById(R.id.systemStatusDescriptionLabel)
-//            params = ViewGroup.LayoutParams(
-//                ViewGroup.LayoutParams.MATCH_PARENT,
-//                ViewGroup.LayoutParams.WRAP_CONTENT
-//            )
+            statusTitleTextView = view.findViewById(R.id.systemStatusTitleLabel)
+            statusDescritpionTextView = view.findViewById(R.id.systemStatusDescriptionLabel)
+        }
 
-            // Holds device name
-//            deviceNameTextView = TextView(view.context)
-//            deviceNameTextView.layoutParams = params
-//            deviceNameTextView.textSize = (R.dimen.card_subtitle_size_float).toFloat()
-//            deviceNameTextView.setPadding(0, 0, 0, 2)
+        // Used to attach the adapter to the recycler found within each instance
+        fun setUpRecyclerView(device : DeviceDescription) {
+            systemRecyclerView = view.findViewById(R.id.statusSingleDeviceRecyclerView)
+            systemRecyclerView.layoutManager =
+                LinearLayoutManager(view.context, RecyclerView.VERTICAL, false)
 
-            // Holds device status
-//            deviceDescTextView = TextView(view.context)
-//            deviceDescTextView.layoutParams = params
-//            deviceDescTextView.textSize = (R.dimen.card_subtitle_size_float).toFloat()
-//            deviceDescTextView.setPadding(0, 0, 0, 5)
-//            var id = MAX_VALUE
-//            it = 0
-//            while (++it <= nDev) {
-//                deviceNameTextView.id = id--
-//                deviceDescTextView.id = id--
-//                viewGroup.addView(deviceNameTextView)
-//                viewGroup.addView(deviceDescTextView)
-//            }
+            systemRecyclerView.adapter = SingleDeviceStatusAdapter(device)
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SingleSysViewHolder {
         view = LayoutInflater.from(parent.context)
             .inflate(R.layout.card_system_status, parent, false)
-        return ViewHolder(view)
+        return SingleSysViewHolder(view)
     }
 
     // The device position depends on the amount of information stored per device
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        var parentArrayPos = 0
-        var childArrayPos  = position
+    override fun onBindViewHolder(holder: SingleSysViewHolder, position: Int) {
+        holder.statusTitleTextView.text = system.getSysName()
+        holder.statusDescritpionTextView.text = system.getSysDesc()
 
-//        when (position) {
-//            0 -> holder.titleTextView.text = deviceSet[0][0]
-//            1 -> holder.systemDescriptionTextView.text = deviceSet[0][1]
-//            else -> {
-//                while (childArrayPos >= deviceSet[parentArrayPos].size)
-//                    childArrayPos -= deviceSet[parentArrayPos++].size
-//                (holder.itemView.findViewById<TextView>(this.getItemId(position).toInt()))
-//                    .text = deviceSet[parentArrayPos][childArrayPos]
-//            }
-//        }
+        // Pos 0 and 1 are title and description
+        if (position >= 2)
+            holder.setUpRecyclerView(system.getSysDevices()[position])
     }
 
     override fun getItemCount(): Int {
-        return deviceSet.size
-    }
-
-    private fun setUpRecyclerView(index: Int) {
-        val deviceRecyclerView = view.findViewById<RecyclerView>(R.id.statusSingleDeviceRecyclerView)
-        deviceRecyclerView.layoutManager =
-            LinearLayoutManager(view.context, RecyclerView.VERTICAL, false)
-
-        deviceRecyclerView.adapter = SingleDeviceStatusAdapter(deviceSet[index])
+        return system.getItemCount()
     }
 }
