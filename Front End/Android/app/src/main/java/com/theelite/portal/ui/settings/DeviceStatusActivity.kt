@@ -24,8 +24,8 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     private fun setUpView() {
-        setUpRecyclerView()
         setUpRefreshLayout()
+        setUpRecyclerView()
     }
 
     //TODO: Allow user to fetch new status
@@ -42,7 +42,7 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
 
     // TODO: Each system is associated to a single instance within the adapter
     private fun setUpRecyclerView() {
-        activityStatusRecyclerView = findViewById(R.id.systemStatusRecyclerView)
+        activityStatusRecyclerView = findViewById(R.id.activityStatusRecyclerView)
         activityStatusRecyclerView.layoutManager =
             LinearLayoutManager(this, RecyclerView.VERTICAL, false)
 

@@ -66,6 +66,10 @@ class SystemDescription(
         sysDevices?.drop(pos)
         return sysDevices
     }
+
+    fun getItemCount() : Int {
+        return 2 + sysDevices.size
+    }
 }
 
 class DeviceDescription constructor() {
@@ -125,5 +129,9 @@ class DeviceDescription constructor() {
     fun removeExtraInfo(pos: Int): ArrayList<String> {
         devExtraInfo.drop(pos)
         return devExtraInfo
+    }
+
+    fun getItemCount() : Int {
+        return 2 + devExtraInfo.size
     }
 }

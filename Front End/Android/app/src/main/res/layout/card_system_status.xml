@@ -67,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
                 android:contentDescription="@string/system_barcode_name"
-                app:srcCompat="@drawable/template_system_barcode" />
+                app:srcCompat="@drawable/template_barcode" />
 
             <!--            <ImageView-->
 <!--                android:id="@+id/deviceStatusBarcodeImageView"-->
