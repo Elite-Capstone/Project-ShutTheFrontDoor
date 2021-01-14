@@ -4,30 +4,34 @@ import com.theelite.portal.R
 import android.content.Context
 import android.media.audiofx.AudioEffect
 
-class SystemDescription constructor() {
-    private var sysName: String = ""
-    private var sysDesc: String = ""
-    private var sysDevices: ArrayList<DeviceDescription> = ArrayList()
+class SystemDescription(
+    private var sysName: String,
+    private var sysDesc: String?,
+    private var sysDevices: ArrayList<DeviceDescription>?
+) {
+//    private var sysName: String = ""
+//    private var sysDesc: String = ""
+//    private var sysDevices: ArrayList<DeviceDescription> = ArrayList()
 
-    constructor(_sysName: String, _sysDesc: String) : this() {
-        sysName = _sysName
-        sysDesc = _sysDesc
-    }
+//    constructor(_sysName: String, _sysDesc: String) : this() {
+//        sysName = _sysName
+//        sysDesc = _sysDesc
+//    }
 
-    constructor(_sysName: String, _sysDesc: String, _sysDevices: ArrayList<DeviceDescription>) :
-            this(_sysName, _sysDesc) {
-        sysDevices = _sysDevices
-    }
+//    constructor(_sysName: String, _sysDesc: String, _sysDevices: ArrayList<DeviceDescription>) :
+//            this(_sysName, _sysDesc) {
+//        sysDevices = _sysDevices
+//    }
 
-    fun getSysName() : String {
+    fun getSysName(): String {
         return sysName
     }
 
-    fun getSysDesc() : String {
+    fun getSysDesc(): String? {
         return sysDesc
     }
 
-    fun getSysDevices() : ArrayList<DeviceDescription> {
+    fun getSysDevices(): ArrayList<DeviceDescription>? {
         return sysDevices
     }
 
@@ -43,19 +47,23 @@ class SystemDescription constructor() {
         sysDevices = _sysDevices
     }
 
-    fun setSystemDesc(_sysName: String, _sysDesc: String, _sysDevices: ArrayList<DeviceDescription>) {
+    fun setSystemDesc(
+        _sysName: String,
+        _sysDesc: String,
+        _sysDevices: ArrayList<DeviceDescription>
+    ) {
         sysName = _sysName
         sysDesc = _sysDesc
         sysDevices = _sysDevices
     }
 
-    fun addDeviceDesc(dev: DeviceDescription) : ArrayList<DeviceDescription> {
-        sysDevices.add(dev)
+    fun addDeviceDesc(dev: DeviceDescription): ArrayList<DeviceDescription>? {
+        sysDevices?.add(dev)
         return sysDevices
     }
 
-    fun removeDeviceDesc(pos: Int) : ArrayList<DeviceDescription> {
-        sysDevices.drop(pos)
+    fun removeDeviceDesc(pos: Int): ArrayList<DeviceDescription>? {
+        sysDevices?.drop(pos)
         return sysDevices
     }
 }
@@ -75,15 +83,15 @@ class DeviceDescription constructor() {
         devExtraInfo = _devExtraInfo
     }
 
-    fun getDevName() : String {
+    fun getDevName(): String {
         return devName
     }
 
-    fun getDevDesc() : String {
+    fun getDevDesc(): String {
         return devDesc
     }
 
-    fun getDevExtra() : ArrayList<String> {
+    fun getDevExtra(): ArrayList<String> {
         return devExtraInfo
     }
 
@@ -99,18 +107,22 @@ class DeviceDescription constructor() {
         devExtraInfo = _devExtraInfo
     }
 
-    fun setDeviceDesc(_devName: String, _devDesc: String, _devExtraInfo: ArrayList<String> = ArrayList()) {
+    fun setDeviceDesc(
+        _devName: String,
+        _devDesc: String,
+        _devExtraInfo: ArrayList<String> = ArrayList()
+    ) {
         devName = _devName
         devDesc = _devDesc
         devExtraInfo = _devExtraInfo
     }
 
-    fun addExtraInfo(info: String) : ArrayList<String> {
+    fun addExtraInfo(info: String): ArrayList<String> {
         devExtraInfo.add(info)
         return devExtraInfo
     }
 
-    fun removeExtraInfo(pos: Int) : ArrayList<String> {
+    fun removeExtraInfo(pos: Int): ArrayList<String> {
         devExtraInfo.drop(pos)
         return devExtraInfo
     }

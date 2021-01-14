@@ -52,7 +52,7 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     private fun getConnectedDevices(): ArrayList<SystemDescription> {
-        val systems   = ArrayList<SystemDescription>()
+        val systems = ArrayList<SystemDescription>()
         systems.add(getSmartDoorSystemList())
         return systems
     }
@@ -69,26 +69,44 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
 
     // Temporary elements
     private fun getSmartDoorSystemList(): SystemDescription {
-        val singleSys = SystemDescription("Smart Front Door",
-            "Fully operational as of " + System.currentTimeMillis() + " ms since 1970")
+        val singleSys = SystemDescription(
+            "Smart Front Door",
+            "Fully operational as of " + System.currentTimeMillis() + " ms since 1970", null
+        )
 
         singleSys.addDeviceDesc(
-            DeviceDescription(getString(R.string.battery_device_name), "100%"))
+            DeviceDescription(getString(R.string.battery_device_name), "100%")
+        )
         singleSys.addDeviceDesc(
-            DeviceDescription(getString(R.string.camera_device_name),
-                "Connected and operational"))
+            DeviceDescription(
+                getString(R.string.camera_device_name),
+                "Connected and operational"
+            )
+        )
         singleSys.addDeviceDesc(
-            DeviceDescription(getString(R.string.display_screen_device_name),
-                "Connected and operational"))
+            DeviceDescription(
+                getString(R.string.display_screen_device_name),
+                "Connected and operational"
+            )
+        )
         singleSys.addDeviceDesc(
-            DeviceDescription(getString(R.string.doorbell_device_name),
-                "Connected and operational"))
+            DeviceDescription(
+                getString(R.string.doorbell_device_name),
+                "Connected and operational"
+            )
+        )
         singleSys.addDeviceDesc(
-            DeviceDescription(getString(R.string.doorlock_device_name),
-            "Connected and operational"))
-        singleSys.addDeviceDesc(DeviceDescription(
-            getString(R.string.motion_sensor_device_name),
-            "Connected and operational"))
+            DeviceDescription(
+                getString(R.string.doorlock_device_name),
+                "Connected and operational"
+            )
+        )
+        singleSys.addDeviceDesc(
+            DeviceDescription(
+                getString(R.string.motion_sensor_device_name),
+                "Connected and operational"
+            )
+        )
 
         return singleSys
     }
