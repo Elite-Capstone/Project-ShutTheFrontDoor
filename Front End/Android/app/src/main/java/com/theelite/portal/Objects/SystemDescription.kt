@@ -67,25 +67,25 @@ class SystemDescription(
         return sysDevices
     }
 
-    fun getItemCount() : Int {
-        return 2 + sysDevices.size
+    fun getItemCount(): Int {
+        return 2 + if (sysDevices != null) sysDevices!!.size else 0
     }
 }
 
-class DeviceDescription constructor() {
-    private var devName: String = ""
-    private var devDesc: String = ""
-    private var devExtraInfo: ArrayList<String> = ArrayList()
-
-    constructor(_devName: String, _devDesc: String) : this() {
-        devName = _devName
-        devDesc = _devDesc
-    }
-
-    constructor(_devName: String, _devDesc: String, _devExtraInfo: ArrayList<String>) :
-            this(_devName, _devDesc) {
-        devExtraInfo = _devExtraInfo
-    }
+class DeviceDescription(
+    private var devName: String = "",
+    private var devDesc: String = "",
+    private var devExtraInfo: ArrayList<String>? = ArrayList()
+) {
+//    constructor(_devName: String, _devDesc: String) : this() {
+//        devName = _devName
+//        devDesc = _devDesc
+//    }
+//
+//    constructor(_devName: String, _devDesc: String, _devExtraInfo: ArrayList<String>) :
+//            this(_devName, _devDesc) {
+//        devExtraInfo = _devExtraInfo
+//    }
 
     fun getDevName(): String {
         return devName
@@ -95,7 +95,7 @@ class DeviceDescription constructor() {
         return devDesc
     }
 
-    fun getDevExtra(): ArrayList<String> {
+    fun getDevExtra(): ArrayList<String>? {
         return devExtraInfo
     }
 
@@ -121,17 +121,17 @@ class DeviceDescription constructor() {
         devExtraInfo = _devExtraInfo
     }
 
-    fun addExtraInfo(info: String): ArrayList<String> {
-        devExtraInfo.add(info)
+    fun addExtraInfo(info: String): ArrayList<String>? {
+        devExtraInfo?.add(info)
         return devExtraInfo
     }
 
-    fun removeExtraInfo(pos: Int): ArrayList<String> {
-        devExtraInfo.drop(pos)
+    fun removeExtraInfo(pos: Int): ArrayList<String>? {
+        devExtraInfo?.drop(pos)
         return devExtraInfo
     }
 
-    fun getItemCount() : Int {
-        return 2 + devExtraInfo.size
+    fun getItemCount(): Int {
+        return 2 + if (devExtraInfo != null) devExtraInfo!!.size else 0
     }
 }

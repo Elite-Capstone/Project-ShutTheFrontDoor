@@ -1,6 +1,5 @@
 package com.theelite.portal.ui.adapters
 
-import android.bluetooth.BluetoothClass
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -39,7 +38,7 @@ class SingleSysStatusAdapter(private val system : SystemDescription) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SingleSysViewHolder {
         view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.card_system_status, parent, false)
+            .inflate(R.layout.system_status_device_list, parent, false)
         return SingleSysViewHolder(view)
     }
 
@@ -50,7 +49,7 @@ class SingleSysStatusAdapter(private val system : SystemDescription) :
 
         // Pos 0 and 1 are title and description
         if (position >= 2)
-            holder.setUpRecyclerView(system.getSysDevices()[position])
+            holder.setUpRecyclerView(system.getSysDevices()!![position])
     }
 
     override fun getItemCount(): Int {

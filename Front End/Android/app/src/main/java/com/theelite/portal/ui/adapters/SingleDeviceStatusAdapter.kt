@@ -37,7 +37,7 @@ class SingleDeviceStatusAdapter(private var device: DeviceDescription) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceExtraViewHolder {
         view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.system_status_device_list, parent, false)
+            .inflate(R.layout.system_status_single_device, parent, false)
         return DeviceExtraViewHolder(view)
     }
 

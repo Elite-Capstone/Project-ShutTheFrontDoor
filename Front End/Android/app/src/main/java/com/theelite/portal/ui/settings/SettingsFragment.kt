@@ -32,7 +32,7 @@ class SettingsFragment : Fragment(), ClickListener {
         val settingsOptions =
             arrayOf("Account", "Notifications", "Device Status", "Help", "Log Out")
         val settingsOptionsIcons =
-            arrayOf("account", "notification", "ic_baseline_construction_24", "help", "log_out")
+            arrayOf("account", "notification", "dev_status", "help", "log_out")
 
         val settingsAdapter =
             OptionsAdapter(OptionsList.getListOfSettingsOptions(this.context, settingsOptions,
