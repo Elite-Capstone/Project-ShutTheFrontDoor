@@ -67,7 +67,7 @@
                 android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
                 android:contentDescription="@string/system_barcode_name"
-                app:srcCompat="@drawable/template_System_Barcode" />
+                app:srcCompat="@drawable/template_system_barcode" />
 
             <!--            <ImageView-->
 <!--                android:id="@+id/deviceStatusBarcodeImageView"-->
@@ -76,8 +76,8 @@
 <!--                android:layout_gravity="center_horizontal|top"-->
 <!--                android:adjustViewBounds="true"-->
 <!--                android:contentDescription="@string/system_barcode_name"-->
-
 <!--                />-->
+
         </LinearLayout>
     </androidx.cardview.widget.CardView>
 </FrameLayout>
