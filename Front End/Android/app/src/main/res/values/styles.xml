@@ -21,19 +21,9 @@
     </style>
 
     <!-- For action bar in activities-->
-<!--    <style name="AppTheme.WActionBar">-->
-<!--        <item name="windowActionBar">true</item>-->
-<!--&lt;!&ndash;        <item name="actionBarStyle">@android:color/transparent</item>&ndash;&gt;-->
-<!--&lt;!&ndash;        <item name="android:actionBarTheme">@android:color/transparent</item>&ndash;&gt;-->
-<!--        <item name="android:windowDrawsSystemBarBackgrounds">true</item>-->
-<!--        <item name="windowNoTitle">false</item>-->
-<!--        <item name="android:background">@android:color/transparent</item>-->
-<!--        <item name="actionBarWidgetTheme">@android:color/transparent</item>-->
-<!--    </style>-->
-
-
     <style name="AppTheme.WActionBar" parent="Theme.AppCompat.DayNight">
         <item name="android:background">@android:color/transparent</item>
+        <item name="android:statusBarColor">@color/cardview_shadow_start_color</item>
         <item name="android:backgroundStacked">@android:color/transparent</item>
         <item name="android:displayOptions">showTitle</item>
         <item name="android:titleTextStyle">@style/MyTheme.ActionBar.TitleTextStyle</item>
