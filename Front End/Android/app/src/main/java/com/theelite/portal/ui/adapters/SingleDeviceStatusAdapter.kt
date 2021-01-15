@@ -3,6 +3,7 @@ package com.theelite.portal.ui.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -13,25 +14,20 @@ class SingleDeviceStatusAdapter(private var device: DeviceDescription) :
     RecyclerView.Adapter<SingleDeviceStatusAdapter.DeviceExtraViewHolder>() {
 
     private lateinit var view: View
+    private lateinit var tempDevice: DeviceDescription
 
     class DeviceExtraViewHolder(_view: View) : RecyclerView.ViewHolder(_view) {
         val view = _view
-        val deviceTitleTextView: TextView
-        val deviceDescriptionTextView: TextView
-        private lateinit var deviceRecyclerView: RecyclerView
+        lateinit var textView: TextView
+        lateinit var  linLayout: LinearLayout
 
-        init {
-            deviceTitleTextView = view.findViewById(R.id.statusSingleDeviceNameTextView)
-            deviceDescriptionTextView = view.findViewById(R.id.statusSingleDeviceDescTextView)
-        }
-
-        // Used to attach the adapter to the recycler found within each instance
-        fun setUpRecyclerView(device : DeviceDescription) {
-            deviceRecyclerView = view.findViewById(R.id.statusSingleDeviceExtraInfoRecyclerView)
-            deviceRecyclerView.layoutManager =
-                LinearLayoutManager(view.context, RecyclerView.VERTICAL, false)
-
-            deviceRecyclerView.adapter = SingleDeviceStatusAdapter(device)
+        fun addText(text: String) {
+            textView = TextView(view.context)
+            textView.text = text
+            linLayout = view.findViewById(R.id.statusSingleDeviceLinearLayout)
+            linLayout.addView(textView,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT)
         }
     }
 
@@ -42,16 +38,12 @@ class SingleDeviceStatusAdapter(private var device: DeviceDescription) :
     }
 
     override fun onBindViewHolder(holder: DeviceExtraViewHolder, position: Int) {
-        holder.deviceTitleTextView.text = device.getDevName()
-        holder.deviceDescriptionTextView.text = device.getDevDesc()
-
-        // Pos 0 and 1 are name and description
-        //if (position >= 2)
-        //holder.setUpRecyclerView(deviceSet[position])
+        if (position < device.getDevExtra().size)
+            holder.addText(device.getDevExtra()[position])
     }
 
     override fun getItemCount(): Int {
-        return device.getItemCount()
+        return device.getDevExtra().size
     }
 
 }

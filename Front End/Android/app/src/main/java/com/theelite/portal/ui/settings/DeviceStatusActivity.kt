@@ -71,7 +71,7 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     private fun getSmartDoorSystemList(): SystemDescription {
         val singleSys = SystemDescription(
             "Smart Front Door",
-            "Fully operational as of " + System.currentTimeMillis() + " ms since 1970", null
+            "Fully operational as of " + System.currentTimeMillis()/(24*3600*1000) + " days since 1970"
         )
 
         singleSys.addDeviceDesc(

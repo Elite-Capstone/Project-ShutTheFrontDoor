@@ -1,37 +1,20 @@
 package com.theelite.portal.Objects
 
-import com.theelite.portal.R
-import android.content.Context
-import android.media.audiofx.AudioEffect
-
 class SystemDescription(
-    private var sysName: String,
-    private var sysDesc: String?,
-    private var sysDevices: ArrayList<DeviceDescription>?
+    private var sysName: String = "",
+    private var sysDesc: String = "",
+    private var sysDevices: ArrayList<DeviceDescription> = ArrayList()
 ) {
-//    private var sysName: String = ""
-//    private var sysDesc: String = ""
-//    private var sysDevices: ArrayList<DeviceDescription> = ArrayList()
-
-//    constructor(_sysName: String, _sysDesc: String) : this() {
-//        sysName = _sysName
-//        sysDesc = _sysDesc
-//    }
-
-//    constructor(_sysName: String, _sysDesc: String, _sysDevices: ArrayList<DeviceDescription>) :
-//            this(_sysName, _sysDesc) {
-//        sysDevices = _sysDevices
-//    }
 
     fun getSysName(): String {
         return sysName
     }
 
-    fun getSysDesc(): String? {
+    fun getSysDesc(): String {
         return sysDesc
     }
 
-    fun getSysDevices(): ArrayList<DeviceDescription>? {
+    fun getSysDevices(): ArrayList<DeviceDescription> {
         return sysDevices
     }
 
@@ -57,35 +40,33 @@ class SystemDescription(
         sysDevices = _sysDevices
     }
 
-    fun addDeviceDesc(dev: DeviceDescription): ArrayList<DeviceDescription>? {
-        sysDevices?.add(dev)
+    fun addDeviceDesc(dev: DeviceDescription): ArrayList<DeviceDescription> {
+        sysDevices.add(dev)
         return sysDevices
     }
 
-    fun removeDeviceDesc(pos: Int): ArrayList<DeviceDescription>? {
-        sysDevices?.drop(pos)
-        return sysDevices
+    fun popDeviceDesc(): DeviceDescription {
+        val device: DeviceDescription
+        if (sysDevices.isNotEmpty()) {
+            device = sysDevices[0]
+            sysDevices.drop(0)
+        } else {
+            device = DeviceDescription()
+            println("Empty Device Array")
+        }
+        return device
     }
 
     fun getItemCount(): Int {
-        return 2 + if (sysDevices != null) sysDevices!!.size else 0
+        return 2 + sysDevices.size
     }
 }
 
 class DeviceDescription(
     private var devName: String = "",
     private var devDesc: String = "",
-    private var devExtraInfo: ArrayList<String>? = ArrayList()
+    private var devExtraInfo: ArrayList<String> = ArrayList()
 ) {
-//    constructor(_devName: String, _devDesc: String) : this() {
-//        devName = _devName
-//        devDesc = _devDesc
-//    }
-//
-//    constructor(_devName: String, _devDesc: String, _devExtraInfo: ArrayList<String>) :
-//            this(_devName, _devDesc) {
-//        devExtraInfo = _devExtraInfo
-//    }
 
     fun getDevName(): String {
         return devName
@@ -95,7 +76,7 @@ class DeviceDescription(
         return devDesc
     }
 
-    fun getDevExtra(): ArrayList<String>? {
+    fun getDevExtra(): ArrayList<String> {
         return devExtraInfo
     }
 
@@ -121,17 +102,24 @@ class DeviceDescription(
         devExtraInfo = _devExtraInfo
     }
 
-    fun addExtraInfo(info: String): ArrayList<String>? {
-        devExtraInfo?.add(info)
+    fun addExtraInfo(info: String): ArrayList<String> {
+        devExtraInfo.add(info)
         return devExtraInfo
     }
 
-    fun removeExtraInfo(pos: Int): ArrayList<String>? {
-        devExtraInfo?.drop(pos)
-        return devExtraInfo
+    fun popExtraInfo(): String {
+        val extra: String
+        if (devExtraInfo.isNotEmpty()) {
+            extra = devExtraInfo[0]
+            devExtraInfo.drop(0)
+        } else {
+            extra = ""
+            println("Empty Extra Info Array")
+        }
+        return extra
     }
 
     fun getItemCount(): Int {
-        return 2 + if (devExtraInfo != null) devExtraInfo!!.size else 0
+        return 2 + devExtraInfo.size
     }
 }
