@@ -61,14 +61,14 @@
                     android:layout_height="@dimen/button_height"
                     android:layout_marginEnd="@dimen/general_padding"
                     android:layout_marginRight="@dimen/general_padding"
-                    android:background="@color/colorPrimary"
+                    android:background="@color/colorPeekButton"
                     android:text="@string/peek" />
 
                 <Button
                     android:id="@+id/recentNotificationsWActionsDoorButton"
                     android:layout_width="155dp"
                     android:layout_height="@dimen/button_height"
-                    android:background="@color/colorAccent"
+                    android:background="@color/colorDoorButton"
                     android:text="@string/unlock" />
 
             </LinearLayout>

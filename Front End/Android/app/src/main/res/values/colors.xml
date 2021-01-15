@@ -3,4 +3,6 @@
     <color name="colorPrimary">#8D54F4</color>
     <color name="colorPrimaryDark">#6200cc</color>
     <color name="colorAccent">#03DAC5</color>
+    <color name="colorDoorButton">#22AB7B</color>
+    <color name="colorPeekButton">#3272F9</color>
 </resources>
