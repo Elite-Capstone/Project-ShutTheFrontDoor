@@ -1,9 +1,11 @@
 package com.theelite.portal.ui.login
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import com.android.volley.Request
 import com.android.volley.Response
@@ -14,6 +16,7 @@ import com.theelite.portal.R
 import com.theelite.portal.request.BooleanRequest
 import com.theelite.portal.ui.register.RegisterActivity
 import org.json.JSONObject
+import kotlin.random.Random
 
 class LoginActivity : AppCompatActivity() {
     private lateinit var toRegisterButton: Button
@@ -53,7 +56,7 @@ class LoginActivity : AppCompatActivity() {
 //        println("Password is ${loginPasswordTextField.text}")
         val queue = Volley.newRequestQueue(this)
         //TODO refactor all urls in one single place
-        val url = "http://3.131.85.201/api/profile/authenticate"
+        val url = R.string.url
         val params = JSONObject()
         params.put("email", loginEmailTextField.text.toString())
         params.put("password", loginPasswordTextField.text.toString())
@@ -65,7 +68,7 @@ class LoginActivity : AppCompatActivity() {
 //            Request.Method.POST,
 //            url, params.toString(),
 //            Response.Listener { authenticated -> if (authenticated) moveToHomePage() else displayError() },
-//            Response.ErrorListener { error -> println("error happend during get ${error.message}") }
+//            Response.ErrorListener { error -> println("error happened during get ${error.message}") }
 //        )
 //        queue.add(jSonObjectRequest)
         moveToHomePage()
@@ -73,6 +76,13 @@ class LoginActivity : AppCompatActivity() {
 
     private fun moveToHomePage() {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
+        val greeting: String = when (Random(System.currentTimeMillis()).nextInt(3) + 1) {
+            2    -> getString(R.string.login_message2)
+            3    -> getString(R.string.login_message3)
+            else -> getString(R.string.login_message1)
+        }
+        mainActivityIntent.putExtra("Home_Greeting", greeting)
+        println("Login intent argument is : ${mainActivityIntent.extras?.get("Home_Greeting")}")
         startActivity(mainActivityIntent)
         this.finish()
     }

@@ -30,10 +30,30 @@
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:label="@string/app_name" />
+             />
 
-        <activity android:name=".ui.accountSettings.AccountSettings"
+        <!-- Activities within Settings -->
+        <activity android:name=".ui.settings.AccountSettingsActivity"
             android:label="Account Settings"
+            android:theme="@style/AppTheme.WActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity android:name=".ui.settings.NotificationsActivity"
+            android:label="Notifications Settings"
+            android:theme="@style/AppTheme.WActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity android:name=".ui.settings.DeviceStatusActivity"
+            android:label="Device Status Settings"
+            android:theme="@style/AppTheme.WActionBar"
             >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

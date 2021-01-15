@@ -13,7 +13,6 @@ import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.OptionsAdapter
 import com.theelite.portal.ui.OptionsList
 
-import com.theelite.portal.ui.accountSettings.AccountSettings
 import com.theelite.portal.ui.login.LoginActivity
 
 class SettingsFragment : Fragment(), ClickListener {
@@ -30,11 +29,14 @@ class SettingsFragment : Fragment(), ClickListener {
         settingsRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
 
-        val settingsOptions = arrayOf("Account", "Notifications", "Help", "Log Out")
-        val settingsOptionsIcons = arrayOf("account", "notification", "help", "log_out")
+        val settingsOptions =
+            arrayOf("Account", "Notifications", "Device Status", "Help", "Log Out")
+        val settingsOptionsIcons =
+            arrayOf("account", "notification", "dev_status", "help", "log_out")
 
         val settingsAdapter =
-            OptionsAdapter(OptionsList.getListOfSettingsOptions(this.context, settingsOptions, settingsOptionsIcons, this.resources), this)
+            OptionsAdapter(OptionsList.getListOfSettingsOptions(this.context, settingsOptions,
+                settingsOptionsIcons, this.resources), this)
         settingsRecyclerView.adapter = settingsAdapter
         return root
     }
@@ -44,10 +46,16 @@ class SettingsFragment : Fragment(), ClickListener {
         println("Clicked on $name from settings")
         when (name) {
             "Account" -> {
-                val accountIntent = Intent(this.context, AccountSettings::class.java)
+                val accountIntent = Intent(this.context, AccountSettingsActivity::class.java)
                 this.startActivity(accountIntent)
             }
             "Notifications" -> {
+                val intent = Intent(this.context, NotificationsActivity::class.java)
+                this.startActivity(intent)
+            }
+            "Device Status" -> {
+                val intent = Intent(this.context, DeviceStatusActivity::class.java)
+                this.startActivity(intent)
             }
             "Log Out" -> {
                 val intent = Intent(this.context, LoginActivity::class.java)

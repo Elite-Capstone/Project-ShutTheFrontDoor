@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.theelite.portal.R
+import com.theelite.portal.ui.adapters.RecentNotificationsAdapter
 
 class NotificationsFragment : Fragment() {
 
@@ -28,7 +29,6 @@ class NotificationsFragment : Fragment() {
         setUpRefreshLayout()
         return root
     }
-
 
     //TODO: Allow user to fetch new notifications
     private fun setUpRefreshLayout() {
