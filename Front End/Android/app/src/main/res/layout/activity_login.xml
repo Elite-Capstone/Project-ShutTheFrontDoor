@@ -8,7 +8,9 @@
         android:id="@+id/loginTitleLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="25dp"
+        android:layout_marginStart="40dp"
+        android:layout_marginLeft="40dp"
+        android:layout_marginTop="40dp"
         android:text="@string/login"
         android:textAppearance="@style/TextAppearance.AppCompat.Display1"
         app:layout_constraintTop_toTopOf="parent" />
@@ -97,6 +99,7 @@
             style="@style/Widget.MaterialComponents.Button.TextButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
             android:layout_marginLeft="5dp"
             android:text="@string/register"
             android:textAppearance="@style/TextAppearance.MaterialComponents.Caption"
@@ -105,8 +108,7 @@
             app:layout_constraintBaseline_toBaselineOf="@+id/newUserLoginLabel"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
-            app:layout_constraintStart_toEndOf="@+id/newUserLoginLabel"
-            android:layout_marginStart="5dp" />
+            app:layout_constraintStart_toEndOf="@+id/newUserLoginLabel" />
     </LinearLayout>
 
 

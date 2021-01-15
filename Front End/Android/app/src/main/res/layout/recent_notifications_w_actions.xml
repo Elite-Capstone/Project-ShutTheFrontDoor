@@ -2,7 +2,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="15dp"
+    android:layout_marginLeft="@dimen/general_padding"
+    android:layout_marginRight="@dimen/general_padding"
+    android:layout_marginTop="@dimen/general_padding"
     android:background="?android:attr/selectableItemBackground"
     android:gravity="center_vertical">
 
@@ -26,7 +28,7 @@
                 android:layout_marginTop="5dp"
                 android:text="@string/title_notifications"
                 android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-                android:textSize="24sp" />
+                android:textSize="@dimen/card_title_size" />
 
             <TextView
                 android:id="@+id/recentNotificationsWActionsDescriptionLabel"
@@ -35,7 +37,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/random_description"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textSize="18sp" />
+                android:textSize="@dimen/card_subtitle_size" />
 
             <TextView
                 android:id="@+id/recentNotificationsWActionsDateLabel"
@@ -44,7 +46,7 @@
                 android:layout_marginTop="10dp"
                 android:paddingBottom="13dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textSize="16sp" />
+                android:textSize="@dimen/card_body_size" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -59,14 +61,14 @@
                     android:layout_height="@dimen/button_height"
                     android:layout_marginEnd="@dimen/general_padding"
                     android:layout_marginRight="@dimen/general_padding"
-                    android:background="@color/colorPrimary"
+                    android:background="@color/colorPeekButton"
                     android:text="@string/peek" />
 
                 <Button
                     android:id="@+id/recentNotificationsWActionsDoorButton"
                     android:layout_width="155dp"
                     android:layout_height="@dimen/button_height"
-                    android:background="@color/colorAccent"
+                    android:background="@color/colorDoorButton"
                     android:text="@string/unlock" />
 
             </LinearLayout>
