@@ -1,7 +1,8 @@
 <resources>
     <!-- Default screen margins -->
     <dimen name="activity_horizontal_margin">16dp</dimen>
-    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">35dp</dimen>
+    <dimen name="recycler_view_margin_top">65dp</dimen>
     <dimen name="button_height">35dp</dimen>
     <dimen name="general_padding">15dp</dimen>
     <dimen name="card_horizontal_padding">10dp</dimen>
@@ -10,10 +11,10 @@
     <dimen name="scrollbar_size">4dp</dimen>
 
     <!-- Default text sizes -->
-    <dimen name="card_title_size">24sp</dimen>
+    <dimen name="card_title_size">20sp</dimen>
     <dimen name="card_title_size_float">24.0</dimen>
-    <dimen name="card_subtitle_size">18sp</dimen>
+    <dimen name="card_subtitle_size">16sp</dimen>
     <dimen name="card_subtitle_size_float">18.0</dimen>
-    <dimen name="card_body_size">14sp</dimen>
+    <dimen name="card_body_size">16sp</dimen>
     <dimen name="card_body_size_float">14.0</dimen>
 </resources>

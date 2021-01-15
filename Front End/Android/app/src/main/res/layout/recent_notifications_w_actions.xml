@@ -26,7 +26,7 @@
                 android:layout_marginTop="5dp"
                 android:text="@string/title_notifications"
                 android:textAppearance="@style/TextAppearance.AppCompat.Display1"
-                android:textSize="24sp" />
+                android:textSize="@dimen/card_title_size" />
 
             <TextView
                 android:id="@+id/recentNotificationsWActionsDescriptionLabel"
@@ -35,7 +35,7 @@
                 android:layout_marginTop="10dp"
                 android:text="@string/random_description"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textSize="18sp" />
+                android:textSize="@dimen/card_subtitle_size" />
 
             <TextView
                 android:id="@+id/recentNotificationsWActionsDateLabel"
@@ -44,7 +44,7 @@
                 android:layout_marginTop="10dp"
                 android:paddingBottom="13dp"
                 android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textSize="16sp" />
+                android:textSize="@dimen/card_body_size" />
 
             <LinearLayout
                 android:layout_width="match_parent"
