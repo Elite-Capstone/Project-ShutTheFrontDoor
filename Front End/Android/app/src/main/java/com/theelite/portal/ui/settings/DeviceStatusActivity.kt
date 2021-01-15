@@ -54,6 +54,7 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     private fun getConnectedDevices(): ArrayList<SystemDescription> {
         val systems = ArrayList<SystemDescription>()
         systems.add(getSmartDoorSystemList())
+        systems.add(getSmartDoorSystemList())
         return systems
     }
 
@@ -74,9 +75,11 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
             "Fully operational as of " + System.currentTimeMillis()/(24*3600*1000) + " days since 1970"
         )
 
-        singleSys.addDeviceDesc(
-            DeviceDescription(getString(R.string.battery_device_name), "100%")
-        )
+        val device = DeviceDescription(getString(R.string.battery_device_name), "100%")
+        device.getDevExtra().add("Battery Full")
+        device.getDevExtra().add("Battery Life: 80%")
+        singleSys.addDeviceDesc(device)
+
         singleSys.addDeviceDesc(
             DeviceDescription(
                 getString(R.string.camera_device_name),

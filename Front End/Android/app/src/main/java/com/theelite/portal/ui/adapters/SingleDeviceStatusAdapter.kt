@@ -14,7 +14,6 @@ class SingleDeviceStatusAdapter(private var device: DeviceDescription) :
     RecyclerView.Adapter<SingleDeviceStatusAdapter.DeviceExtraViewHolder>() {
 
     private lateinit var view: View
-    private lateinit var tempDevice: DeviceDescription
 
     class DeviceExtraViewHolder(_view: View) : RecyclerView.ViewHolder(_view) {
         val view = _view
@@ -24,7 +23,7 @@ class SingleDeviceStatusAdapter(private var device: DeviceDescription) :
         fun addText(text: String) {
             textView = TextView(view.context)
             textView.text = text
-            linLayout = view.findViewById(R.id.statusSingleDeviceLinearLayout)
+            linLayout = view.findViewById(R.id.statusDeviceListLinearLayout)
             linLayout.addView(textView,
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -33,7 +32,7 @@ class SingleDeviceStatusAdapter(private var device: DeviceDescription) :
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DeviceExtraViewHolder {
         view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.system_status_single_device, parent, false)
+            .inflate(R.layout.system_status_device_list, parent, false)
         return DeviceExtraViewHolder(view)
     }
 
