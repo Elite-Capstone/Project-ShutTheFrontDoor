@@ -3,11 +3,12 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">35dp</dimen>
     <dimen name="recycler_view_margin_top">65dp</dimen>
+    <dimen name="recycler_view_margin_bottom">55dp</dimen>
     <dimen name="button_height">35dp</dimen>
     <dimen name="general_padding">15dp</dimen>
     <dimen name="card_horizontal_padding">10dp</dimen>
     <dimen name="card_vertical_padding">5dp</dimen>
-    <dimen name="activity_card_corner_radius">2dp</dimen>
+    <dimen name="activity_card_corner_radius">4dp</dimen>
     <dimen name="scrollbar_size">4dp</dimen>
 
     <!-- Default text sizes -->
