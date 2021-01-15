@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="@dimen/general_padding"
+    android:layout_marginRight="@dimen/general_padding"
+    android:layout_marginTop="@dimen/general_padding"
+    android:background="?android:attr/selectableItemBackground"
+    android:gravity="center_vertical">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbarSize="@dimen/scrollbar_size"
+        app:cardCornerRadius="@dimen/activity_card_corner_radius">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/general_padding"
+            android:paddingLeft="@dimen/general_padding"
+            android:paddingEnd="15dp"
+            android:paddingRight="15dp">
+
+            <TextView
+                android:id="@+id/recentNotificationsNoActionsTitleLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/card_vertical_padding"
+                android:text="@string/title_notifications"
+                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:textSize="@dimen/card_title_size" />
+
+            <TextView
+                android:id="@+id/recentNotificationsNoActionsDescriptionLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/card_vertical_padding"
+                android:text="@string/random_description"
+                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textSize="@dimen/card_subtitle_size" />
+
+            <TextView
+                android:id="@+id/recentNotificationsNoActionsDateLabel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/card_vertical_padding"
+                android:paddingBottom="@dimen/card_vertical_padding"
+                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+                android:textSize="@dimen/card_body_size" />
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+</FrameLayout>
