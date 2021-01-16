@@ -24,13 +24,18 @@ public class UserController {
         return userService.authenticateUser(user);
     }
 
+    @PostMapping("/role/{role}")
+    public boolean updateUserRole(@RequestBody User user, @PathVariable int role) {
+        return userService.modifyUserRole(user, role);
+    }
+
     @DeleteMapping("/")
     public boolean deleteUser(@RequestBody User user) {
         return userService.deleteUser(user);
     }
 
     @GetMapping("/")
-    public User getUserWithEmail(@RequestBody User user){
+    public User getUserWithEmail(@RequestBody User user) {
         return userService.getUserWithEmail(user.getEmail());
     }
 }

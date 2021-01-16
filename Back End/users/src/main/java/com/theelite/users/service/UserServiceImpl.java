@@ -2,6 +2,7 @@ package com.theelite.users.service;
 
 import com.theelite.users.dao.UserDao;
 import com.theelite.users.model.User;
+import com.theelite.users.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -41,5 +42,22 @@ public class UserServiceImpl implements UserService {
     public User getUserWithEmail(String email) {
         if (userDao.userExistsWithEmail(email)) return userDao.findById(email).get();
         else return null;
+    }
+
+    @Override
+    public boolean modifyUserRole(User user, int role) {
+        if (!userDao.userExistsWithEmail(user.getEmail())) return false;
+        switch (role) {
+            case 0:
+                userDao.updateUserRole(user.getEmail(), UserRole.Admin);
+                break;
+            case 2:
+                userDao.updateUserRole(user.getEmail(), UserRole.Guest);
+                break;
+            default:
+                userDao.updateUserRole(user.getEmail(), UserRole.Regular);
+                break;
+        }
+        return true;
     }
 }
