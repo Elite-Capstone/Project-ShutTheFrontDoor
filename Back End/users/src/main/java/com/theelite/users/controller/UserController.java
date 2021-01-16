@@ -54,7 +54,7 @@ public class UserController {
         return userService.removeUserFromAccount(user.getEmail());
     }
 
-    @GetMapping("/")
+    @PostMapping("/get")
     public User getUserWithEmail(@RequestBody User user) {
         return userService.getUserWithEmail(user.getEmail());
     }
