@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.UUID;
+
 public class CustomDaoImpl implements CustomDao {
     private final MongoOperations mongoOperations;
 
@@ -24,8 +26,10 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
-    public void updateUserEmail(String user, String newEmail) {
-
+    public void updateUserInfo(User user) {
+        Query query = new Query().addCriteria(Criteria.where("email").is(user.getEmail()));
+        Update update = new Update().set("firstName", user.getFirstName()).set("lastName", user.getLastName());
+        mongoOperations.findAndModify(query, update, User.class);
     }
 
     @Override
@@ -39,6 +43,13 @@ public class CustomDaoImpl implements CustomDao {
         query.addCriteria(Criteria.where("email").is(user));
         Update update = new Update();
         update.set("role", userRole);
+        mongoOperations.findAndModify(query, update, User.class);
+    }
+
+    @Override
+    public void updateUserAccount(String user, UUID accountId) {
+        Query query = new Query().addCriteria(Criteria.where("email").is(user));
+        Update update = new Update().set("accountId", accountId);
         mongoOperations.findAndModify(query, update, User.class);
     }
 }

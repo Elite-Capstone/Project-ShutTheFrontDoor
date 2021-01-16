@@ -9,6 +9,8 @@ public interface UserService {
 
     boolean authenticateUser(User user);
 
+    boolean updateUserInfo(User user);
+
     boolean deleteUser(User user);
 
     User getUserWithEmail(String email);
@@ -18,5 +20,7 @@ public interface UserService {
     boolean inviteUserToAccount(Invitation invitation);
 
     boolean cancelUserInvitation(Invitation invitation);
+
+    boolean removeUserFromAccount(String user);
 
 }

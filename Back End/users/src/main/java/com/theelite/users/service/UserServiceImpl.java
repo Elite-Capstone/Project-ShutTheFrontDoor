@@ -73,6 +73,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean inviteUserToAccount(Invitation invitation) {
+        if (userDao.userExistsWithEmail(invitation.getReceiverEmail())) {
+            userDao.updateUserAccount(invitation.getReceiverEmail(), invitation.getAccountId());
+            return true;
+        }
         if (getInvitationForUser(invitation.getReceiverEmail()) != null) return false;
         //TODO: Send email to targeted user :)
         return invitations.add(invitation);
@@ -83,11 +87,25 @@ public class UserServiceImpl implements UserService {
         return invitations.remove(invitation);
     }
 
+    @Override
+    public boolean removeUserFromAccount(String user) {
+        if (!userDao.userExistsWithEmail(user)) return false;
+        userDao.updateUserAccount(user, null);
+        return true;
+    }
+
     private Invitation getInvitationForUser(String email) {
         if (invitations.isEmpty()) return null;
         for (Invitation invitation : invitations) {
             if (invitation.getReceiverEmail().equals(email)) return invitation;
         }
         return null;
+    }
+
+    @Override
+    public boolean updateUserInfo(User user) {
+        if (!userDao.userExistsWithEmail(user.getEmail())) return false;
+        userDao.updateUserInfo(user);
+        return true;
     }
 }
