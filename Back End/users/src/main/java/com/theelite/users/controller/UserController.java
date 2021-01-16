@@ -1,6 +1,7 @@
 package com.theelite.users.controller;
 
 
+import com.theelite.users.model.Account;
 import com.theelite.users.model.User;
 import com.theelite.users.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,5 +29,8 @@ public class UserController {
         return userService.deleteUser(user);
     }
 
-
+    @GetMapping("/")
+    public User getUserWithEmail(@RequestBody User user){
+        return userService.getUserWithEmail(user.getEmail());
+    }
 }

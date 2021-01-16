@@ -7,5 +7,6 @@ public interface UserService {
     boolean addUser(User user);
     boolean authenticateUser(User user);
     boolean deleteUser(User user);
+    User getUserWithEmail(String email);
 
 }
