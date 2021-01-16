@@ -2,6 +2,7 @@ package com.theelite.users.controller;
 
 
 import com.theelite.users.model.Account;
+import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,16 @@ public class UserController {
     @DeleteMapping("/")
     public boolean deleteUser(@RequestBody User user) {
         return userService.deleteUser(user);
+    }
+
+    @DeleteMapping("/cancelInvitation")
+    public boolean cancelInvitation(@RequestBody Invitation invitation){
+        return userService.cancelUserInvitation(invitation);
+    }
+
+    @PostMapping("/invite")
+    public boolean inviteUser(@RequestBody Invitation invitation){
+        return userService.inviteUserToAccount(invitation);
     }
 
     @GetMapping("/")
