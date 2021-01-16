@@ -208,5 +208,5 @@ hs_err_pid*
 nodes_modules/
 
 Front End/Web/Portal/.vscode/
-
+*.mvn/
 *.idea/
