@@ -18,6 +18,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean addUser(User user) {
         if (userDao.userExistsWithEmail(user.getEmail())) return false;
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
         return true;
     }
@@ -26,7 +27,7 @@ public class UserServiceImpl implements UserService {
     public boolean authenticateUser(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
         User savedUserInfo = userDao.findById(user.getEmail()).get();
-        return passwordEncoder.matches(savedUserInfo.getPassword(), user.getPassword());
+        return passwordEncoder.matches(user.getPassword(), savedUserInfo.getPassword());
     }
 
     @Override

@@ -18,7 +18,7 @@ public class UserController {
         return userService.addUser(user);
     }
 
-    @GetMapping("/auth")
+    @PostMapping("/auth")
     public boolean authenticateUser(@RequestBody User user) {
         return userService.authenticateUser(user);
     }
