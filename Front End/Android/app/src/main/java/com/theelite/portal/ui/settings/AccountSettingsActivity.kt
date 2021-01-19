@@ -24,8 +24,8 @@ class AccountSettingsActivity : AppCompatActivity(), ClickListener {
         recyclerView = findViewById(R.id.accountSettingsRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val accountSettingsOptions = arrayOf("Profile", "Users")
-        val accountSettingsOptionsIcon = arrayOf("account", "users")
+        val accountSettingsOptions = arrayOf("Profile", "Password","Users", "Delete your account")
+        val accountSettingsOptionsIcon = arrayOf("account", "password","users", "delete_acc")
 
         val optionsAdapter = OptionsAdapter(
             OptionsList.getListOfSettingsOptions(
