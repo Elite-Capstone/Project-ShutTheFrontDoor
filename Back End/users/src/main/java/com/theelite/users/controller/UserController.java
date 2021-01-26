@@ -14,6 +14,8 @@ public class UserController {
     @Autowired
     private UserServiceImpl userService;
 
+
+
     @PutMapping("/new")
     public boolean addNewUser(@RequestBody User user) {
         return userService.addUser(user);
