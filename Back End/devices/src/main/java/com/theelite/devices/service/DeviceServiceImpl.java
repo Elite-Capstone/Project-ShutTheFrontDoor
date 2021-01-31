@@ -26,11 +26,14 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public boolean deleteDevice(Device device) {
+        deviceDao.deleteById(device.getDeviceId());
         return true;
     }
 
+
     @Override
     public boolean changeDeviceName(Device device) {
+        deviceDao.changeDeviceName(device);
         return true;
     }
 

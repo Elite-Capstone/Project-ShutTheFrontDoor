@@ -13,11 +13,9 @@ public class DeviceController {
     private DeviceServiceImpl DeviceService;
 
     @PutMapping("/new")
-    public boolean addNewDevice(@RequestBody Device device) {
-        return DeviceService.addNewDevice(device);
-    }
+    public boolean addNewDevice(@RequestBody Device device) { return DeviceService.addNewDevice(device); }
 
-    @PutMapping("/updateName")
+    @PostMapping("/updateName")
     public boolean changeDeviceName(@RequestBody Device device) {
         return DeviceService.changeDeviceName(device);
     }

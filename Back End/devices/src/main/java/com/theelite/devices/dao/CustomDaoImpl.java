@@ -1,7 +1,6 @@
 package com.theelite.devices.dao;
 
 import com.theelite.devices.model.Device;
-import com.theelite.devices.model.Device;
 import com.theelite.devices.model.DeviceType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -28,13 +27,11 @@ public class CustomDaoImpl implements CustomDao {
     }
 
 
-    public boolean changeDeviceName(Device device){
-        return false;
+    public void changeDeviceName(Device device){
+        Query query = new Query().addCriteria(Criteria.where("deviceId").is(device.getDeviceId()));
+        Update update = new Update().set("deviceName", device.getDeviceName());
+        mongoOperations.findAndModify(query, update, Device.class);
     }
 
-
-    public String getDeviceName(Device device){
-        return null;
-    }
 
 }

@@ -8,6 +8,5 @@ import java.util.UUID;
 public interface CustomDao {
 
     boolean deviceExistsWithId(String id);
-    boolean changeDeviceName(Device device);
-    String getDeviceName(Device device);
+    void changeDeviceName(Device device);
 }
