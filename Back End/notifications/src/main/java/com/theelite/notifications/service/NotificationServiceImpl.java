@@ -41,6 +41,7 @@ public class NotificationServiceImpl implements NotificationService {
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(accountId, userId, bootStrapServer));
         consumer.subscribe(Collections.singleton(topic));
         ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+        consumer.commitAsync();
         List<Notification> notifications = new ArrayList<>();
         for (ConsumerRecord<String, String> r : records) {
             notifications.add(new Notification(r.value(), new Date(), UUID.fromString(topic), UUID.fromString(accountId)));
