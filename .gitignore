@@ -212,3 +212,7 @@ Front End/Web/Portal/.vscode/
 *.idea/
 
 Back End/users/target/
+
+Back End/notifications/src/main/resources/application.properties
+
+Back End/notifications/target/
