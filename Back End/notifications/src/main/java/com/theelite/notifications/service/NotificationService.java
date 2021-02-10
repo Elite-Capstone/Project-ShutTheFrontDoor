@@ -1,19 +1,17 @@
 package com.theelite.notifications.service;
 
 import com.theelite.notifications.model.Notification;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
 
 //@Service
 public interface NotificationService {
     String getHealth();
-    List<Notification> getRecentNotifications(UUID accountId, UUID userId);
+    List<Notification> getRecentNotifications(String accountId, String userId);
     boolean publishNotification(Notification notification);
-    boolean addNewDoorIdAsTopic(UUID doorId);
-    boolean deleteDoorIdAsTopic(UUID doorId);
+    boolean addNewDoorIdAsTopic(String doorId);
+    boolean deleteDoorIdAsTopic(String doorId);
+    boolean createConsumerGroup(String accId);
+    boolean deleteConsumerGroup(String accId);
     List<String> getKafkaTopics();
 }
