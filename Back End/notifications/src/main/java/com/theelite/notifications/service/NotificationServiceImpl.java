@@ -36,7 +36,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notification> getRecentNotifications(String accountId, String userId) {
-        //TODO implement
+        //TODO retrieve notification as pojo
         String topic = "00b288a8-3db1-40b5-b30f-532af4e12f4b";
         KafkaConsumer<String, String> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(accountId, userId, bootStrapServer));
         consumer.subscribe(Collections.singleton(topic));
@@ -52,7 +52,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public boolean publishNotification(Notification notification) {
-        // TODO Implement
+        // TODO publish notification as pojo
         KafkaProducer<String, String> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
         producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification.getNotification()));
         producer.close();

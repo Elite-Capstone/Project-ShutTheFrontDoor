@@ -59,7 +59,7 @@ public class NotificationConfigurations {
 
 
     public static Properties getConsumerProps(String clientId, String consumerGroup, String bootstrapServer) {
-
+        // TODO deserializer for java object
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.setProperty("group.id", consumerGroup);
@@ -72,6 +72,7 @@ public class NotificationConfigurations {
     }
 
     public static Properties getProducerProps(String bootstrapServer){
+        //TODO serializer for java object
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
