@@ -210,3 +210,7 @@ nodes_modules/
 Front End/Web/Portal/.vscode/
 *.mvn/
 *.idea/
+
+Hardware/ESP-IDF-Repo/esp32-camera
+
+Hardware/ESP-IDF-Repo/esp-idf

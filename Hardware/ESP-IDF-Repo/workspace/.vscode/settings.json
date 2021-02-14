@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "sdkconfig.h": "c",
+        "freertos.h": "c"
+    }
+}
