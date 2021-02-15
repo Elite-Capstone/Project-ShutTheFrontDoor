@@ -14,6 +14,11 @@ public class UserController {
     @Autowired
     private UserServiceImpl userService;
 
+    @GetMapping("/")
+    public String pong(){
+        return "Pong !!!\nBut App is reachable ;)";
+    }
+
     @PutMapping("/new")
     public boolean addNewUser(@RequestBody User user) {
         return userService.addUser(user);
