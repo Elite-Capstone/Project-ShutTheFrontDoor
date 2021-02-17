@@ -2,13 +2,13 @@ menu "Example Configuration"
 
     config EXAMPLE_WIFI_SSID
         string "WiFi SSID"
-        default "NETGEAR30"
+        default "Enter SSID"
         help
             SSID (network name) for the example to connect to.
 
     config EXAMPLE_WIFI_PASSWORD
         string "WiFi Password"
-        default "deepkayak849"
+        default "Enter Password"
         help
             WiFi password (WPA or WPA2) for the example to use.
 

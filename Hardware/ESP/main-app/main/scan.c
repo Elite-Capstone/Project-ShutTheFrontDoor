@@ -18,9 +18,65 @@
 #include "esp_event.h"
 #include "nvs_flash.h"
 
-#define DEFAULT_SCAN_LIST_SIZE CONFIG_EXAMPLE_SCAN_LIST_SIZE
+/* Set the SSID and Password via project configuration, or can set directly here */
+#define DEFAULT_SCAN_LIST_SIZE CONFIG_SCAN_LIST_SIZE
+
+#define DEFAULT_SSID CONFIG_WIFI_SSID
+#define DEFAULT_PWD CONFIG_WIFI_PASSWORD
+
+#if CONFIG_WIFI_ALL_CHANNEL_SCAN_CONNECT
+#define DEFAULT_SCAN_METHOD WIFI_ALL_CHANNEL_SCAN
+#define AUTO_CONNECT 1
+#elif CONFIG_WIFI_FAST_SCAN
+#define DEFAULT_SCAN_METHOD WIFI_FAST_SCAN
+#define AUTO_CONNECT 1
+#elif CONFIG_WIFI_ALL_CHANNEL_SCAN_SHOW
+#define DEFAULT_SCAN_METHOD WIFI_ALL_CHANNEL_SCAN
+#define AUTO_CONNECT 0
+#else
+#define DEFAULT_SCAN_METHOD WIFI_FAST_SCAN
+#endif /*CONFIG_SCAN_METHOD*/
+
+#if CONFIG_WIFI_CONNECT_AP_BY_SIGNAL
+#define DEFAULT_SORT_METHOD WIFI_CONNECT_AP_BY_SIGNAL
+#elif CONFIG_WIFI_CONNECT_AP_BY_SECURITY
+#define DEFAULT_SORT_METHOD WIFI_CONNECT_AP_BY_SECURITY
+#else
+#define DEFAULT_SORT_METHOD WIFI_CONNECT_AP_BY_SIGNAL
+#endif /*CONFIG_SORT_METHOD*/
+
+#if CONFIG_FAST_SCAN_THRESHOLD
+#define DEFAULT_RSSI CONFIG_FAST_SCAN_MINIMUM_SIGNAL
+#if CONFIG_FAST_SCAN_WEAKEST_AUTHMODE_OPEN
+#define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
+#elif CONFIG_FAST_SCAN_WEAKEST_AUTHMODE_WEP
+#define DEFAULT_AUTHMODE WIFI_AUTH_WEP
+#elif CONFIG_FAST_SCAN_WEAKEST_AUTHMODE_WPA
+#define DEFAULT_AUTHMODE WIFI_AUTH_WPA_PSK
+#elif CONFIG_FAST_SCAN_WEAKEST_AUTHMODE_WPA2
+#define DEFAULT_AUTHMODE WIFI_AUTH_WPA2_PSK
+#else
+#define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
+#endif
+#else
+#define DEFAULT_RSSI -127
+#define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
+#endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
 static const char *TAG = "scan";
+
+static void event_handler(void* arg, esp_event_base_t event_base,
+                                int32_t event_id, void* event_data)
+{
+    if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
+        esp_wifi_connect();
+    } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        esp_wifi_connect();
+    } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+    }
+}
 
 static void print_auth_mode(int authmode)
 {
@@ -106,8 +162,8 @@ static void print_cipher_type(int pairwise_cipher, int group_cipher)
     }
 }
 
-/* Initialize Wi-Fi as sta and set scan method */
-static void wifi_scan(void)
+/* Initialize Wi-Fi as sta and set scan method. Return wifi list*/
+static wifi_ap_record_t wifi_scan(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -129,6 +185,7 @@ static void wifi_scan(void)
     ESP_ERROR_CHECK(esp_wifi_scan_get_ap_num(&ap_count));
     ESP_LOGI(TAG, "Total APs scanned = %u", ap_count);
     for (int i = 0; (i < DEFAULT_SCAN_LIST_SIZE) && (i < ap_count); i++) {
+        // Log Info
         ESP_LOGI(TAG, "SSID \t\t%s", ap_info[i].ssid);
         ESP_LOGI(TAG, "RSSI \t\t%d", ap_info[i].rssi);
         print_auth_mode(ap_info[i].authmode);
@@ -138,10 +195,50 @@ static void wifi_scan(void)
         ESP_LOGI(TAG, "Channel \t\t%d\n", ap_info[i].primary);
     }
 
+    return ap_info;
+
+}
+
+/* Initialize Wi-Fi as sta and set scan method 
+   The ESP connects to the AP with matching SSID and Password */
+static void fast_scan(void)
+{
+    ESP_ERROR_CHECK(esp_netif_init());
+    ESP_ERROR_CHECK(esp_event_loop_create_default());
+
+    wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
+    ESP_ERROR_CHECK(esp_wifi_init(&cfg));
+
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, NULL));
+
+    // Initialize default station as network interface instance (esp-netif)
+    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
+    assert(sta_netif);
+
+    // Initialize and start WiFi
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = DEFAULT_SSID,
+            .password = DEFAULT_PWD,
+            .scan_method = DEFAULT_SCAN_METHOD,
+            .sort_method = DEFAULT_SORT_METHOD,
+            .threshold.rssi = DEFAULT_RSSI,
+            .threshold.authmode = DEFAULT_AUTHMODE,
+        },
+    };
+    // Log output
+    ESP_LOGI(TAG, "Connected to SSID \t\t%s", DEFAULT_SSID);
+
+    ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
+    ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_start());
 }
 
 void app_main(void)
 {
+    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
+
     // Initialize NVS
     esp_err_t ret = nvs_flash_init();
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
@@ -150,5 +247,12 @@ void app_main(void)
     }
     ESP_ERROR_CHECK( ret );
 
-    wifi_scan();
+    if (DEFAULT_SCAN_METHOD == WIFI_FAST_SCAN) {
+        fast_scan();
+    }
+    else { //WIFI_ALL_CHANNEL_SCAN:
+        ap_info = wifi_scan();
+        // TODO: Send list to BlueTooth connected user
+        // Set the default wifi to the returned selection from the user
+    }
 }
