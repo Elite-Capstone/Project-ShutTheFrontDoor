@@ -1,14 +1,14 @@
-/* Scan Example
-
-   This example code is in the Public Domain (or CC0 licensed, at your option.)
-
-   Unless required by applicable law or agreed to in writing, this
-   software is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
-   CONDITIONS OF ANY KIND, either express or implied.
-*/
-
 /*
-    This example shows how to scan for available set of APs.
+    Project:    ShutTheFrontDoor
+    File:       scan.c
+    Author:     Benjamin Lanthier
+    Date:       18/02/2021
+
+    Desc:       File describing the top-level Wifi configurations and modes of Access Point (AP) detection.
+                Two main methods of scanning are programmed in ESP32: Fast Scan and All Channel Scan. The
+                Fast Scan connects the device to the first AP that meets the requirements (such as SSID and
+                Security level), while the All Channel Scan collects all the available channels and returns
+                the list as an object.
 */
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -17,6 +17,9 @@
 #include "esp_log.h"
 #include "esp_event.h"
 #include "nvs_flash.h"
+
+// Header file
+#include "scan.h"
 
 /* Set the SSID and Password via project configuration, or can set directly here */
 #define DEFAULT_SCAN_LIST_SIZE CONFIG_SCAN_LIST_SIZE
@@ -233,26 +236,4 @@ static void fast_scan(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
-}
-
-void app_main(void)
-{
-    wifi_ap_record_t ap_info[DEFAULT_SCAN_LIST_SIZE];
-
-    // Initialize NVS
-    esp_err_t ret = nvs_flash_init();
-    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-        ESP_ERROR_CHECK(nvs_flash_erase());
-        ret = nvs_flash_init();
-    }
-    ESP_ERROR_CHECK( ret );
-
-    if (DEFAULT_SCAN_METHOD == WIFI_FAST_SCAN) {
-        fast_scan();
-    }
-    else { //WIFI_ALL_CHANNEL_SCAN:
-        ap_info = wifi_scan();
-        // TODO: Send list to BlueTooth connected user
-        // Set the default wifi to the returned selection from the user
-    }
 }
