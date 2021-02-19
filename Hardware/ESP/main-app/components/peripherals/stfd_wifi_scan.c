@@ -11,12 +11,12 @@
                 the list as an object.
 */
 #include <string.h>
+#include <esp_wifi.h>
+#include <esp_event.h>
+#include <nvs_flash.h>
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
-#include "esp_wifi.h"
-#include "esp_log.h"
-#include "esp_event.h"
-#include "nvs_flash.h"
 
 #include "stfd_peripherals.h"
 
@@ -65,21 +65,17 @@
 #define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
 #endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
-static const char *TAG = "scan";
+static const char *TAG = "stfd_wifi_scan";
                 
-uint32_t getDefaultScanListSize(void)
-{
+uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
 }
 
-wifi_scan_method_t getDefaultScanMethod(void)
-{
+wifi_scan_method_t getDefaultScanMethod(void) {
     return DEFAULT_SCAN_METHOD;
 }
 
-void event_handler(void* arg, esp_event_base_t event_base,
-                                int32_t event_id, void* event_data)
-{
+void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
@@ -90,8 +86,7 @@ void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-void print_auth_mode(int authmode)
-{
+void print_auth_mode(int authmode) {
     switch (authmode) {
     case WIFI_AUTH_OPEN:
         ESP_LOGI(TAG, "Authmode \tWIFI_AUTH_OPEN");
@@ -123,8 +118,7 @@ void print_auth_mode(int authmode)
     }
 }
 
-void print_cipher_type(int pairwise_cipher, int group_cipher)
-{
+void print_cipher_type(int pairwise_cipher, int group_cipher) {
     switch (pairwise_cipher) {
     case WIFI_CIPHER_TYPE_NONE:
         ESP_LOGI(TAG, "Pairwise Cipher \tWIFI_CIPHER_TYPE_NONE");
@@ -175,8 +169,7 @@ void print_cipher_type(int pairwise_cipher, int group_cipher)
 }
 
 /* Initialize Wi-Fi as sta and set scan method. Return wifi list*/
-wifi_ap_record_t* wifi_scan(void)
-{
+wifi_ap_record_t* wifi_all_ch_scan(void) {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
     esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
@@ -208,13 +201,13 @@ wifi_ap_record_t* wifi_scan(void)
     }
 
     return ap_info;
-
 }
 
 /* Initialize Wi-Fi as sta and set scan method 
    The ESP connects to the AP with matching SSID and Password */
-void fast_scan(void)
-{
+wifi_ap_record_t* fast_scan(void) {
+    wifi_ap_record_t ap_info;
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
@@ -239,10 +232,41 @@ void fast_scan(void)
             .threshold.authmode = DEFAULT_AUTHMODE,
         },
     };
+    ap_info.ssid = DEFAULT_SSID;
+    ap_info.rssi = DEFAULT_RSSI;
+    ap_info.authmode = DEFAULT_AUTHMODE;
+
     // Log output
-    ESP_LOGI(TAG, "Connected to SSID \t\t%s", DEFAULT_SSID);
+    ESP_LOGI(TAG, "Fast Scan - Connected to SSID \t\t%s", DEFAULT_SSID);
 
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    return &ap_info;
+}
+
+wifi_ap_record_t* wifi_scan() {
+    wifi_ap_record_t* ap_info;
+
+    // Initialize NVS
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK( ret );
+
+    if (getDefaultScanMethod() == WIFI_FAST_SCAN) {
+        ap_info = fast_scan();
+        gpio_blink_output(2);
+    }
+    else { //WIFI_ALL_CHANNEL_SCAN:
+        ap_info = wifi_all_ch_scan();
+        gpio_blink_output(3)
+        // TODO: Send list to BlueTooth connected user
+        // Set the default wifi to the returned selection from the user
+    }
+
+    return ap_info;
 }

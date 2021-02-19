@@ -10,7 +10,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <esp_event.h>
-#include <esp_log.h>
 #include <esp_system.h>
 #include <sys/param.h>
 
@@ -24,7 +23,7 @@
 
 #include "stfd_peripherals.h"
 
-static const char *TAG = "Camera";
+static const char *TAG = "stfd_camera";
 
 #define MOUNT_POINT "/sdcard"
 
@@ -175,33 +174,35 @@ bool save_image_to_sdcard(camera_fb_t *pic)
     sprintf(pic_name, MOUNT_POINT"/pic_%lli.jpg", counter);
     FILE *file = fopen(pic_name, "w");
     
-        if (file != NULL)
-        {
-            fwrite(pic->buf, 1, pic->len, file);
-            ESP_LOGI(TAG, "File saved: %s", pic_name);
-            err = false;
-        }
-        else
-        {
-            ESP_LOGE(TAG, "Could not open file =(");
-            fclose(file);
-            free(pic_name);
-            err = true;
-        }
-
+    if (file != NULL)
+    {
+        fwrite(pic->buf, 1, pic->len, file);
+        ESP_LOGI(TAG, "File saved: %s", pic_name);
+        err = false;
+    }
+    else
+    {
+        ESP_LOGE(TAG, "Could not open file =(");
         fclose(file);
         free(pic_name);
+        err = true;
+    }
 
-        return !err;
+    fclose(file);
+    free(pic_name);
+
+    return !err;
 }
 
-void camera_take_picture(bool save_to_sdcard = false)
+camera_fb_t* camera_take_picture(bool save_to_sdcard = false)
 {
-        ESP_LOGI(TAG, "Taking picture...");
-        camera_fb_t *pic = esp_camera_fb_get();
+    ESP_LOGI(TAG, "Taking picture...");
+    camera_fb_t *pic = esp_camera_fb_get();
 
-        if (save_to_sdcard)
-            save_image_to_sdcard(pic);
+    if (save_to_sdcard)
+        save_image_to_sdcard(pic);
 
-        vTaskDelay(3000 / portTICK_RATE_MS);
+    vTaskDelay(3000 / portTICK_RATE_MS);
+
+    return pic;
 }
