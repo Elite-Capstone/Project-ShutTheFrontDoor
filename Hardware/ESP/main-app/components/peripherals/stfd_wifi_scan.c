@@ -18,8 +18,7 @@
 #include "esp_event.h"
 #include "nvs_flash.h"
 
-// Header file
-#include "scan.h"
+#include "stfd_peripherals.h"
 
 /* Set the SSID and Password via project configuration, or can set directly here */
 #define DEFAULT_SCAN_LIST_SIZE CONFIG_SCAN_LIST_SIZE
@@ -67,8 +66,18 @@
 #endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
 static const char *TAG = "scan";
+                
+uint32_t getDefaultScanListSize(void)
+{
+    return DEFAULT_SCAN_LIST_SIZE;
+}
 
-static void event_handler(void* arg, esp_event_base_t event_base,
+wifi_scan_method_t getDefaultScanMethod(void)
+{
+    return DEFAULT_SCAN_METHOD;
+}
+
+void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -81,7 +90,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
     }
 }
 
-static void print_auth_mode(int authmode)
+void print_auth_mode(int authmode)
 {
     switch (authmode) {
     case WIFI_AUTH_OPEN:
@@ -114,7 +123,7 @@ static void print_auth_mode(int authmode)
     }
 }
 
-static void print_cipher_type(int pairwise_cipher, int group_cipher)
+void print_cipher_type(int pairwise_cipher, int group_cipher)
 {
     switch (pairwise_cipher) {
     case WIFI_CIPHER_TYPE_NONE:
@@ -166,7 +175,7 @@ static void print_cipher_type(int pairwise_cipher, int group_cipher)
 }
 
 /* Initialize Wi-Fi as sta and set scan method. Return wifi list*/
-static wifi_ap_record_t wifi_scan(void)
+wifi_ap_record_t* wifi_scan(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
@@ -204,7 +213,7 @@ static wifi_ap_record_t wifi_scan(void)
 
 /* Initialize Wi-Fi as sta and set scan method 
    The ESP connects to the AP with matching SSID and Password */
-static void fast_scan(void)
+void fast_scan(void)
 {
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());

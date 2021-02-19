@@ -121,12 +121,59 @@ CONFIG_PARTITION_TABLE_MD5=y
 # end of Partition Table
 
 #
+# Project ShutTheFrontDoor Configuration
+#
+
+#
+# Camera configuration
+#
+CONFIG_OV7670_SUPPORT=y
+# CONFIG_OV7725_SUPPORT is not set
+CONFIG_NT99141_SUPPORT=y
+CONFIG_OV2640_SUPPORT=y
+CONFIG_OV3660_SUPPORT=y
+CONFIG_OV5640_SUPPORT=y
+# CONFIG_SCCB_HARDWARE_I2C_PORT0 is not set
+CONFIG_SCCB_HARDWARE_I2C_PORT1=y
+CONFIG_CAMERA_CORE0=y
+# CONFIG_CAMERA_CORE1 is not set
+# CONFIG_CAMERA_NO_AFFINITY is not set
+# end of Camera configuration
+
+#
+# Picture Coniguration
+#
+CONFIG_GPIO_INPUT_0_PIC=y
+# CONFIG_GPIO_INPUT_2_PIC is not set
+# CONFIG_GPIO_INPUT_4_PIC is not set
+# CONFIG_GPIO_INPUT_12_PIC is not set
+# CONFIG_GPIO_INPUT_13_PIC is not set
+# CONFIG_GPIO_INPUT_14_PIC is not set
+# CONFIG_GPIO_INPUT_15_PIC is not set
+# CONFIG_GPIO_INPUT_16_PIC is not set
+CONFIG_IMAGE_FORMAT_QVGA=y
+# CONFIG_IMAGE_FORMAT_CIF is not set
+# CONFIG_IMAGE_FORMAT_VGA is not set
+# CONFIG_IMAGE_FORMAT_SVGA is not set
+# CONFIG_IMAGE_FORMAT_XGA is not set
+# CONFIG_IMAGE_FORMAT_SXGA is not set
+# CONFIG_CAM_FRAMESIZE_UXGA is not set
+CONFIG_IMAGE_PIXEL_JPEG=y
+# CONFIG_IMAGE_PIXEL_YUV422 is not set
+# CONFIG_IMAGE_PIXEL_GRAYSCALE is not set
+# CONFIG_IMAGE_PIXEL_RGB565 is not set
+CONFIG_IMAGE_TO_SDCARD=y
+# CONFIG_IMAGE_TO_HTTP_UPLOAD is not set
+# CONFIG_IMAGE_TO_BOTH_PROT is not set
+# end of Picture Coniguration
+
+#
 # Wifi Configuration
 #
 CONFIG_WIFI_FAST_SCAN=y
 # CONFIG_WIFI_ALL_CHANNEL_SCAN_CONNECT is not set
 # CONFIG_WIFI_ALL_CHANNEL_SCAN_SHOW is not set
-CONFIG_WIFI_SSID="NETGEAR30"
+CONFIG_WIFI_SSID="Enter Fast-scan SSID"
 CONFIG_WIFI_PASSWORD="Enter Fast-scan Password"
 CONFIG_SCAN_LIST_SIZE=10
 CONFIG_WIFI_CONNECT_AP_BY_SIGNAL=y
@@ -143,6 +190,7 @@ CONFIG_FAST_SCAN_WEAKEST_AUTHMODE_OPEN=y
 # CONFIG_FAST_SCAN_WEAKEST_AUTHMODE_WPA2 is not set
 # end of Fast Scan Extra Configs
 # end of Wifi Configuration
+# end of Project ShutTheFrontDoor Configuration
 
 #
 # Compiler options
@@ -1021,6 +1069,11 @@ CONFIG_WPA_MBEDTLS_CRYPTO=y
 # CONFIG_WPA_TESTING_OPTIONS is not set
 # CONFIG_WPA_WPS_WARS is not set
 # end of Supplicant
+
+#
+# Camera configuration
+#
+# end of Camera configuration
 # end of Component config
 
 #

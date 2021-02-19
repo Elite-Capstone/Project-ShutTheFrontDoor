@@ -1,5 +1,157 @@
 menu "Project ShutTheFrontDoor Configuration"
 
+    menu "Camera configuration"
+
+        config OV7670_SUPPORT
+            bool "Support OV7670 VGA"
+            default y
+            help
+                Enable this option if you want to use the OV7670.
+                Disable this option to safe memory.
+    
+        config OV7725_SUPPORT
+            bool "Support OV7725 SVGA"
+            default n
+            help
+                Enable this option if you want to use the OV7725.
+                Disable this option to save memory.
+    
+        config NT99141_SUPPORT
+            bool "Support NT99141 HD"
+            default y
+            help
+                Enable this option if you want to use the NT99141.
+                Disable this option to save memory.
+    
+        config OV2640_SUPPORT
+            bool "Support OV2640 2MP"
+            default y
+            help
+                Enable this option if you want to use the OV2640.
+                Disable this option to save memory.
+    
+        config OV3660_SUPPORT
+            bool "Support OV3660 3MP"
+            default y
+            help
+                Enable this option if you want to use the OV3360.
+                Disable this option to save memory.
+    
+        config OV5640_SUPPORT
+            bool "Support OV5640 5MP"
+            default y
+            help
+                Enable this option if you want to use the OV5640.
+                Disable this option to save memory.
+    
+        choice SCCB_HARDWARE_I2C_PORT
+            bool "I2C peripheral to use for SCCB"
+            default SCCB_HARDWARE_I2C_PORT1
+    
+            config SCCB_HARDWARE_I2C_PORT0
+                bool "I2C0"
+            config SCCB_HARDWARE_I2C_PORT1
+                bool "I2C1"
+    
+        endchoice
+    
+        choice CAMERA_TASK_PINNED_TO_CORE
+            bool "Camera task pinned to core"
+            default CAMERA_CORE0
+            help
+                Pin the camera handle task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+    
+            config CAMERA_CORE0
+                bool "CORE0"
+            config CAMERA_CORE1
+                bool "CORE1"
+            config CAMERA_NO_AFFINITY
+                bool "NO_AFFINITY"
+    
+        endchoice
+    
+    endmenu
+
+    menu "Picture Coniguration"
+        
+        choice GPIO_INPUT_TAKE_PIC
+            prompt "Take Picture GPIO"
+            default GPIO_INPUT_16_PIC
+            help 
+                The selected GPIO will be pulled high and should have the button to take a picture
+
+            config GPIO_INPUT_0_PIC
+                bool "GPIO 0"
+            config GPIO_INPUT_2_PIC
+                bool "GPIO 2"
+            config GPIO_INPUT_4_PIC
+                bool "GPIO 4"
+            config GPIO_INPUT_12_PIC
+                bool "GPIO 12"
+            config GPIO_INPUT_13_PIC
+                bool "GPIO 13"
+            config GPIO_INPUT_14_PIC
+                bool "GPIO 14"
+            config GPIO_INPUT_15_PIC
+                bool "GPIO 15"
+            config GPIO_INPUT_16_PIC
+                bool "GPIO 16"
+        endchoice
+
+        choice IMAGE_FORMAT_SIZE
+            prompt "Image format output size"
+            default IMAGE_FORMAT_QVGA
+            help
+                Select the captured picture's format size. Do not use sizes above QVGA when not JPEG (Listed in ascending order)
+            
+            config IMAGE_FORMAT_QVGA
+                bool "QVGA"
+            config IMAGE_FORMAT_CIF
+                bool "CIF"
+            config IMAGE_FORMAT_VGA
+                bool "VGA"
+            config IMAGE_FORMAT_SVGA
+                bool "SVGA"
+            config IMAGE_FORMAT_XGA
+                bool "XGA"
+            config IMAGE_FORMAT_SXGA
+                bool "SXGA"
+            config CAM_FRAMESIZE_UXGA
+                bool "UXGA"
+        endchoice
+
+        choice IMAGE_PIXEL_FORMAT
+            prompt "Image pixel output format"
+            default IMAGE_PIXEL_JPEG
+            help
+                Select the captured picture's pixel format
+            
+            config IMAGE_PIXEL_JPEG
+                bool "JPEG"
+            config IMAGE_PIXEL_YUV422
+                bool "YUV422"
+            config IMAGE_PIXEL_GRAYSCALE
+                bool "Grayscale"
+            config IMAGE_PIXEL_RGB565
+                bool "RBG 565"
+        endchoice
+
+        choice IMAGE_TO_SDCARD
+            prompt "Save the pictures to the SD card"
+            default IMAGE_TO_HTTP_UPLOAD
+            help
+                If the pictures are saved to the SD card, they can only be retrieved there. The HTTP request will send the picture to the database.
+            
+            config IMAGE_TO_SDCARD
+                bool "Save to SD card"
+            config IMAGE_TO_HTTP_UPLOAD
+                bool "Upload through HTTP request"
+            config IMAGE_TO_BOTH_PROT
+                bool "Save to SD card and upload too"
+        endchoice
+
+    endmenu
+
     menu "Wifi Configuration"
 
         choice SCAN_METHOD
@@ -80,43 +232,6 @@ menu "Project ShutTheFrontDoor Configuration"
 
         endmenu
 
-    endmenu
-
-    menu "Picture Coniguration"
-        
-        choice GPIO_INPUT_TAKE_PIC
-            prompt "Take Picture GPIO"
-            default 16
-            help 
-                The selected GPIO will be pulled high and should have the button to take a picture
-
-            config GPIO_INPUT_0_PIC
-                bool "GPIO 0"
-            config GPIO_INPUT_2_PIC
-                bool "GPIO 2"
-            config GPIO_INPUT_4_PIC
-                bool "GPIO 4"
-            config GPIO_INPUT_12_PIC
-                bool "GPIO 12"
-            config GPIO_INPUT_13_PIC
-                bool "GPIO 13"
-            config GPIO_INPUT_14_PIC
-                bool "GPIO 14"
-            config GPIO_INPUT_15_PIC
-                bool "GPIO 15"
-            config GPIO_INPUT_16_PIC
-                bool "GPIO 16"
-        endchoice
-
-        choice TAKE_PIC_FORMAT
-        default FRAMESIZE_UXGA
-        help
-            Select the format the taken picture will have
-        
-        config CAM_FRAMESIZE_UXGA
-            bool "UXGA"
-        endchoice
-            
     endmenu
 
 endmenu
