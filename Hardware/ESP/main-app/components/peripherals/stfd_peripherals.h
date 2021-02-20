@@ -9,7 +9,7 @@
 #include <esp_log.h>
 #include <esp_wifi.h>
 #include <esp_event.h>
-#include <esp_camera.h>
+#include "esp_camera.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -38,7 +38,13 @@ void init_sdcard();
  */
 bool save_image_to_sdcard(camera_fb_t *pic);
 
-void camera_take_picture(bool save_to_sdcard);
+/**
+ * @brief Executes the picture taking routine and returns the picture framebuffer
+ * 
+ * @param save_to_sdcard boolean passed to indicate if the picture should be saved
+ *                       in the local SD card or not.
+ */
+camera_fb_t* camera_take_picture(bool save_to_sdcard);
 
 // GPIO
 
@@ -68,9 +74,9 @@ void gpio_blink_output(uint32_t num_blinks);
 /**
  * @brief Sets up the selected input and output GPIO from the configuration menu selection
  */
-bool gpio_setup_for_picture(void);
-bool gpio_setup_input(void);
-bool gpio_setup_output(void);
+void gpio_setup_for_picture(void);
+void gpio_setup_input(void);
+void gpio_setup_output(void);
 
 // WiFi Scan
 void event_handler(void* arg, esp_event_base_t event_base,

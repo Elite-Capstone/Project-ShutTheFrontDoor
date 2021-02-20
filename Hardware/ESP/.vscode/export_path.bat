@@ -1,1 +1,0 @@
-%userprofile%\Desktop\School_material\COEN-ELEC490\Project-ShutTheFrontDoor\Hardware\ESP-IDF-Repo\esp-idf\export.bat

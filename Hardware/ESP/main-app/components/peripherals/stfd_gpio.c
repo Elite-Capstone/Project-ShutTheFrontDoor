@@ -68,10 +68,9 @@ void gpio_blink_output(uint32_t num_blinks) {
     }
 }
 
-bool gpio_setup_input(void) {
-    uint32_t err = 0;
-
+void gpio_setup_input(void) {
     gpio_config_t io_conf;
+
     ///interrupt of rising edge
     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
     //bit mask of the pins, use GPIO4/5 here
@@ -80,20 +79,17 @@ bool gpio_setup_input(void) {
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
     io_conf.pull_up_en = 1;
-    err |= gpio_config(&io_conf);
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
 
     //install gpio isr service
-    err |= gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT);
+    ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
     //hook isr handler for specific gpio pin
-    err |= gpio_isr_handler_add(GPIO_INPUT_PIC, gpio_isr_handler, (void*) GPIO_INPUT_PIC);
-
-    return err == 0;
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, gpio_isr_handler, (void*) GPIO_INPUT_PIC));
 }
 
-bool gpio_setup_output(void) {
-    uint32_t err;
-
+void gpio_setup_output(void) {
     gpio_config_t io_conf;
+
     //disable interrupt
     io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
     //set as output mode
@@ -105,15 +101,14 @@ bool gpio_setup_output(void) {
     //disable pull-up mode
     io_conf.pull_up_en = 0;
     //configure GPIO with the given settings
-    err |= gpio_config(&io_conf);
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
 
     //Initialize to 0
-    err |= gpio_set_level(GPIO_OUTPUT_CONFIRM_UPLOAD, 0);
-
-    return err == 0;
+    ESP_ERROR_CHECK(gpio_set_level(GPIO_OUTPUT_CONFIRM_UPLOAD, 0));
 }
 
-bool gpio_setup_for_picture(void) {
+void gpio_setup_for_picture(void) {
     ESP_LOGI(TAG, "GPIO setup...");
-    return gpio_setup_input() && gpio_setup_output();
+    gpio_setup_input();
+    gpio_setup_output();
 }

@@ -18,7 +18,6 @@
 
 #include "driver/sdmmc_host.h"
 #include "driver/sdmmc_defs.h"
-#include "sdmmc_cmd.h"
 #include "esp_vfs_fat.h"
 
 #include "stfd_peripherals.h"
@@ -194,7 +193,7 @@ bool save_image_to_sdcard(camera_fb_t *pic)
     return !err;
 }
 
-camera_fb_t* camera_take_picture(bool save_to_sdcard = false)
+camera_fb_t* camera_take_picture(bool save_to_sdcard)
 {
     ESP_LOGI(TAG, "Taking picture...");
     camera_fb_t *pic = esp_camera_fb_get();
