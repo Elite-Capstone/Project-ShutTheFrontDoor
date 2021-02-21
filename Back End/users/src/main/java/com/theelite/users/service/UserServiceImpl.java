@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private ArrayList<Invitation> invitations = new ArrayList<>();
+//    private ArrayList<Invitation> invitations = new ArrayList<>();
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -26,13 +26,17 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean addUser(User user) {
         if (userDao.userExistsWithEmail(user.getEmail())) return false;
-        Invitation userInvitation = getInvitationForUser(user.getEmail());
+
+        Invitation userInvitation = userDao.getInvitation(user.getEmail());
+
         if (userInvitation != null) {
             user.setAccountId(userInvitation.getAccountId());
-            invitations.remove(userInvitation);
+            userDao.cancelInvitation(user.getEmail());
         } else user.setAccountId(UUID.randomUUID());
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
+
         return true;
     }
 
@@ -79,14 +83,16 @@ public class UserServiceImpl implements UserService {
             userDao.updateUserAccount(invitation.getReceiverEmail(), invitation.getAccountId());
             return true;
         }
-        if (getInvitationForUser(invitation.getReceiverEmail()) != null) return false;
+        if (userDao.getInvitation(invitation.getReceiverEmail()) != null) return false;
         //TODO: Send email to targeted user :)
-        return invitations.add(invitation);
+         userDao.saveNewInvitation(invitation);
+         return true;
     }
 
     @Override
     public boolean cancelUserInvitation(Invitation invitation) {
-        return invitations.remove(invitation);
+        userDao.cancelInvitation(invitation.getReceiverEmail());
+        return !userDao.invitationExists(invitation.getReceiverEmail());
     }
 
     @Override
@@ -94,14 +100,6 @@ public class UserServiceImpl implements UserService {
         if (!userDao.userExistsWithEmail(user)) return false;
         userDao.updateUserAccount(user, null);
         return true;
-    }
-
-    private Invitation getInvitationForUser(String email) {
-        if (invitations.isEmpty()) return null;
-        for (Invitation invitation : invitations) {
-            if (invitation.getReceiverEmail().equals(email)) return invitation;
-        }
-        return null;
     }
 
     @Override
