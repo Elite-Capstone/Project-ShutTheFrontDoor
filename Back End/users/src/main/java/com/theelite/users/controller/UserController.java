@@ -5,6 +5,7 @@ import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,8 +16,9 @@ public class UserController {
     private UserServiceImpl userService;
 
     @GetMapping("/")
-    public String pong(){
-        return "Pong !!!\nBut App is reachable ;)";
+    public ResponseEntity pong(){
+//        return "Pong !!!\nBut App is reachable ;)";
+        return userService.getHealth();
     }
 
     @PutMapping("/new")

@@ -11,4 +11,5 @@ public interface CustomDao {
     void updateUserInfo(User user);
     void updateUserPassword(String user, String password);
     void updateUserRole(String user, UserRole userRole);
+    long testDatabaseConnection();
 }

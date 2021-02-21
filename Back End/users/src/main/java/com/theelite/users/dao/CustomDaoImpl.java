@@ -52,4 +52,11 @@ public class CustomDaoImpl implements CustomDao {
         Update update = new Update().set("accountId", accountId);
         mongoOperations.findAndModify(query, update, User.class);
     }
+
+    @Override
+    public long testDatabaseConnection(){
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is("").not());
+        return mongoOperations.count(query, User.class);
+    }
 }

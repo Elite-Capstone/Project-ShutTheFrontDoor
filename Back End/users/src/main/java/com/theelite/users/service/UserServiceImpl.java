@@ -5,6 +5,8 @@ import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -107,5 +109,15 @@ public class UserServiceImpl implements UserService {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
         userDao.updateUserInfo(user);
         return true;
+    }
+
+    @Override
+    public ResponseEntity getHealth() {
+        try {
+            userDao.testDatabaseConnection();
+        } catch (Exception e) {
+            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity(HttpStatus.ACCEPTED);
     }
 }
