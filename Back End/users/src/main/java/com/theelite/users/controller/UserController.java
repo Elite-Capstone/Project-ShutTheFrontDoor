@@ -17,7 +17,6 @@ public class UserController {
 
     @GetMapping("/")
     public ResponseEntity pong(){
-//        return "Pong !!!\nBut App is reachable ;)";
         return userService.getHealth();
     }
 

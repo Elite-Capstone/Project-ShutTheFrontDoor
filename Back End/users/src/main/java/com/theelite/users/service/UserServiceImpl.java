@@ -116,8 +116,8 @@ public class UserServiceImpl implements UserService {
         try {
             userDao.testDatabaseConnection();
         } catch (Exception e) {
-            return new ResponseEntity(HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity("Error with the db somehow",HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity(HttpStatus.ACCEPTED);
+        return new ResponseEntity("Everything seems to be fine!", HttpStatus.ACCEPTED);
     }
 }
