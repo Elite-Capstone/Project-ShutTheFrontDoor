@@ -12,6 +12,8 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Service;
 
@@ -30,8 +32,14 @@ public class NotificationServiceImpl implements NotificationService {
     private String bootStrapServer;
 
     @Override
-    public String getHealth() {
-        return "Everything seems to be fine\n";
+    public ResponseEntity getHealth() {
+
+        try {
+            kafkaAdmin.listTopics();
+        } catch (Exception e) {
+            return new ResponseEntity("Error with Kafka or something", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity("Everything seems to be fine", HttpStatus.ACCEPTED);
     }
 
     @Override

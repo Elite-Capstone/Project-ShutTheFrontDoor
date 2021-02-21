@@ -1,12 +1,13 @@
 package com.theelite.notifications.service;
 
 import com.theelite.notifications.model.Notification;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 //@Service
 public interface NotificationService {
-    String getHealth();
+    ResponseEntity getHealth();
     List<Notification> getRecentNotifications(String accountId, String userId);
     boolean publishNotification(Notification notification);
     boolean addNewDoorIdAsTopic(String doorId);
