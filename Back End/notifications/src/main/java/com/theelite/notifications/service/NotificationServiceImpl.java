@@ -1,7 +1,9 @@
 package com.theelite.notifications.service;
 
+import com.theelite.notifications.communication.UserService;
 import com.theelite.notifications.configuration.NotificationConfigurations;
 import com.theelite.notifications.model.Notification;
+import com.theelite.notifications.model.User;
 import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
@@ -16,7 +18,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Service;
+import retrofit2.Retrofit;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -28,12 +32,14 @@ public class NotificationServiceImpl implements NotificationService {
     @Autowired
     private AdminClient kafkaAdmin;
 
+    @Value("${user.ms.url}")
+    private String userMsUrl;
+
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootStrapServer;
 
     @Override
     public ResponseEntity getHealth() {
-
         try {
             kafkaAdmin.listTopics();
         } catch (Exception e) {
@@ -44,15 +50,17 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public List<Notification> getRecentNotifications(String accountId, String userId) {
+
+
         //TODO retrieve notification as pojo
         String topic = "00b288a8-3db1-40b5-b30f-532af4e12f4b";
-        KafkaConsumer<String, String> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(accountId, userId, bootStrapServer));
+        KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(accountId, userId, bootStrapServer));
         consumer.subscribe(Collections.singleton(topic));
-        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
+        ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
         consumer.commitAsync();
         List<Notification> notifications = new ArrayList<>();
-        for (ConsumerRecord<String, String> r : records) {
-            notifications.add(new Notification(r.value(), new Date(), UUID.fromString(topic), UUID.fromString(accountId)));
+        for (ConsumerRecord<String, Notification> r : records) {
+            notifications.add(r.value());
         }
         consumer.close();
         return notifications;
@@ -61,8 +69,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public boolean publishNotification(Notification notification) {
         // TODO publish notification as pojo
-        KafkaProducer<String, String> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
-        producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification.getNotification()));
+        KafkaProducer<String, Notification> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
+        notification.setDate(new Date());
+        producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification));
         producer.close();
         return true;
     }
@@ -121,5 +130,21 @@ public class NotificationServiceImpl implements NotificationService {
             e.printStackTrace();
         }
         return result;
+    }
+
+    public boolean userIsNotLegit(String account, String email) {
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(userMsUrl).build();
+        UserService userService = retrofit.create(UserService.class);
+        User user = new User();
+        user.setEmail(email);
+        User userSavedInfo = null;
+        try {
+            userSavedInfo = userService.getUserWithId(user).execute().body();
+            return userSavedInfo.getAccountId().equals(account);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (userSavedInfo == null) return false;
+        else return userSavedInfo.getAccountId().equals(account);
     }
 }

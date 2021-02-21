@@ -3,6 +3,8 @@ package com.theelite.notifications.configuration;
 import com.theelite.notifications.model.Notification;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
@@ -13,6 +15,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.core.KafkaAdmin;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.Properties;
 import java.util.UUID;
@@ -66,7 +69,8 @@ public class NotificationConfigurations {
         props.setProperty("client.it", clientId);
         props.setProperty("enable.auto.commit", "true");
         props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.setProperty("value.deserializer", "org.springframework.kafka.support.serializer.JsonDeserializer");
+        props.setProperty(JsonDeserializer.TRUSTED_PACKAGES,"*");
 
         return props;
     }
@@ -76,7 +80,8 @@ public class NotificationConfigurations {
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+//        props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerialize");
+        props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerializer");
 
         return props;
     }
