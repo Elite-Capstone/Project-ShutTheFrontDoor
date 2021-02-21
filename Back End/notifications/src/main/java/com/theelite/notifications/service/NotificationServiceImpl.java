@@ -133,6 +133,8 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     public boolean userIsNotLegit(String account, String email) {
+        if (userMsUrl == null || userMsUrl.equals("")) return false;
+        
         Retrofit retrofit = new Retrofit.Builder().baseUrl(userMsUrl).build();
         UserService userService = retrofit.create(UserService.class);
         User user = new User();
