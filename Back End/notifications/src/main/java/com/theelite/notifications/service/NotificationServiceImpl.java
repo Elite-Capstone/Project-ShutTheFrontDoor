@@ -45,7 +45,7 @@ public class NotificationServiceImpl implements NotificationService {
         } catch (Exception e) {
             return new ResponseEntity("Error with Kafka or something", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity("Everything seems to be fine", HttpStatus.ACCEPTED);
+        return new ResponseEntity("Everything seems to be fine", HttpStatus.OK);
     }
 
     @Override
@@ -134,7 +134,7 @@ public class NotificationServiceImpl implements NotificationService {
 
     public boolean userIsNotLegit(String account, String email) {
         if (userMsUrl == null || userMsUrl.equals("")) return false;
-        
+
         Retrofit retrofit = new Retrofit.Builder().baseUrl(userMsUrl).build();
         UserService userService = retrofit.create(UserService.class);
         User user = new User();
