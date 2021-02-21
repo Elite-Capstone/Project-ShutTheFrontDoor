@@ -11,11 +11,10 @@
                 the list as an object.
 */
 #include <string.h>
-#include <esp_wifi.h>
-#include <esp_event.h>
 #include "nvs_flash.h"
 
 #include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "freertos/event_groups.h"
 
 #include "stfd_peripherals.h"
@@ -82,6 +81,7 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
         esp_wifi_connect();
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        //sprintf(cam_content.device_ip, IPSTR, IP2STR(&event->ip_info.ip));
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
     }
 }
@@ -232,7 +232,7 @@ wifi_ap_record_t* fast_scan(void) {
             .threshold.authmode = DEFAULT_AUTHMODE,
         },
     };
-    ap_info.ssid = DEFAULT_SSID;
+    memcpy(ap_info.ssid, DEFAULT_SSID, strlen(DEFAULT_SSID));
     ap_info.rssi = DEFAULT_RSSI;
     ap_info.authmode = DEFAULT_AUTHMODE;
 
@@ -263,7 +263,7 @@ wifi_ap_record_t* wifi_scan() {
     }
     else { //WIFI_ALL_CHANNEL_SCAN:
         ap_info = wifi_all_ch_scan();
-        gpio_blink_output(3)
+        gpio_blink_output(3);
         // TODO: Send list to BlueTooth connected user
         // Set the default wifi to the returned selection from the user
     }

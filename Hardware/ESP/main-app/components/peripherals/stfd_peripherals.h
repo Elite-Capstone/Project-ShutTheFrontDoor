@@ -7,22 +7,55 @@
     Desc:       Header file containing all the added peripheral functions
 */
 #include <esp_log.h>
-#include <esp_wifi.h>
+#include <esp_system.h>
 #include <esp_event.h>
+#include <esp_wifi.h>
+#include <esp_http_server.h>
 #include "esp_camera.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/queue.h"
+#include "driver/gpio.h"
 
 #define SIGNAL_HIGH 1
 #define SIGNAL_LOW 0
 
-static xQueueHandle gpio_evt_queue = NULL;
+typedef enum {
+    INVALID = -1,
+    STANDBY = 0,
+    PICTURE = 1,
+    STREAM  = 2,
+} cam_content_type_t;
+
+typedef struct {
+    bool cam_initiated;
+    bool sdcard_initiated;
+    bool cam_server_init;
+    bool save_to_sdcard;
+    bool upload_content;
+    cam_content_type_t content_type;
+    wifi_ap_record_t* ap_info;
+    char* device_ip;
+    long long int pic_counter;
+} cam_content_t;
+
+static cam_content_t cam_content = {
+    .cam_initiated      = false,
+    .sdcard_initiated   = false,
+    .cam_server_init    = false,
+    .save_to_sdcard     = false,
+    .upload_content     = false,
+    .content_type       = STANDBY,
+    .ap_info            = NULL,
+    .device_ip          = "",
+    .pic_counter        = 0
+};
 
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
 
-// CAMERA
+//========== CAMERA ==========
 /**
  * @brief Initilize the camera
  */
@@ -31,7 +64,14 @@ esp_err_t init_camera();
 /**
  * @brief Initilize the SD card
  */
-void init_sdcard();
+esp_err_t init_sdcard();
+
+/**
+ * @brief Selects the task to execute (picture or stream) according to the passed camera content
+ * 
+ * @param cam_content Camera current status with its content
+ */
+void cam_exec_recording_task(cam_content_t* cam_content);
 
 /**
  * @brief Saves the image to the SD card locally is the SD card has been initialized
@@ -46,7 +86,24 @@ bool save_image_to_sdcard(camera_fb_t *pic);
  */
 camera_fb_t* camera_take_picture(bool save_to_sdcard);
 
-// GPIO
+/**
+ * @brief HTTP event handler for streaming
+ * 
+ * @param req HTTP request
+ */
+esp_err_t stream_handler(httpd_req_t *req);
+
+/**
+ * @brief Function begins camera server for streaming
+ */
+void startCameraServer(void);
+
+/**
+ * @brief Function stop camera server from streaming and deallocates the memory
+ */
+void stopCameraServer(void);
+
+//========== GPIO ==========
 
 /**
  * @brief Checks if the triggered input GPIO is valid to perform the action and if it is the required logic value
@@ -54,14 +111,7 @@ camera_fb_t* camera_take_picture(bool save_to_sdcard);
  * @param io_num   GPIO input pin number,
  * @param sg_level Desired signal level
  */
-bool trigValidGPIO(uint32_t io_num, uint8_t sg_level);
-
-/**
- * @brief This function programs what to do upon interrupt
- * 
- * @param arg   arguments passed from the isr queue
- */
-void IRAM_ATTR gpio_isr_handler(void* arg);
+bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level);
 
 /**
  * @brief This function sends a signal pulse through an output GPIO. This function is used for 
@@ -72,13 +122,31 @@ void IRAM_ATTR gpio_isr_handler(void* arg);
 void gpio_blink_output(uint32_t num_blinks);
 
 /**
+ * @brief performs the interrupt task for input gpios (Picutre or Stream)
+ * 
+ * @param io_num            GPIO used to create the interrupt
+ * @param http_upload       Boolean from configuration menu indicating if the content is to uploaded
+ * @param save_to_sdcard    Boolean from configuration menu. Indicates if the content is to 
+ *                          be saved on the local SD card
+ */
+cam_content_type_t gpio_io_type(uint32_t io_num);
+
+/**
+ * @brief This function programs what to do upon interrupt
+ * 
+ * @param arg   arguments passed from the isr queue
+ */
+void IRAM_ATTR gpio_isr_handler(void* arg);
+
+/**
  * @brief Sets up the selected input and output GPIO from the configuration menu selection
  */
-void gpio_setup_for_picture(void);
-void gpio_setup_input(void);
+void gpio_setup_for_picture(gpio_isr_t isr_handler);
+void gpio_setup_input(gpio_isr_t isr_handler);
 void gpio_setup_output(void);
 
-// WiFi Scan
+//========== WiFi Scan ==========
+
 void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data);
 
@@ -94,9 +162,9 @@ wifi_ap_record_t* wifi_all_ch_scan(void);
 /**
  * @brief Scans and finds the first compatible AP with the matching requirements (SSID, Password, Security level)
  */
-void fast_scan(void);
+wifi_ap_record_t* fast_scan(void);
 
 /**
  * @brief Performs the wifi scan and connects to the AP if the scan mode if fast_scan()
  */
-void wifi_scan(void);
+wifi_ap_record_t* wifi_scan(void);

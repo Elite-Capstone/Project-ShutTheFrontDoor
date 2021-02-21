@@ -72,13 +72,13 @@ menu "Project ShutTheFrontDoor Configuration"
     
     endmenu
 
-    menu "Picture Coniguration"
+    menu "Picture Configuration"
         
         choice GPIO_INPUT_TAKE_PIC
             prompt "Take Picture GPIO"
             default GPIO_INPUT_16_PIC
             help 
-                The selected GPIO will be pulled high and should have the button to take a picture
+                The selected GPIO will be pulled high and must be pulled down to take a picture
 
             config GPIO_INPUT_0_PIC
                 bool "GPIO 0"
@@ -95,6 +95,54 @@ menu "Project ShutTheFrontDoor Configuration"
             config GPIO_INPUT_15_PIC
                 bool "GPIO 15"
             config GPIO_INPUT_16_PIC
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_TOGGLE_STREAM
+            prompt "GPIO to toggle start/end stream"
+            default GPIO_INPUT_12_STREAM
+            help 
+                The selected GPIO will be pulled high and must be pulled down to toggle the video stream
+
+            config GPIO_INPUT_0_STREAM
+                bool "GPIO 0"
+            config GPIO_INPUT_2_STREAM
+                bool "GPIO 2"
+            config GPIO_INPUT_4_STREAM
+                bool "GPIO 4"
+            config GPIO_INPUT_12_STREAM
+                bool "GPIO 12"
+            config GPIO_INPUT_13_STREAM
+                bool "GPIO 13"
+            config GPIO_INPUT_14_STREAM
+                bool "GPIO 14"
+            config GPIO_INPUT_15_STREAM
+                bool "GPIO 15"
+            config GPIO_INPUT_16_STREAM
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_OUTPUT_CONFIRM
+            prompt "Output picture/stream GPIO"
+            default GPIO_OUTPUT_4_CONFIRM
+            help 
+                The selected GPIO will pulse when the picture is uploaded or stream has toggled
+
+            config GPIO_OUTPUT_0_CONFIRM
+                bool "GPIO 0"
+            config GPIO_OUTPUT_2_CONFIRM
+                bool "GPIO 2"
+            config GPIO_OUTPUT_4_CONFIRM
+                bool "GPIO 4"
+            config GPIO_OUTPUT_12_CONFIRM
+                bool "GPIO 12"
+            config GPIO_OUTPUT_13_CONFIRM
+                bool "GPIO 13"
+            config GPIO_OUTPUT_14_CONFIRM
+                bool "GPIO 14"
+            config GPIO_OUTPUT_15_CONFIRM
+                bool "GPIO 15"
+            config GPIO_OUTPUT_16_CONFIRM
                 bool "GPIO 16"
         endchoice
 
@@ -149,6 +197,13 @@ menu "Project ShutTheFrontDoor Configuration"
             config IMAGE_TO_BOTH_PROT
                 bool "Save to SD card and upload too"
         endchoice
+
+        config CAM_STREAM_PORT
+            int "Streaming Port"
+            range 0 9999
+            default 80
+            help
+                Port on which the camera will stream its video feed
 
     endmenu
 

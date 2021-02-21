@@ -212,3 +212,9 @@ Front End/Web/Portal/.vscode/
 *.idea/
 
 Hardware/ESP/esp-idf
+
+Hardware/ESP/main-app_deprecated/
+
+Hardware/ESP/main-app/sdkconfig
+
+Hardware/ESP/main-app/sdkconfig.old
