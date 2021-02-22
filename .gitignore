@@ -210,3 +210,9 @@ nodes_modules/
 Front End/Web/Portal/.vscode/
 *.mvn/
 *.idea/
+
+Back End/users/target/
+
+Back End/notifications/src/main/resources/application.properties
+
+Back End/notifications/target/

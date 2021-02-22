@@ -5,6 +5,8 @@ import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,7 +15,7 @@ import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
-    private ArrayList<Invitation> invitations = new ArrayList<>();
+    //    private ArrayList<Invitation> invitations = new ArrayList<>();
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -24,13 +26,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean addUser(User user) {
         if (userDao.userExistsWithEmail(user.getEmail())) return false;
-        Invitation userInvitation = getInvitationForUser(user.getEmail());
+
+        Invitation userInvitation = userDao.getInvitation(user.getEmail());
+
         if (userInvitation != null) {
             user.setAccountId(userInvitation.getAccountId());
-            invitations.remove(userInvitation);
-        } else user.setAccountId(UUID.randomUUID());
+            userDao.cancelInvitation(user.getEmail());
+            //Regular user in family account
+            user.setRole(UserRole.Regular);
+        } else {
+            // Only user in his family account
+            user.setAccountId(UUID.randomUUID());
+            user.setRole(UserRole.Admin);
+        }
+
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
+
         return true;
     }
 
@@ -77,14 +89,16 @@ public class UserServiceImpl implements UserService {
             userDao.updateUserAccount(invitation.getReceiverEmail(), invitation.getAccountId());
             return true;
         }
-        if (getInvitationForUser(invitation.getReceiverEmail()) != null) return false;
+        if (userDao.getInvitation(invitation.getReceiverEmail()) != null) return false;
         //TODO: Send email to targeted user :)
-        return invitations.add(invitation);
+        userDao.saveNewInvitation(invitation);
+        return true;
     }
 
     @Override
     public boolean cancelUserInvitation(Invitation invitation) {
-        return invitations.remove(invitation);
+        userDao.cancelInvitation(invitation.getReceiverEmail());
+        return !userDao.invitationExists(invitation.getReceiverEmail());
     }
 
     @Override
@@ -94,18 +108,20 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-    private Invitation getInvitationForUser(String email) {
-        if (invitations.isEmpty()) return null;
-        for (Invitation invitation : invitations) {
-            if (invitation.getReceiverEmail().equals(email)) return invitation;
-        }
-        return null;
-    }
-
     @Override
     public boolean updateUserInfo(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
         userDao.updateUserInfo(user);
         return true;
+    }
+
+    @Override
+    public ResponseEntity getHealth() {
+        try {
+            userDao.testDatabaseConnection();
+        } catch (Exception e) {
+            return new ResponseEntity("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity("Everything seems to be fine!", HttpStatus.OK);
     }
 }
