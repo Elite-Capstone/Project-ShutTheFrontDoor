@@ -15,7 +15,7 @@ import java.util.UUID;
 
 @Service
 public class UserServiceImpl implements UserService {
-//    private ArrayList<Invitation> invitations = new ArrayList<>();
+    //    private ArrayList<Invitation> invitations = new ArrayList<>();
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -32,7 +32,13 @@ public class UserServiceImpl implements UserService {
         if (userInvitation != null) {
             user.setAccountId(userInvitation.getAccountId());
             userDao.cancelInvitation(user.getEmail());
-        } else user.setAccountId(UUID.randomUUID());
+            //Regular user in family account
+            user.setRole(UserRole.Regular);
+        } else {
+            // Only user in his family account
+            user.setAccountId(UUID.randomUUID());
+            user.setRole(UserRole.Admin);
+        }
 
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
@@ -85,8 +91,8 @@ public class UserServiceImpl implements UserService {
         }
         if (userDao.getInvitation(invitation.getReceiverEmail()) != null) return false;
         //TODO: Send email to targeted user :)
-         userDao.saveNewInvitation(invitation);
-         return true;
+        userDao.saveNewInvitation(invitation);
+        return true;
     }
 
     @Override
@@ -114,8 +120,8 @@ public class UserServiceImpl implements UserService {
         try {
             userDao.testDatabaseConnection();
         } catch (Exception e) {
-            return new ResponseEntity("Error with the db somehow",HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity("Everything seems to be fine!", HttpStatus.ACCEPTED);
+        return new ResponseEntity("Everything seems to be fine!", HttpStatus.OK);
     }
 }
