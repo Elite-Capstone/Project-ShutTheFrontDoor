@@ -51,27 +51,22 @@ class LoginActivity : AppCompatActivity() {
 
     private fun login() {
 
-//        if (::loginEmailTextField.isInitialized) print("They null"); return
-//        println("Email is ${loginEmailTextField.text}")
-//        println("Password is ${loginPasswordTextField.text}")
         val queue = Volley.newRequestQueue(this)
         //TODO refactor all urls in one single place
-        val url = R.string.url
+        var url: String = getString(R.string.url)
+        url += "user/auth"
         val params = JSONObject()
         params.put("email", loginEmailTextField.text.toString())
         params.put("password", loginPasswordTextField.text.toString())
-        params.put("username", loginEmailTextField.text.toString())
 
-
-//        println("params in strings is ${params.toString()}")
-//        val jSonObjectRequest = BooleanRequest(
-//            Request.Method.POST,
-//            url, params.toString(),
-//            Response.Listener { authenticated -> if (authenticated) moveToHomePage() else displayError() },
-//            Response.ErrorListener { error -> println("error happened during get ${error.message}") }
-//        )
-//        queue.add(jSonObjectRequest)
-        moveToHomePage()
+        val jSonObjectRequest = BooleanRequest(
+            Request.Method.POST,
+            url, params.toString(),
+            Response.Listener { authenticated -> if (authenticated) moveToHomePage() else displayError() },
+            Response.ErrorListener { error -> println("error happened during get ${error.message}") }
+        )
+        queue.add(jSonObjectRequest)
+//        moveToHomePage()
     }
 
     private fun moveToHomePage() {
