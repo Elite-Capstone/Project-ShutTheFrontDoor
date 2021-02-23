@@ -82,7 +82,7 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
         esp_wifi_connect();
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        sprintf(cam_content.device_ip, IPSTR, IP2STR(&event->ip_info.ip));
+        //sprintf(cam_content.device_ip, IPSTR, IP2STR(&event->ip_info.ip));
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
     }
 }
@@ -237,11 +237,11 @@ void fast_scan(wifi_ap_record_t* ap_info) {
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
-void wifi_scan(wifi_ap_record_t* ap_info) {
+void wifi_scan(mcu_content_t* cam_c) {
 
-    if (ap_info != NULL) {
-        free(ap_info);
-        ap_info = NULL;
+    if (cam_c->ap_info != NULL) {
+        free(cam_c->ap_info);
+        cam_c->ap_info = NULL;
     }
 
     // Initialize NVS
@@ -262,14 +262,14 @@ void wifi_scan(wifi_ap_record_t* ap_info) {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     if (getDefaultScanMethod() == WIFI_FAST_SCAN) {
-        fast_scan(ap_info);
+        fast_scan(cam_c->ap_info);
         gpio_blink_output(2);
     }
     else { //WIFI_ALL_CHANNEL_SCAN:
-        wifi_all_ch_scan(ap_info);
+        wifi_all_ch_scan(cam_c->ap_info);
         gpio_blink_output(3);
         // TODO: Send list to BlueTooth connected user
         // Set the default wifi to the returned selection from the user
     }
-    cam_c->device_ip = (uint32_t) sta_netif->ip_info->ip.addr;
+    //sprintf(cam_c->device_ip, IPSTR, IP2STR(sta_netif->ip_info->ip));
 }
