@@ -42,7 +42,7 @@ static const char* TAG = "main";
 
 static xQueueHandle gpio_evt_queue = NULL;
 
-mcu_content_t _cam_c = {
+mcu_content_t _mcu_c = {
     .cam_initiated      = false,
     .sdcard_initiated   = false,
     .cam_server_init    = false,
@@ -54,12 +54,12 @@ mcu_content_t _cam_c = {
     .pic_counter        = 0
 };
 
-static mcu_content_t* cam_content = &_cam_c;
+static mcu_content_t* mcu_c = &_mcu_c;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
-static void gpio_take_picture(void* arg);
-void cam_exec_recording_task(mcu_content_t* cam_content);
+static void gpio_trig_action(void* arg);
+void exec_recording_task(mcu_content_t* mcu_c);
 
 /**
  * @brief Handler for GPIO interrupts
@@ -75,19 +75,19 @@ void IRAM_ATTR gpio_isr_handler(void* arg) {
 /**
  * @brief Takes a picture when the input gpio is pulled down by a switch
  */
-static void gpio_take_picture(void* arg)
+static void gpio_trig_action(void* arg)
 {
     uint32_t io_num;
     for(;;) {
         if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
+            mcu_c->content_type = gpio_io_type(io_num);
+            mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
+            mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
 
             if (trig_valid_gpio(io_num, SIGNAL_LOW)) {
                 gpio_blink_output(1);
-                cam_content->save_to_sdcard = IMAGE_TO_SDCARD;
-                cam_content->upload_content = IMAGE_TO_HTTP_UPLOAD;
-                cam_content->content_type   = gpio_io_type(io_num);
-                cam_exec_recording_task(cam_content);
+                exec_recording_task(mcu_c);
             }
             else {
                 ESP_LOGI(TAG, "Triggered the wrong input pin");
@@ -99,36 +99,51 @@ static void gpio_take_picture(void* arg)
 /**
  * @brief Selects the task to execute (picture or stream) according to the passed camera content
  * 
- * @param cam_c Camera current status with its content
+ * @param mcu_c Camera current status with its content
  */
-void cam_exec_recording_task(mcu_content_t* cam_c) {    
-    
-    if (cam_c->content_type == PICTURE) {
-        camera_fb_t* camera_pic;
-        uint8_t* jpeg_buf = NULL;
-        size_t jpeg_buf_len = 0;
+void exec_recording_task(mcu_content_t* mcu_c) {    
+    camera_fb_t* camera_pic;
+    uint8_t* jpeg_buf = NULL;
+    size_t jpeg_buf_len = 0;
 
-        camera_pic = camera_take_picture(cam_c);
-        convert_to_jpeg(camera_pic, jpeg_buf, jpeg_buf_len);
+    switch (mcu_c->content_type) {
+        case (mcu_content_type_t) PICTURE:
+            camera_pic = camera_take_picture(mcu_c);
+            convert_to_jpeg(camera_pic, jpeg_buf, jpeg_buf_len);
 
-        if (cam_c->save_to_sdcard && cam_c->sdcard_initiated)
-            save_image_to_sdcard(jpeg_buf, jpeg_buf_len, cam_c->pic_counter);
+            if (mcu_c->save_to_sdcard && mcu_c->sdcard_initiated)
+                save_image_to_sdcard(jpeg_buf, jpeg_buf_len, mcu_c->pic_counter);
 
-        if (cam_c->upload_content) {   
-            ESP_LOGI(TAG, "Uploading picture");
-            ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
-            http_rest_with_url(jpeg_buf, jpeg_buf_len);
-        }
-    }
-    else if (cam_c->content_type == STREAM) {
-        if (!(cam_c->cam_server_init)) {
-          startStreamServer(cam_c->device_ip);
-          cam_c->cam_server_init = true;
-        }
-        else {
-          stopStreamServer();
-          cam_c->cam_server_init = false;
-        }
+            if (mcu_c->upload_content) {   
+                ESP_LOGI(TAG, "Uploading picture");
+                ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
+                http_rest_with_url_upload_picture(jpeg_buf, jpeg_buf_len);
+            }
+            break;
+
+        case (mcu_content_type_t) STREAM:
+            if (!(mcu_c->cam_server_init)) {
+            startStreamServer(mcu_c->device_ip);
+            mcu_c->cam_server_init = true;
+            }
+            else {
+            stopStreamServer();
+            mcu_c->cam_server_init = false;
+            }
+            break;
+
+        case (mcu_content_type_t) DRBELL:
+            //http_request for doorbell
+            //http_rest_with_url("/notif", NULL, NULL)
+            http_rest_with_url_notification();
+            break;
+        case (mcu_content_type_t) REEDSW:
+            //http_request for reed switch
+            http_rest_with_url_notification();
+            break;
+        case (mcu_content_type_t) INVALID:
+        default:
+            ESP_LOGE(TAG, "Invalid type detected when executing queue task");
     }
 }
 
@@ -147,12 +162,12 @@ void app_main(void) {
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     //start gpio task
-    xTaskCreate(&gpio_take_picture, "gpio_take_picture", 8192, NULL, 10, NULL);
+    xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
     gpio_setup_for_picture(gpio_isr_handler);
-    init_camera(cam_content);
+    init_camera(mcu_c);
     if (INIT_SDCARD)
-        init_sdcard(cam_content);
+        init_sdcard(mcu_c);
 
-    wifi_scan(cam_content);
+    wifi_scan(mcu_c);
 }

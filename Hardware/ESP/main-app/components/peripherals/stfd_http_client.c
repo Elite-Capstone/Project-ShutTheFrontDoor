@@ -113,7 +113,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
 }
 
 //Change file calling method to add 
-void http_rest_with_url(uint8_t* buf, size_t len) {
+void http_rest_with_url_upload_picture(uint8_t* buf, size_t len) {
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
@@ -227,29 +227,44 @@ void http_rest_with_url(uint8_t* buf, size_t len) {
     esp_http_client_cleanup(client);
 }
 
-// void app_main(void)
-// {
-//     esp_err_t ret = nvs_flash_init();
-//     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
-//       ESP_ERROR_CHECK(nvs_flash_erase());
-//       ret = nvs_flash_init();
-//     }
-//     ESP_ERROR_CHECK(ret);
-//     ESP_ERROR_CHECK(esp_netif_init());
-//     ESP_ERROR_CHECK(esp_event_loop_create_default());
+void http_rest_with_url_notification(void) {
+    char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
+    /**
+     * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
+     * If host and path parameters are not set, query parameter will be ignored. In such cases,
+     * query parameter should be specified in URL.
+     *
+     * If URL as well as host and path parameters are specified, values of host and path will be considered.
+     * NOTE: 
+     *      - url: "http://34.117.160.50/"
+     *      - path: name of the path in the API endpoint
+     */
+    esp_http_client_config_t config = {
+        .url = "http://34.117.160.50/",
+        .path = "/notif",
+        .query = "esp",
+        .event_handler = _http_event_handler,
+        .user_data = local_response_buffer,        // Pass address of local buffer to get response
+    };
+     esp_http_client_handle_t client = esp_http_client_init(&config);
 
-//     /* This helper function configures Wi-Fi or Ethernet, as selected in menuconfig.
-//      * Read "Establishing Wi-Fi or Ethernet Connection" section in
-//      * examples/protocols/README.md for more information about this function.
-//      */
 
-//     //**** Change the example_connect WIFI with the correct implementation
-//     ESP_ERROR_CHECK(example_connect());
-//     ESP_LOGI(TAG, "Connected to AP, begin http example");
-    
-//     //Creating the task with the name and the size of the buffer
-//     xTaskCreate(&http_test_task, "http_test_task", 8192, NULL, 5, NULL);
-// }
+
+    esp_http_client_set_url(client, "http://34.117.160.50/notif/newTopic/{00b288a8-3db1-40b5-b30f-532af4e12f4b}");
+
+    esp_err_t err = esp_http_client_perform(client);
+    //GET
+    if (err == ESP_OK) {
+         ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
+                 esp_http_client_get_status_code(client),
+                 esp_http_client_get_content_length(client));
+    } else {
+        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+     }
+     ESP_LOG_BUFFER_HEX(TAG, local_response_buffer, strlen(local_response_buffer));
+
+    esp_http_client_cleanup(client);
+}
 
 //=======================================
 //===== Section for video streaming =====

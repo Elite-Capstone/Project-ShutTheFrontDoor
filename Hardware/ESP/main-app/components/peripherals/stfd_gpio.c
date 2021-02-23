@@ -49,6 +49,42 @@
 #define GPIO_INPUT_STREAM 12
 #endif /* CONFIG_GPIO_INPUT_STREAM */
 
+#if  CONFIG_GPIO_INPUT_0_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 0
+#elif  CONFIG_GPIO_INPUT_4_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 4
+#elif  CONFIG_GPIO_INPUT_12_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 12
+#elif  CONFIG_GPIO_INPUT_13_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 13
+#elif  CONFIG_GPIO_INPUT_14_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 14
+#elif  CONFIG_GPIO_INPUT_15_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 15
+#elif  CONFIG_GPIO_INPUT_16_DRBELL_NOTIF
+#define GPIO_INPUT_DRBELL_NOTIF 16
+#else
+#define GPIO_INPUT_DRBELL_NOTIF 13
+#endif /* CONFIG_GPIO_INPUT_DRBELL_NOTIF */
+
+#if  GPIO_INPUT_0_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 0
+#elif  CONFIG_GPIO_INPUT_4_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 4
+#elif  CONFIG_GPIO_INPUT_12_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 12
+#elif  CONFIG_GPIO_INPUT_13_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 13
+#elif  CONFIG_GPIO_INPUT_14_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 14
+#elif  CONFIG_GPIO_INPUT_15_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 15
+#elif  CONFIG_GPIO_INPUT_16_REEDSW_STATUS
+#define GPIO_INPUT_REEDSW_STATUS 16
+#else
+#define GPIO_INPUT_REEDSW_STATUS 15
+#endif /* CONFIG_GPIO_INPUT_REEDSW_STATUS */
+
 #if CONFIG_GPIO_OUTPUT_0_CONFIRM
 #define GPIO_OUTPUT_CONFIRM_UPLOAD 0
 #elif CONFIG_GPIO_OUTPUT_2_CONFIRM
@@ -67,20 +103,49 @@
 #define GPIO_OUTPUT_CONFIRM_UPLOAD 4
 #endif /* CONFIG_GPIO_OUTPUT_CONFIRM_UPLOAD */
 
+// Wrong GPIO assignment check
+#define GPIO_MULTA_ERR_MSG "Multiple functions assigned to same GPIO: "
+
 #if (GPIO_INPUT_PIC == GPIO_INPUT_STREAM)
-#error "Both input GPIO functions are associated to the same GPIO"
+#error GPIO_MULTA_ERR_MSG "Picture & Stream"
 #endif
 
-#if (GPIO_INPUT_STREAM == GPIO_OUTPUT_CONFIRM_UPLOAD)
-#error "The output GPIO is also associated to the input GPIO for Streaming"
+#if (GPIO_INPUT_PIC == GPIO_INPUT_DRBELL_NOTIF)
+#error GPIO_MULTA_ERR_MSG "Picture & Doorbell Notif."
+#endif
+
+#if (GPIO_INPUT_PIC == GPIO_INPUT_REEDSW_STATUS)
+#error GPIO_MULTA_ERR_MSG "Picture & Reed Switch Status"
 #endif
 
 #if (GPIO_INPUT_PIC == GPIO_OUTPUT_CONFIRM_UPLOAD)
-#error "The output GPIO is also associated to the input GPIO for Picture"
+#error GPIO_MULTA_ERR_MSG "Picture & Output confirm"
+#endif
+
+#if (GPIO_INPUT_STREAM == GPIO_INPUT_DRBELL_NOTIF)
+#error GPIO_MULTA_ERR_MSG "Stream & Doorbell Notif."
+#endif
+
+#if (GPIO_INPUT_STREAM == GPIO_INPUT_REEDSW_STATUS)
+#error GPIO_MULTA_ERR_MSG "Stream & Reed Switch Status"
+#endif
+
+#if (GPIO_INPUT_STREAM == GPIO_OUTPUT_CONFIRM_UPLOAD)
+#error GPIO_MULTA_ERR_MSG "Stream & Output confirm"
+#endif
+
+#if (GPIO_INPUT_DRBELL_NOTIF == GPIO_INPUT_REEDSW_STATUS)
+#error GPIO_MULTA_ERR_MSG "Doorbell Notif & Reed Switch Status"
+#endif
+
+#if (GPIO_INPUT_DRBELL_NOTIF == GPIO_OUTPUT_CONFIRM_UPLOAD)
+#error GPIO_MULTA_ERR_MSG "Doorbell Notif & Output confirm"
 #endif
 
 #define GPIO_INPUT_PIC_PIN_SEL      (1ULL<<GPIO_INPUT_PIC)
 #define GPIO_INPUT_STREAM_PIN_SEL   (1ULL<<GPIO_INPUT_STREAM)
+#define GPIO_INPUT_DRBELL_PIN_SEL   (1ULL<<GPIO_INPUT_DRBELL_NOTIF)
+#define GPIO_INPUT_REEDSW_PIN_SEL   (1ULL<<GPIO_INPUT_REEDSW_STATUS)
 #define GPIO_OUTPUT_PIN_SEL         (1ULL<<GPIO_OUTPUT_CONFIRM_UPLOAD)
 
 #define ESP_INTR_FLAG_DEFAULT 0
@@ -88,7 +153,8 @@
 static const char* TAG = "stfd_gpio";
 
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
-    return ((io_num == GPIO_INPUT_PIC || io_num == GPIO_INPUT_STREAM) && gpio_get_level(io_num) == sg_level);
+    //return ((io_num == GPIO_INPUT_PIC || io_num == GPIO_INPUT_STREAM) && gpio_get_level(io_num) == sg_level);
+    return gpio_get_level(io_num) == sg_level;
 }
 
 void gpio_blink_output(uint32_t num_blinks) {
@@ -108,13 +174,30 @@ mcu_content_type_t gpio_io_type(uint32_t io_num) {
             return PICTURE;
         case GPIO_INPUT_STREAM:
             return STREAM;
+        case GPIO_INPUT_DRBELL_NOTIF:
+            return DRBELL;
+        case GPIO_INPUT_REEDSW_STATUS:
+            return REEDSW;
         default:
             return INVALID;
     }
 }
 
+// esp_err_t stfd_gpio_config() {
+//     ///interrupt of rising edge
+//     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+//     //bit mask of the pins, use GPIO4/5 here
+//     io_conf.pin_bit_mask = GPIO_INPUT_PIC_PIN_SEL;
+//     //set as input mode    
+//     io_conf.mode = GPIO_MODE_INPUT;
+//     //enable pull-up mode
+//     io_conf.pull_up_en = 1;
+//     return ESP_ERROR_CHECK(gpio_config(&io_conf));
+// }
+
 void gpio_setup_input(gpio_isr_t isr_handler) {
     gpio_config_t io_conf;
+    //esp_err_t err = ESP_OK;
 
     ///interrupt of rising edge
     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
@@ -136,6 +219,26 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     io_conf.pull_up_en = 1;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
 
+    ///interrupt of rising edge
+    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+    //bit mask of the pins, use GPIO4/5 here
+    io_conf.pin_bit_mask = GPIO_INPUT_DRBELL_PIN_SEL;
+    //set as input mode    
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = 1;
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
+    ///interrupt of rising edge
+    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
+    //bit mask of the pins, use GPIO4/5 here
+    io_conf.pin_bit_mask = GPIO_INPUT_REEDSW_PIN_SEL;
+    //set as input mode    
+    io_conf.mode = GPIO_MODE_INPUT;
+    //enable pull-up mode
+    io_conf.pull_up_en = 1;
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+
     //install gpio isr service
     //Must only be done once. But each gpio can have their own isr handler
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
@@ -143,6 +246,8 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, isr_handler, (void*) GPIO_INPUT_PIC));
     //hook isr handler for specific gpio pin
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_STREAM, isr_handler, (void*) GPIO_INPUT_STREAM));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_DRBELL_NOTIF, isr_handler, (void*) GPIO_INPUT_DRBELL_NOTIF));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_REEDSW_STATUS, isr_handler, (void*) GPIO_INPUT_REEDSW_STATUS));
 }
 
 void gpio_setup_output(void) {

@@ -1,5 +1,129 @@
 menu "Project ShutTheFrontDoor Configuration"
 
+    menu "GPIO Configuration"
+
+        choice GPIO_INPUT_TAKE_PIC
+            prompt "Take Picture GPIO"
+            default GPIO_INPUT_16_PIC
+            help 
+                The selected GPIO will be pulled high and must be pulled down to take a picture
+
+            config GPIO_INPUT_0_PIC
+                bool "GPIO 0"
+            config GPIO_INPUT_2_PIC
+                bool "GPIO 2"
+            config GPIO_INPUT_4_PIC
+                bool "GPIO 4"
+            config GPIO_INPUT_12_PIC
+                bool "GPIO 12"
+            config GPIO_INPUT_13_PIC
+                bool "GPIO 13"
+            config GPIO_INPUT_14_PIC
+                bool "GPIO 14"
+            config GPIO_INPUT_15_PIC
+                bool "GPIO 15"
+            config GPIO_INPUT_16_PIC
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_TOGGLE_STREAM
+            prompt "GPIO to toggle start/end stream"
+            default GPIO_INPUT_12_STREAM
+            help 
+                The selected GPIO will be pulled high and must be pulled down to toggle the video stream
+
+            config GPIO_INPUT_0_STREAM
+                bool "GPIO 0"
+            config GPIO_INPUT_2_STREAM
+                bool "GPIO 2"
+            config GPIO_INPUT_4_STREAM
+                bool "GPIO 4"
+            config GPIO_INPUT_12_STREAM
+                bool "GPIO 12"
+            config GPIO_INPUT_13_STREAM
+                bool "GPIO 13"
+            config GPIO_INPUT_14_STREAM
+                bool "GPIO 14"
+            config GPIO_INPUT_15_STREAM
+                bool "GPIO 15"
+            config GPIO_INPUT_16_STREAM
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_DOORBELL_NOTIF
+            prompt "GPIO to send notification on doorbell push"
+            default GPIO_INPUT_13_DRBELL_NOTIF
+            help 
+                The selected GPIO will be pulled high and must be pulled down to signal the doorbell has been pressed
+
+            config GPIO_INPUT_0_DRBELL_NOTIF
+                bool "GPIO 0"
+            config GPIO_INPUT_2_DRBELL_NOTIF
+                bool "GPIO 2"
+            config GPIO_INPUT_4_DRBELL_NOTIF
+                bool "GPIO 4"
+            config GPIO_INPUT_12_DRBELL_NOTIF
+                bool "GPIO 12"
+            config GPIO_INPUT_13_DRBELL_NOTIF
+                bool "GPIO 13"
+            config GPIO_INPUT_14_DRBELL_NOTIF
+                bool "GPIO 14"
+            config GPIO_INPUT_15_DRBELL_NOTIF
+                bool "GPIO 15"
+            config GPIO_INPUT_16_DRBELL_NOTIF
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_DOOR_REEDSW_STATUS
+            prompt "GPIO to signal when door has been open/closed"
+            default GPIO_INPUT_15_REEDSW_STATUS
+            help 
+                The selected GPIO will be pulled high and must be pulled down to toggle the door open/close status
+
+            config GPIO_INPUT_0_REEDSW_STATUS
+                bool "GPIO 0"
+            config GPIO_INPUT_2_REEDSW_STATUS
+                bool "GPIO 2"
+            config GPIO_INPUT_4_REEDSW_STATUS
+                bool "GPIO 4"
+            config GPIO_INPUT_12_REEDSW_STATUS
+                bool "GPIO 12"
+            config GPIO_INPUT_13_REEDSW_STATUS
+                bool "GPIO 13"
+            config GPIO_INPUT_14_REEDSW_STATUS
+                bool "GPIO 14"
+            config GPIO_INPUT_15_REEDSW_STATUS
+                bool "GPIO 15"
+            config GPIO_INPUT_16_REEDSW_STATUS
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_OUTPUT_CONFIRM
+            prompt "Output confirm GPIO"
+            default GPIO_OUTPUT_4_CONFIRM
+            help 
+                The selected GPIO will pulse when the picture is uploaded or stream has toggled
+
+            config GPIO_OUTPUT_0_CONFIRM
+                bool "GPIO 0"
+            config GPIO_OUTPUT_2_CONFIRM
+                bool "GPIO 2"
+            config GPIO_OUTPUT_4_CONFIRM
+                bool "GPIO 4"
+            config GPIO_OUTPUT_12_CONFIRM
+                bool "GPIO 12"
+            config GPIO_OUTPUT_13_CONFIRM
+                bool "GPIO 13"
+            config GPIO_OUTPUT_14_CONFIRM
+                bool "GPIO 14"
+            config GPIO_OUTPUT_15_CONFIRM
+                bool "GPIO 15"
+            config GPIO_OUTPUT_16_CONFIRM
+                bool "GPIO 16"
+        endchoice
+    
+    endmenu
+
     menu "Camera configuration"
 
         config OV7670_SUPPORT
@@ -74,78 +198,6 @@ menu "Project ShutTheFrontDoor Configuration"
 
     menu "Picture Configuration"
         
-        choice GPIO_INPUT_TAKE_PIC
-            prompt "Take Picture GPIO"
-            default GPIO_INPUT_16_PIC
-            help 
-                The selected GPIO will be pulled high and must be pulled down to take a picture
-
-            config GPIO_INPUT_0_PIC
-                bool "GPIO 0"
-            config GPIO_INPUT_2_PIC
-                bool "GPIO 2"
-            config GPIO_INPUT_4_PIC
-                bool "GPIO 4"
-            config GPIO_INPUT_12_PIC
-                bool "GPIO 12"
-            config GPIO_INPUT_13_PIC
-                bool "GPIO 13"
-            config GPIO_INPUT_14_PIC
-                bool "GPIO 14"
-            config GPIO_INPUT_15_PIC
-                bool "GPIO 15"
-            config GPIO_INPUT_16_PIC
-                bool "GPIO 16"
-        endchoice
-
-        choice GPIO_INPUT_TOGGLE_STREAM
-            prompt "GPIO to toggle start/end stream"
-            default GPIO_INPUT_12_STREAM
-            help 
-                The selected GPIO will be pulled high and must be pulled down to toggle the video stream
-
-            config GPIO_INPUT_0_STREAM
-                bool "GPIO 0"
-            config GPIO_INPUT_2_STREAM
-                bool "GPIO 2"
-            config GPIO_INPUT_4_STREAM
-                bool "GPIO 4"
-            config GPIO_INPUT_12_STREAM
-                bool "GPIO 12"
-            config GPIO_INPUT_13_STREAM
-                bool "GPIO 13"
-            config GPIO_INPUT_14_STREAM
-                bool "GPIO 14"
-            config GPIO_INPUT_15_STREAM
-                bool "GPIO 15"
-            config GPIO_INPUT_16_STREAM
-                bool "GPIO 16"
-        endchoice
-
-        choice GPIO_OUTPUT_CONFIRM
-            prompt "Output picture/stream GPIO"
-            default GPIO_OUTPUT_4_CONFIRM
-            help 
-                The selected GPIO will pulse when the picture is uploaded or stream has toggled
-
-            config GPIO_OUTPUT_0_CONFIRM
-                bool "GPIO 0"
-            config GPIO_OUTPUT_2_CONFIRM
-                bool "GPIO 2"
-            config GPIO_OUTPUT_4_CONFIRM
-                bool "GPIO 4"
-            config GPIO_OUTPUT_12_CONFIRM
-                bool "GPIO 12"
-            config GPIO_OUTPUT_13_CONFIRM
-                bool "GPIO 13"
-            config GPIO_OUTPUT_14_CONFIRM
-                bool "GPIO 14"
-            config GPIO_OUTPUT_15_CONFIRM
-                bool "GPIO 15"
-            config GPIO_OUTPUT_16_CONFIRM
-                bool "GPIO 16"
-        endchoice
-
         choice IMAGE_FORMAT_SIZE
             prompt "Image format output size"
             default IMAGE_FORMAT_QVGA

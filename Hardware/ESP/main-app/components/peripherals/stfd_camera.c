@@ -111,27 +111,27 @@ static camera_config_t camera_config = {
     .fb_count     = 2   //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
 
-esp_err_t init_camera(cam_content_t* cam_c)
+esp_err_t init_camera(mcu_content_t* mcu_c)
 {
     esp_err_t err;
     //initialize the camera
-    if (!(cam_c->cam_initiated)) {
+    if (!(mcu_c->cam_initiated)) {
         err = esp_camera_init(&camera_config);
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Camera Init Failed");
             return err;
         }
-        cam_c->cam_initiated= true;
+        mcu_c->cam_initiated= true;
     }
     return ESP_OK;
 }
 
-esp_err_t init_sdcard(cam_content_t* cam_c)
+esp_err_t init_sdcard(mcu_content_t* mcu_c)
 {
     esp_err_t ret = ESP_FAIL;
 
-    if (!(cam_c->sdcard_initiated)) {
+    if (!(mcu_c->sdcard_initiated)) {
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = false,
             .max_files = 5,
@@ -201,7 +201,7 @@ bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt)
     return !err;
 }
 
-camera_fb_t* camera_take_picture(cam_content_t* cam_c)
+camera_fb_t* camera_take_picture(mcu_content_t* mcu_c)
 {
     ESP_LOGI(TAG, "Taking picture...");
     camera_fb_t *pic = esp_camera_fb_get();
@@ -211,7 +211,7 @@ camera_fb_t* camera_take_picture(cam_content_t* cam_c)
       pic = NULL;
     }
     else {
-      cam_c->pic_counter++;
+      mcu_c->pic_counter++;
     }
 
     vTaskDelay(3000 / portTICK_RATE_MS);

@@ -30,6 +30,8 @@ typedef enum {
     STANDBY = 0,
     PICTURE = 1,
     STREAM  = 2,
+    DRBELL  = 3,
+    REEDSW  = 4
 } mcu_content_type_t;
 
 typedef struct {
@@ -140,7 +142,14 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt);
  * @param buf Transfer file content buffer
  * @param len Transfer file content length
  */
-void http_rest_with_url(uint8_t* buf, size_t len);
+void http_rest_with_url_upload_picture(uint8_t* buf, size_t len);
+
+/**
+ * @brief
+ * 
+ * @param
+ */
+void http_rest_with_url_notification(void);
 
 /**
  * @brief HTTP event handler for streaming
