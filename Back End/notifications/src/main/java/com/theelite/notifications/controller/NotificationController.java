@@ -60,4 +60,12 @@ public class NotificationController {
     public void publishNotification(@RequestBody Notification notification) {
         service.publishNotification(notification);
     }
+
+    @PutMapping("/newNotif/{doorId}/{event}")
+    public void publishNotification(@PathVariable("doorId") String doorId, @PathVariable("event") String event) {
+        Notification notification = new Notification();
+        notification.setNotification(event);
+        notification.setDoorId(UUID.fromString(doorId));
+        service.publishNotification(notification);
+    }
 }
