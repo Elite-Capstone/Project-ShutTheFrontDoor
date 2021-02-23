@@ -66,7 +66,7 @@ public class NotificationConfigurations {
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.setProperty("group.id", consumerGroup);
-        props.setProperty("client.it", clientId);
+        props.setProperty("client.id", clientId);
         props.setProperty("enable.auto.commit", "true");
         props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         props.setProperty("value.deserializer", "org.springframework.kafka.support.serializer.JsonDeserializer");
