@@ -17,6 +17,7 @@ class NotificationsFragment : Fragment() {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recentNotificationRecyclerView: RecyclerView
     private lateinit var root: View
+    private lateinit var recentNotificationsAdapter: RecentNotificationsAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -47,7 +48,7 @@ class NotificationsFragment : Fragment() {
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        val recentNotificationsAdapter = RecentNotificationsAdapter(getNotifications())
+        recentNotificationsAdapter = RecentNotificationsAdapter(getNotifications())
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
     }
 
@@ -57,6 +58,8 @@ class NotificationsFragment : Fragment() {
         while (index >= 0) {
             notifications.add("Received notifications ${index--}")
         }
+        //After your data set was updated
+        recentNotificationsAdapter.notifyDataSetChanged()
         return notifications
     }
 
