@@ -19,15 +19,11 @@
 //#include "esp_timer.h"
 #include "img_converters.h"
 
-#include "soc/soc.h" //disable brownout problems
-#include "soc/rtc_cntl_reg.h"  //disable brownout problems
-
 #include "stfd_peripherals.h"
 
 static const char *TAG = "stfd_camera";
 
 #define MOUNT_POINT "/sdcard"
-#define DEFAULT_CAM_STREAM_PORT 80
 
 #define BOARD_ESP32CAM_AITHINKER 1
 
@@ -84,13 +80,6 @@ static const char *TAG = "stfd_camera";
 #define IMAGE_PIXEL_FORMAT PIXFORMAT_JPEG
 #endif /* CONFIG_IMAGE_PIXEL_FORMAT */
 
-#define PART_BOUNDARY "123456789000000000000987654321"
-static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
-static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
-static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
-
-httpd_handle_t stream_httpd = NULL;
-
 static camera_config_t camera_config = {
     .pin_pwdn     = CAM_PIN_PWDN,
     .pin_reset    = CAM_PIN_RESET,
@@ -122,27 +111,27 @@ static camera_config_t camera_config = {
     .fb_count     = 2   //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
 
-esp_err_t init_camera()
+esp_err_t init_camera(cam_content_t* cam_c)
 {
     esp_err_t err;
     //initialize the camera
-    if (!(cam_content.cam_initiated)) {
+    if (!(cam_c->cam_initiated)) {
         err = esp_camera_init(&camera_config);
         if (err != ESP_OK)
         {
             ESP_LOGE(TAG, "Camera Init Failed");
             return err;
         }
-        cam_content.cam_initiated = true;
+        cam_c->cam_initiated= true;
     }
     return ESP_OK;
 }
 
-esp_err_t init_sdcard()
+esp_err_t init_sdcard(cam_content_t* cam_c)
 {
     esp_err_t ret = ESP_FAIL;
 
-    if (!(cam_content.sdcard_initiated)) {
+    if (!(cam_c->sdcard_initiated)) {
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = false,
             .max_files = 5,
@@ -180,40 +169,21 @@ esp_err_t init_sdcard()
     return ret;
 }
 
-void cam_exec_recording_task(cam_content_t* cam_content) {
-    camera_fb_t* camera_pic;
-    
-    if (cam_content->content_type == PICTURE) {
-        camera_pic = camera_take_picture(cam_content->save_to_sdcard);
-        if (cam_content->upload_content)
-        {
-            ESP_LOGI(TAG, "Tried to Upload to HTTP");
-            //TODO: Upload picture
-        }
-    }
-    else if (cam_content->content_type == STREAM) {
-        if (!(cam_content->cam_server_init)) {
-          startCameraServer();
-        }
-        else {
-          stopCameraServer();
-        }
-    }
-}
+
 
 //================================================
 //===== Section - Taking Pictures and upload =====
 //================================================
-bool save_image_to_sdcard(camera_fb_t *pic)
+bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt)
 {
     bool err = false;
     char *pic_name = malloc(30 + sizeof(int64_t));
-    sprintf(pic_name, MOUNT_POINT"/pic_%lli.jpg", cam_content.pic_counter);
+    sprintf(pic_name, MOUNT_POINT"/pic_%lli.jpg", pic_cnt);
     FILE *file = fopen(pic_name, "w");
     
     if (file != NULL)
     {
-        fwrite(pic->buf, 1, pic->len, file);
+        fwrite(buf, 1, len, file);
         ESP_LOGI(TAG, "File saved: %s", pic_name);
         err = false;
     }
@@ -231,45 +201,30 @@ bool save_image_to_sdcard(camera_fb_t *pic)
     return !err;
 }
 
-camera_fb_t* camera_take_picture(bool save_to_sdcard)
+camera_fb_t* camera_take_picture(cam_content_t* cam_c)
 {
     ESP_LOGI(TAG, "Taking picture...");
     camera_fb_t *pic = esp_camera_fb_get();
-    cam_content.pic_counter++;
-
-    if (save_to_sdcard)
-        save_image_to_sdcard(pic);
+    if (!pic) {
+      ESP_LOGW(TAG, "Camera Capture Failed!");
+      esp_camera_fb_return(pic);
+      pic = NULL;
+    }
+    else {
+      cam_c->pic_counter++;
+    }
 
     vTaskDelay(3000 / portTICK_RATE_MS);
 
     return pic;
 }
 
-//=======================================
-//===== Section for video streaming =====
-//=======================================
+esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t* jpeg_buf, size_t jpeg_buf_len) {
+    esp_err_t res = ESP_OK;
 
-esp_err_t stream_handler(httpd_req_t *req) {
-  camera_fb_t * fb = NULL;
-  esp_err_t res = ESP_OK;
-  size_t _jpg_buf_len = 0;
-  uint8_t * _jpg_buf = NULL;
-  char * part_buf[64];
-
-  res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
-  if(res != ESP_OK){
-    return res;
-  }
-
-  while(true){
-    fb = esp_camera_fb_get();
-    if (!fb) {
-      ESP_LOGE(TAG, "Camera capture failed");
-      res = ESP_FAIL;
-    } else {
-      if(fb->width > 400){
+    if(fb->width > 400){
         if(fb->format != PIXFORMAT_JPEG){
-          bool jpeg_converted = frame2jpg(fb, 80, &_jpg_buf, &_jpg_buf_len);
+          bool jpeg_converted = frame2jpg(fb, 80, &jpeg_buf, &jpeg_buf_len);
           esp_camera_fb_return(fb);
           fb = NULL;
           if(!jpeg_converted){
@@ -277,57 +232,12 @@ esp_err_t stream_handler(httpd_req_t *req) {
             res = ESP_FAIL;
           }
         } else {
-          _jpg_buf_len = fb->len;
-          _jpg_buf = fb->buf;
+          jpeg_buf_len = fb->len;
+          jpeg_buf = fb->buf;
+
+          esp_camera_fb_return(fb);
+          fb = NULL;
         }
-      }
     }
-    if(res == ESP_OK){
-      size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
-      res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
-    }
-    if(res == ESP_OK){
-      res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
-    }
-    if(res == ESP_OK){
-      res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
-    }
-    if(fb){
-      esp_camera_fb_return(fb);
-      fb = NULL;
-      _jpg_buf = NULL;
-    } else if(_jpg_buf){
-      free(_jpg_buf);
-      _jpg_buf = NULL;
-    }
-    if(res != ESP_OK){
-      break;
-    }
-  }
-  return res;
-}
-
-void startCameraServer() {
-    httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.server_port = DEFAULT_CAM_STREAM_PORT;
-
-    httpd_uri_t index_uri = {
-    .uri       = "/",
-    .method    = HTTP_GET,
-    .handler   = stream_handler,
-    .user_ctx  = NULL
-    };
-
-    ESP_LOGI(TAG,"Starting web server on port: '%d'\n", config.server_port);
-    ESP_LOGI(TAG, "Connect to http://%s", cam_content.device_ip);
-    if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-    httpd_register_uri_handler(stream_httpd, &index_uri);
-    }
-}
-
-void stopCameraServer() {
-  if (httpd_stop(&stream_httpd) == ESP_OK)
-      ESP_LOGI(TAG,"Stopping web server");
-  else
-      ESP_LOGE(TAG, "Could not successfully stop the camera server on port %d", DEFAULT_CAM_STREAM_PORT);
+    return res;
 }

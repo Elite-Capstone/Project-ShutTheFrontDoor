@@ -116,7 +116,6 @@ cam_content_type_t gpio_io_type(uint32_t io_num) {
 void gpio_setup_input(gpio_isr_t isr_handler) {
     gpio_config_t io_conf;
 
-
     ///interrupt of rising edge
     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
     //bit mask of the pins, use GPIO4/5 here

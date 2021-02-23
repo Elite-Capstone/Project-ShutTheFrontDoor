@@ -11,12 +11,16 @@
 #include <esp_event.h>
 #include <esp_wifi.h>
 #include <esp_http_server.h>
+#include <esp_http_client.h>
 #include "esp_camera.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/gpio.h"
+
+#include "soc/soc.h" //disable brownout problems
+#include "soc/rtc_cntl_reg.h"  //disable brownout problems
 
 #define SIGNAL_HIGH 1
 #define SIGNAL_LOW 0
@@ -40,18 +44,6 @@ typedef struct {
     long long int pic_counter;
 } cam_content_t;
 
-static cam_content_t cam_content = {
-    .cam_initiated      = false,
-    .sdcard_initiated   = false,
-    .cam_server_init    = false,
-    .save_to_sdcard     = false,
-    .upload_content     = false,
-    .content_type       = STANDBY,
-    .ap_info            = NULL,
-    .device_ip          = "",
-    .pic_counter        = 0
-};
-
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
 
@@ -59,49 +51,37 @@ wifi_scan_method_t getDefaultScanMethod(void);
 /**
  * @brief Initilize the camera
  */
-esp_err_t init_camera();
+esp_err_t init_camera(cam_content_t* cam_c);
 
 /**
  * @brief Initilize the SD card
  */
-esp_err_t init_sdcard();
-
-/**
- * @brief Selects the task to execute (picture or stream) according to the passed camera content
- * 
- * @param cam_content Camera current status with its content
- */
-void cam_exec_recording_task(cam_content_t* cam_content);
+esp_err_t init_sdcard(cam_content_t* cam_c);
 
 /**
  * @brief Saves the image to the SD card locally is the SD card has been initialized
+ * 
+ * @param buf     Image pixel buffer
+ * @param len     Size of the image buffer
+ * @param pic_cnt Current picture counter
  */
-bool save_image_to_sdcard(camera_fb_t *pic);
+bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt);
 
 /**
  * @brief Executes the picture taking routine and returns the picture framebuffer
+ *        Must use esp_camera_return() after to free the memory allocated by esp_camera_fb_get()
+ */
+camera_fb_t* camera_take_picture(cam_content_t* cam_c);
+
+/**
+ * @brief Converts the camera frame buffer of any format to a JPEG. 
+ *        It is assumed that the framebuffer was not returned prior to this function call.
  * 
- * @param save_to_sdcard boolean passed to indicate if the picture should be saved
- *                       in the local SD card or not.
+ * @param fb            The camera frame buffer of any pixel format
+ * @param jpeg_buf      The buffer holding the JPEG conversion
+ * @param jpeg_buf_len  JPEG Buffer length
  */
-camera_fb_t* camera_take_picture(bool save_to_sdcard);
-
-/**
- * @brief HTTP event handler for streaming
- * 
- * @param req HTTP request
- */
-esp_err_t stream_handler(httpd_req_t *req);
-
-/**
- * @brief Function begins camera server for streaming
- */
-void startCameraServer(void);
-
-/**
- * @brief Function stop camera server from streaming and deallocates the memory
- */
-void stopCameraServer(void);
+esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t* jpeg_buf, size_t jpeg_buf_len);
 
 //========== GPIO ==========
 
@@ -145,6 +125,42 @@ void gpio_setup_for_picture(gpio_isr_t isr_handler);
 void gpio_setup_input(gpio_isr_t isr_handler);
 void gpio_setup_output(void);
 
+//========== HTTP client ==========
+
+/**
+ * @brief Interrupt handler for an HTTP event
+ * 
+ * @param evt
+ */
+esp_err_t _http_event_handler(esp_http_client_event_t *evt);
+
+/**
+ * @brief Begins the HTTP transaction to the set URL
+ * 
+ * @param buf Transfer file content buffer
+ * @param len Transfer file content length
+ */
+void http_rest_with_url(uint8_t* buf, size_t len);
+
+/**
+ * @brief HTTP event handler for streaming
+ * 
+ * @param req HTTP request
+ */
+esp_err_t stream_handler(httpd_req_t *req);
+
+/**
+ * @brief Function begins camera server for streaming
+ * 
+ * @param device_ip ESP camera's IP address on which it is streaming on
+ */
+void startStreamServer(char* device_ip);
+
+/**
+ * @brief Function stop camera server from streaming and deallocates the memory
+ */
+void stopStreamServer(void);
+
 //========== WiFi Scan ==========
 
 void event_handler(void* arg, esp_event_base_t event_base,
@@ -157,14 +173,17 @@ void print_cipher_type(int pairwise_cipher, int group_cipher);
 /**
  * @brief Scans for all available access points (AP) and returns te compiled list
  */
-wifi_ap_record_t* wifi_all_ch_scan(void);
+void wifi_all_ch_scan(wifi_ap_record_t* ap_info);
 
 /**
  * @brief Scans and finds the first compatible AP with the matching requirements (SSID, Password, Security level)
  */
-wifi_ap_record_t* fast_scan(void);
+void fast_scan(wifi_ap_record_t* ap_info);
 
 /**
- * @brief Performs the wifi scan and connects to the AP if the scan mode if fast_scan()
+ * @brief Performs the wifi scan and connects to the AP if the scan mode if fast_scan().
+ *        It assigns the wifi list or AP info to the passed pointer
+ * 
+ * @param ap_info Pointer to which the list is assigned to
  */
-wifi_ap_record_t* wifi_scan(void);
+void wifi_scan(wifi_ap_record_t* ap_info);

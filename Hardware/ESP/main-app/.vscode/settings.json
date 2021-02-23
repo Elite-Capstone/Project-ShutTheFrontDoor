@@ -47,6 +47,11 @@
     "esp_timer.h": "c",
     "esp_log.h": "c",
     "xiosbase": "c",
-    "*.ipp": "c"
+    "*.ipp": "c",
+    "esp_http_client.h": "c",
+    "esp_tls.h": "c",
+    "*.inc": "c",
+    "http_parser.h": "c",
+    "sdkconfig.h": "c"
   }
 }
