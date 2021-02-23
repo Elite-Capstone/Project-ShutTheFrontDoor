@@ -145,11 +145,11 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 void http_rest_with_url_upload_picture(uint8_t* buf, size_t len);
 
 /**
- * @brief
+ * @brief Uploads the attached message as a notification to the backend
  * 
- * @param
+ * @param message The message to attach to the notification
  */
-void http_rest_with_url_notification(void);
+void http_rest_with_url_notification(const char* _message);
 
 /**
  * @brief HTTP event handler for streaming

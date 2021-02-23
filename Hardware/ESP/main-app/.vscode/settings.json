@@ -52,6 +52,9 @@
     "esp_tls.h": "c",
     "*.inc": "c",
     "http_parser.h": "c",
-    "sdkconfig.h": "c"
+    "sdkconfig.h": "c",
+    "time.h": "c",
+    "ctime": "c",
+    "queue.h": "c"
   }
 }

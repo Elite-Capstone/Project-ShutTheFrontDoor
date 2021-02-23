@@ -39,6 +39,8 @@
 #endif /* CONFIG INIT_SDCARD */
 
 static const char* TAG = "main";
+static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
+static const char* REEDSW_MSG = "The Door opened";
 
 static xQueueHandle gpio_evt_queue = NULL;
 
@@ -133,13 +135,10 @@ void exec_recording_task(mcu_content_t* mcu_c) {
             break;
 
         case (mcu_content_type_t) DRBELL:
-            //http_request for doorbell
-            //http_rest_with_url("/notif", NULL, NULL)
-            http_rest_with_url_notification();
+            http_rest_with_url_notification(DRBELL_MSG);
             break;
         case (mcu_content_type_t) REEDSW:
-            //http_request for reed switch
-            http_rest_with_url_notification();
+            http_rest_with_url_notification(REEDSW_MSG);
             break;
         case (mcu_content_type_t) INVALID:
         default:

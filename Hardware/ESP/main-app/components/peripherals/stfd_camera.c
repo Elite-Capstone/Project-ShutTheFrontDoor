@@ -158,6 +158,7 @@ esp_err_t init_sdcard(mcu_content_t* mcu_c)
         if (ret == ESP_OK)
         {
         ESP_LOGI(TAG, "SD card mount successfully!");
+        mcu_c->sdcard_initiated = true;
         }
         else
         {
