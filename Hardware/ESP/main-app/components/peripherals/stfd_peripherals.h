@@ -30,7 +30,7 @@ typedef enum {
     STANDBY = 0,
     PICTURE = 1,
     STREAM  = 2,
-} cam_content_type_t;
+} mcu_content_type_t;
 
 typedef struct {
     bool cam_initiated;
@@ -38,11 +38,11 @@ typedef struct {
     bool cam_server_init;
     bool save_to_sdcard;
     bool upload_content;
-    cam_content_type_t content_type;
+    mcu_content_type_t content_type;
     wifi_ap_record_t* ap_info;
     char* device_ip;
     long long int pic_counter;
-} cam_content_t;
+} mcu_content_t;
 
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
@@ -51,12 +51,12 @@ wifi_scan_method_t getDefaultScanMethod(void);
 /**
  * @brief Initilize the camera
  */
-esp_err_t init_camera(cam_content_t* cam_c);
+esp_err_t init_camera(mcu_content_t* cam_c);
 
 /**
  * @brief Initilize the SD card
  */
-esp_err_t init_sdcard(cam_content_t* cam_c);
+esp_err_t init_sdcard(mcu_content_t* cam_c);
 
 /**
  * @brief Saves the image to the SD card locally is the SD card has been initialized
@@ -71,7 +71,7 @@ bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt);
  * @brief Executes the picture taking routine and returns the picture framebuffer
  *        Must use esp_camera_return() after to free the memory allocated by esp_camera_fb_get()
  */
-camera_fb_t* camera_take_picture(cam_content_t* cam_c);
+camera_fb_t* camera_take_picture(mcu_content_t* cam_c);
 
 /**
  * @brief Converts the camera frame buffer of any format to a JPEG. 
@@ -109,7 +109,7 @@ void gpio_blink_output(uint32_t num_blinks);
  * @param save_to_sdcard    Boolean from configuration menu. Indicates if the content is to 
  *                          be saved on the local SD card
  */
-cam_content_type_t gpio_io_type(uint32_t io_num);
+mcu_content_type_t gpio_io_type(uint32_t io_num);
 
 /**
  * @brief This function programs what to do upon interrupt
@@ -186,4 +186,4 @@ void fast_scan(wifi_ap_record_t* ap_info);
  * 
  * @param ap_info Pointer to which the list is assigned to
  */
-void wifi_scan(wifi_ap_record_t* ap_info);
+void wifi_scan(mcu_content_t* cam_content);

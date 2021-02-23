@@ -155,8 +155,8 @@ void http_rest_with_url(uint8_t* buf, size_t len) {
      *      - modify the Content-Type depending of the method
      */
 
+    ESP_LOGI(TAG, DEFAULT_HTTP_URL "file/upload");
     esp_http_client_set_url(client, DEFAULT_HTTP_URL "file/upload");
-    ESP_LOGI(TAG, DEFAULT_HTTP_URL "file/upload")
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     // Uploading strictly JPEG
     esp_http_client_set_header(client, "Content-Type", "image/jpeg");
@@ -164,7 +164,7 @@ void http_rest_with_url(uint8_t* buf, size_t len) {
     //const char *post_data = "{\"field1\":\"value1\"}";
     //esp_http_client_set_post_field(client, post_data, strlen(post_data));
     // buf contains pixel data and len is the length of the data
-    esp_http_client_set_post_field(client, buf, len);
+    esp_http_client_set_post_field(client, *buf, len);
 
     err = esp_http_client_perform(client);
     if (err == ESP_OK) {

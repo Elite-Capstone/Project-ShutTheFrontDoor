@@ -102,7 +102,7 @@ void gpio_blink_output(uint32_t num_blinks) {
     }
 }
 
-cam_content_type_t gpio_io_type(uint32_t io_num) {
+mcu_content_type_t gpio_io_type(uint32_t io_num) {
     switch(io_num) {
         case GPIO_INPUT_PIC:
             return PICTURE;

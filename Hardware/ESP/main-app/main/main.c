@@ -42,7 +42,7 @@ static const char* TAG = "main";
 
 static xQueueHandle gpio_evt_queue = NULL;
 
-cam_content_t _cam_c = {
+mcu_content_t _cam_c = {
     .cam_initiated      = false,
     .sdcard_initiated   = false,
     .cam_server_init    = false,
@@ -54,12 +54,12 @@ cam_content_t _cam_c = {
     .pic_counter        = 0
 };
 
-static cam_content_t* cam_content = &_cam_c;
+static mcu_content_t* cam_content = &_cam_c;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
 static void gpio_take_picture(void* arg);
-void cam_exec_recording_task(cam_content_t* cam_content);
+void cam_exec_recording_task(mcu_content_t* cam_content);
 
 /**
  * @brief Handler for GPIO interrupts
@@ -101,7 +101,7 @@ static void gpio_take_picture(void* arg)
  * 
  * @param cam_c Camera current status with its content
  */
-void cam_exec_recording_task(cam_content_t* cam_c) {    
+void cam_exec_recording_task(mcu_content_t* cam_c) {    
     
     if (cam_c->content_type == PICTURE) {
         camera_fb_t* camera_pic;
@@ -116,7 +116,7 @@ void cam_exec_recording_task(cam_content_t* cam_c) {
 
         if (cam_c->upload_content) {   
             ESP_LOGI(TAG, "Uploading picture");
-            ESP_LOGI(TAG, "Buffer length %i", jpeg_buf_len)
+            ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
             http_rest_with_url(jpeg_buf, jpeg_buf_len);
         }
     }
@@ -154,5 +154,5 @@ void app_main(void) {
     if (INIT_SDCARD)
         init_sdcard(cam_content);
 
-    wifi_scan(cam_content->ap_info);
+    wifi_scan(cam_content);
 }
