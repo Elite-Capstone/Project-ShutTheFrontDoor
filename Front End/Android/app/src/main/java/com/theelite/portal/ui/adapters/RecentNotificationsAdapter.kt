@@ -41,7 +41,12 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>)
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view: View
 
-        if (viewType % 2 == 0) {
+        println("View type $viewType is odd")
+        view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.recent_notifications_w_actions, parent, false)
+        view.setTag(R.layout.recent_notifications_w_actions, "recent")
+
+        /*if (viewType % 2 == 0) {
             println("View type $viewType is even")
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_no_actions, parent, false)
@@ -52,7 +57,7 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>)
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_w_actions, parent, false)
             view.setTag(R.layout.recent_notifications_w_actions, "recent")
-        }
+        }*/
         return ViewHolder(view)
     }
 

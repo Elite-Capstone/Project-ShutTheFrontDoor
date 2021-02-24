@@ -31,7 +31,7 @@
 
     <!-- Programmatically selected Display Strings -->
     <string name="registration_message">Welcome to Doorhub!</string>
-    <string name="login_message1">Welcome back pleb!</string>
+    <string name="login_message1">Welcome back!</string>
     <string name="login_message2">Welcome home!</string>
     <string name="login_message3">Now\'s the time to go to the washroom</string>
     <string name="smart_door_status_summary">Fully operational</string>
