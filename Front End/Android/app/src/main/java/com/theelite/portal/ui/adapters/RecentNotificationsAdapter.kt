@@ -5,9 +5,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
 
-class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
+class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>) :
     RecyclerView.Adapter<RecentNotificationsAdapter.ViewHolder>() {
 
 
@@ -56,9 +57,9 @@ class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.titleTextView.text = dataSet[position]
-        holder.descriptionTextView.text = dataSet[position]
-        holder.dateTextView.text = dataSet[position]
+        holder.titleTextView.text = dataSet[position].notification
+        holder.descriptionTextView.text = dataSet[position].notification
+        holder.dateTextView.text = dataSet[position].date.toString()
     }
 
     override fun getItemCount(): Int {
