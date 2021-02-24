@@ -1,5 +1,6 @@
 package com.theelite.users.dao;
 
+import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,5 +52,38 @@ public class CustomDaoImpl implements CustomDao {
         Query query = new Query().addCriteria(Criteria.where("email").is(user));
         Update update = new Update().set("accountId", accountId);
         mongoOperations.findAndModify(query, update, User.class);
+    }
+
+    @Override
+    public long testDatabaseConnection(){
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is("").not());
+        return mongoOperations.count(query, User.class);
+    }
+
+    @Override
+    public void cancelInvitation(String user) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("receiverEmail").is(user));
+        mongoOperations.findAndRemove(query, Invitation.class);
+    }
+
+    @Override
+    public Invitation getInvitation(String user) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("receiverEmail").is(user));
+        return mongoOperations.findOne(query, Invitation.class);
+    }
+
+    @Override
+    public boolean invitationExists(String user) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("receiverEmail").is(user));
+        return mongoOperations.exists(query, Invitation.class);
+    }
+
+    @Override
+    public void saveNewInvitation(Invitation invitation) {
+         mongoOperations.save(invitation);
     }
 }

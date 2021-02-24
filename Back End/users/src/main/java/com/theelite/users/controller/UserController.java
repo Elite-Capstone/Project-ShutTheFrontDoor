@@ -5,6 +5,7 @@ import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.service.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -13,6 +14,11 @@ public class UserController {
 
     @Autowired
     private UserServiceImpl userService;
+
+    @GetMapping("/")
+    public ResponseEntity pong(){
+        return userService.getHealth();
+    }
 
     @PutMapping("/new")
     public boolean addNewUser(@RequestBody User user) {

@@ -2,6 +2,7 @@ package com.theelite.users.service;
 
 import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
+import org.springframework.http.ResponseEntity;
 
 public interface UserService {
 
@@ -22,5 +23,7 @@ public interface UserService {
     boolean cancelUserInvitation(Invitation invitation);
 
     boolean removeUserFromAccount(String user);
+
+    ResponseEntity getHealth();
 
 }

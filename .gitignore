@@ -218,3 +218,11 @@ Hardware/ESP/main-app_deprecated/
 Hardware/ESP/main-app/sdkconfig
 
 Hardware/ESP/main-app/sdkconfig.old
+
+Back End/users/target/
+
+Back End/notifications/src/main/resources/application.properties
+
+Back End/notifications/target/
+
+Back End/file-storage-service/target/
