@@ -70,7 +70,7 @@ class NotificationsFragment : Fragment() {
 //        while (index >= 0) {
 //            notifications.add("Received notifications ${index--}")
 //        }
-        val client = OkHttpClient.Builder().build()
+//        val client = OkHttpClient.Builder().build()
         val retrofit = Retrofit.Builder()
                 .baseUrl(getString(R.string.url))
                 .addConverterFactory(GsonConverterFactory.create())

@@ -39,5 +39,7 @@
     <!-- Programmatically used strings -->
     <string name="url">http://34.117.160.50/</string>
     <string name="notifications_title">Notifications</string>
+    <string name="firstname_hint">First Name</string>
+    <string name="lastname_hint">Last Name</string>
 
 </resources>
