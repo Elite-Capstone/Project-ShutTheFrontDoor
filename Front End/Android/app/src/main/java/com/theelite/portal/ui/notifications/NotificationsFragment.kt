@@ -89,6 +89,7 @@ class NotificationsFragment : Fragment() {
             override fun onResponse(call: Call<List<Notification>>, response: Response<List<Notification>>) {
                 if (response.isSuccessful) {
                     notifications.addAll(response.body()!!)
+                    recentNotificationsAdapter.notifyDataSetChanged()
                 }
                 if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }
@@ -101,7 +102,7 @@ class NotificationsFragment : Fragment() {
 
 
 //After your data set was updated
-        recentNotificationsAdapter.notifyDataSetChanged()
+
 //        return notifications
     }
 
