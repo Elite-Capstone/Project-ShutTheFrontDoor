@@ -11,6 +11,7 @@
 #include <esp_event.h>
 #include <esp_wifi.h>
 #include <esp_http_server.h>
+#include "http_server.h"
 #include <esp_http_client.h>
 #include "esp_camera.h"
 
@@ -83,7 +84,7 @@ camera_fb_t* camera_take_picture(mcu_content_t* cam_c);
  * @param jpeg_buf      The buffer holding the JPEG conversion
  * @param jpeg_buf_len  JPEG Buffer length
  */
-esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t* jpeg_buf, size_t jpeg_buf_len);
+esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_len);
 
 //========== GPIO ==========
 

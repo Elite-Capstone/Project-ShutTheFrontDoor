@@ -23,9 +23,11 @@
 
 #define DEFAULT_CAM_STREAM_PORT 80
 #define PART_BOUNDARY "123456789000000000000987654321"
-static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
-static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
-static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
+static const char* STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
+static const char* PIC_CONTENT_TYPE = "multipart/mixed;boundary=" PART_BOUNDARY;
+static const char* MEDIA_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
+static const char* MEDIA_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
+
 
 httpd_handle_t stream_httpd = NULL;
 
@@ -116,6 +118,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
 //Change file calling method to add 
 void http_rest_with_url_upload_picture(uint8_t* buf, size_t len) {
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
+    esp_err_t err = ESP_OK;
     /**
      * NOTE: All the configuration parameters for http_client must be spefied either in URL or as host and path parameters.
      * If host and path parameters are not set, query parameter will be ignored. In such cases,
@@ -135,8 +138,6 @@ void http_rest_with_url_upload_picture(uint8_t* buf, size_t len) {
     };
     esp_http_client_handle_t client = esp_http_client_init(&config);
 
-    esp_err_t err = esp_http_client_perform(client);
-
     // POST
     /**
      * NOTE: *post_data is the data that will be sent in the body
@@ -150,8 +151,6 @@ void http_rest_with_url_upload_picture(uint8_t* buf, size_t len) {
     // Uploading strictly JPEG
     esp_http_client_set_header(client, "Content-Type", "image/jpeg");
     
-    //const char *post_data = "{\"field1\":\"value1\"}";
-    //esp_http_client_set_post_field(client, post_data, strlen(post_data));
     // buf contains pixel data and len is the length of the data
     esp_http_client_set_post_field(client, (const char*)buf, len);
 
@@ -167,7 +166,7 @@ void http_rest_with_url_upload_picture(uint8_t* buf, size_t len) {
     esp_http_client_cleanup(client);
 }
 
-void http_rest_with_url_notification(const char* _message) {
+void http_rest_with_url_notification(const char* message) {
     char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
     esp_err_t err = ESP_OK;
     /**
@@ -223,6 +222,20 @@ void http_rest_with_url_notification(const char* _message) {
     esp_http_client_cleanup(client);
 }
 
+// static esp_err_t http_send_frame_chunk(uint8_t* buf, size_t len, char* ) {
+//     char * part_buf[64];
+//     if(res == ESP_OK){
+//       size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
+//       res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+//     }
+//     if(res == ESP_OK){
+//       res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
+//     }
+//     if(res == ESP_OK){
+//       res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
+//     }
+// }
+
 //=======================================
 //===== Section for video streaming =====
 //=======================================
@@ -234,7 +247,7 @@ esp_err_t stream_handler(httpd_req_t *req) {
   uint8_t * _jpg_buf = NULL;
   char * part_buf[64];
 
-  res = httpd_resp_set_type(req, _STREAM_CONTENT_TYPE);
+  res = httpd_resp_set_type(req, STREAM_CONTENT_TYPE);
   if(res != ESP_OK){
     return res;
   }
@@ -245,17 +258,17 @@ esp_err_t stream_handler(httpd_req_t *req) {
       ESP_LOGE(TAG, "Camera capture failed");
       res = ESP_FAIL;
     } else {
-      convert_to_jpeg(fb, _jpg_buf, _jpg_buf_len);
+      convert_to_jpeg(fb, &_jpg_buf, &_jpg_buf_len);
     }
     if(res == ESP_OK){
-      size_t hlen = snprintf((char *)part_buf, 64, _STREAM_PART, _jpg_buf_len);
+      size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
       res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
     }
     if(res == ESP_OK){
       res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
     }
     if(res == ESP_OK){
-      res = httpd_resp_send_chunk(req, _STREAM_BOUNDARY, strlen(_STREAM_BOUNDARY));
+      res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
     }
     if(fb){
       esp_camera_fb_return(fb);

@@ -220,25 +220,26 @@ camera_fb_t* camera_take_picture(mcu_content_t* mcu_c)
     return pic;
 }
 
-esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t* jpeg_buf, size_t jpeg_buf_len) {
+esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_len) {
     esp_err_t res = ESP_OK;
+    ESP_LOGI(TAG, "Frame width %i", fb->width);
+    //if(fb->width > 400 && fb->format != PIXFORMAT_JPEG){
+        bool jpeg_converted = frame2jpg(fb, 80, jpeg_buf, jpeg_buf_len);
 
-    if(fb->width > 400){
-        if(fb->format != PIXFORMAT_JPEG){
-          bool jpeg_converted = frame2jpg(fb, 80, &jpeg_buf, &jpeg_buf_len);
-          esp_camera_fb_return(fb);
-          fb = NULL;
-          if(!jpeg_converted){
+        esp_camera_fb_return(fb);
+        fb = NULL;
+        if(!jpeg_converted){
             ESP_LOGE(TAG, "JPEG compression failed");
             res = ESP_FAIL;
-          }
-        } else {
-          jpeg_buf_len = fb->len;
-          jpeg_buf = fb->buf;
+        } 
+    //} 
+    // else {
+    //     *jpeg_buf_len = fb->len;
+    //     *jpeg_buf     = fb->buf;
 
-          esp_camera_fb_return(fb);
-          fb = NULL;
-        }
-    }
+    //     esp_camera_fb_return(fb);
+    //     fb = NULL;
+    // }
+    ESP_LOGI(TAG, "buffer length at the end: %i\r\nframebuffer length at the end: %i", *jpeg_buf_len, fb->len);
     return res;
 }

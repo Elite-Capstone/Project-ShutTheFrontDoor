@@ -55,6 +55,14 @@
     "sdkconfig.h": "c",
     "time.h": "c",
     "ctime": "c",
-    "queue.h": "c"
+    "queue.h": "c",
+    "future": "c",
+    "system_error": "c",
+    "locale": "c",
+    "xlocale": "c",
+    "xlocmes": "c",
+    "xlocmon": "c",
+    "xlocnum": "c",
+    "xloctime": "c"
   }
 }

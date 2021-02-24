@@ -111,14 +111,15 @@ void exec_recording_task(mcu_content_t* mcu_c) {
     switch (mcu_c->content_type) {
         case (mcu_content_type_t) PICTURE:
             camera_pic = camera_take_picture(mcu_c);
-            convert_to_jpeg(camera_pic, jpeg_buf, jpeg_buf_len);
+            convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
 
             if (mcu_c->save_to_sdcard && mcu_c->sdcard_initiated)
                 save_image_to_sdcard(jpeg_buf, jpeg_buf_len, mcu_c->pic_counter);
 
             if (mcu_c->upload_content) {   
                 ESP_LOGI(TAG, "Uploading picture");
-                ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
+                //ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
+                ESP_LOGI(TAG, "buffer length: %i", jpeg_buf_len);
                 http_rest_with_url_upload_picture(jpeg_buf, jpeg_buf_len);
             }
             break;
