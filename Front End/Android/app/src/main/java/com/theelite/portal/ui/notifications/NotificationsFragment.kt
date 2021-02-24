@@ -48,7 +48,7 @@ class NotificationsFragment : Fragment() {
         swipeRefreshLayout.setOnRefreshListener {
 //            println("Recent Notifications -- Starting to Refresh!!")
             getNotifications()
-                recentNotificationsAdapter.notify()
+//                recentNotificationsAdapter.notify()
         }
     }
 
