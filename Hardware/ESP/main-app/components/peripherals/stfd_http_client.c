@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
+#include "esp_timer.h"
 #include "esp_tls.h"
 
 #include "stfd_peripherals.h"
@@ -241,56 +242,90 @@ void http_rest_with_url_notification(const char* message) {
 //=======================================
 
 esp_err_t stream_handler(httpd_req_t *req) {
-  camera_fb_t * fb = NULL;
-  esp_err_t res = ESP_OK;
-  size_t _jpg_buf_len = 0;
-  uint8_t * _jpg_buf = NULL;
-  char * part_buf[64];
+    camera_fb_t * fb = NULL;
+    esp_err_t res = ESP_OK;
+    size_t _jpg_buf_len = 0;
+    uint8_t * _jpg_buf = NULL;
+    char * part_buf[64];
+    static int64_t last_frame = 0;
+    if(!last_frame) {
+        last_frame = esp_timer_get_time();
+    }
 
-  res = httpd_resp_set_type(req, STREAM_CONTENT_TYPE);
-  if(res != ESP_OK){
-    return res;
-  }
-
-  while(true){
-    fb = esp_camera_fb_get();
-    if (!fb) {
-      ESP_LOGE(TAG, "Camera capture failed");
-      res = ESP_FAIL;
-    } else {
-      convert_to_jpeg(fb, &_jpg_buf, &_jpg_buf_len);
-    }
-    if(res == ESP_OK){
-      size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
-      res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
-    }
-    if(res == ESP_OK){
-      res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
-    }
-    if(res == ESP_OK){
-      res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
-    }
-    if(fb){
-      esp_camera_fb_return(fb);
-      fb = NULL;
-      _jpg_buf = NULL;
-    } else if(_jpg_buf){
-      free(_jpg_buf);
-      _jpg_buf = NULL;
-    }
+    res = httpd_resp_set_type(req, STREAM_CONTENT_TYPE);
     if(res != ESP_OK){
-      break;
+        return res;
     }
-  }
-  return res;
+
+    while(true){
+        fb = esp_camera_fb_get();
+        if (!fb) {
+            ESP_LOGE(TAG, "Camera capture failed");
+            res = ESP_FAIL;
+            break;
+        }
+        convert_to_jpeg(fb, &_jpg_buf, &_jpg_buf_len);
+
+        // if(res == ESP_OK){
+        //     size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
+        //     res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+        // }
+        // if(res == ESP_OK){
+        //     res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
+        // }
+        // if(res == ESP_OK){
+        //     res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
+        // }
+        // if(fb){
+        //     esp_camera_fb_return(fb);
+        //     fb = NULL;
+        //     _jpg_buf = NULL;
+        // } else if(_jpg_buf){
+        //     free(_jpg_buf);
+        //     _jpg_buf = NULL;
+        // }
+        // if(res != ESP_OK){
+        //     break;
+        // }
+        if(res == ESP_OK){
+            res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
+        }
+        if(res == ESP_OK){
+            size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
+
+            res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
+        }
+        if(res == ESP_OK){
+            res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
+        }
+        if(fb->format != PIXFORMAT_JPEG){
+            free(_jpg_buf);
+        }
+        esp_camera_fb_return(fb);
+        if(res != ESP_OK){
+            break;
+        }
+        int64_t fr_end = esp_timer_get_time();
+        int64_t frame_time = fr_end - last_frame;
+        last_frame = fr_end;
+        frame_time /= 1000;
+        ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)",
+            (uint32_t)(_jpg_buf_len/1024),
+            (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
+    }
+
+    last_frame = 0;
+    return res;
 }
 
 void startStreamServer(char* device_ip) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = DEFAULT_CAM_STREAM_PORT;
+    config.recv_wait_timeout = 30;
+    config.send_wait_timeout = 30;
 
     httpd_uri_t index_uri = {
-    .uri       = "/",
+    .uri       = "/stream",
     .method    = HTTP_GET,
     .handler   = stream_handler,
     .user_ctx  = NULL
@@ -304,8 +339,9 @@ void startStreamServer(char* device_ip) {
 }
 
 void stopStreamServer() {
-  if (httpd_stop(&stream_httpd) == ESP_OK)
-      ESP_LOGI(TAG,"Stopping web server");
-  else
-      ESP_LOGE(TAG, "Could not successfully stop the camera server on port %d", DEFAULT_CAM_STREAM_PORT);
+    ESP_LOGI(TAG, "Trying to stop stream");
+    if (httpd_stop(&stream_httpd) == ESP_OK)
+        ESP_LOGI(TAG,"Stopping web server");
+    else
+        ESP_LOGE(TAG, "Could not successfully stop the camera server on port %d", DEFAULT_CAM_STREAM_PORT);
 }

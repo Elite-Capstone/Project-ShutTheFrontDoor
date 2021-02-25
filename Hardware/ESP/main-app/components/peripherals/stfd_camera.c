@@ -80,6 +80,9 @@ static const char *TAG = "stfd_camera";
 #define IMAGE_PIXEL_FORMAT PIXFORMAT_JPEG
 #endif /* CONFIG_IMAGE_PIXEL_FORMAT */
 
+#define DEFAULT_STREAM_JPEG_QUALITY 12
+#define DEFAULT_PIC_JPEG_QUALITY 10
+
 static camera_config_t camera_config = {
     .pin_pwdn     = CAM_PIN_PWDN,
     .pin_reset    = CAM_PIN_RESET,
@@ -111,20 +114,84 @@ static camera_config_t camera_config = {
     .fb_count     = 2   //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
 
-esp_err_t init_camera(mcu_content_t* mcu_c)
-{
-    esp_err_t err;
-    //initialize the camera
-    if (!(mcu_c->cam_initiated)) {
+esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
+    esp_err_t err = ESP_OK;
+    if (!mcu_c->cam_initiated) {
+        if (type == PICTURE) {
+            camera_config.jpeg_quality = DEFAULT_PIC_JPEG_QUALITY;
+            camera_config.fb_count = 1;
+            ESP_LOGI(TAG, "Initializing Camera to Picture");
+        } else if (type == STREAM) {
+            camera_config.jpeg_quality = DEFAULT_STREAM_JPEG_QUALITY;
+            camera_config.fb_count = 1;
+            ESP_LOGI(TAG, "Initializing Camera to Stream");
+        }
+        else {
+            ESP_LOGE(TAG, "Passed invalid type %i", (int) type);
+            return ESP_FAIL;
+        }
+        //initialize the camera
         err = esp_camera_init(&camera_config);
-        if (err != ESP_OK)
-        {
+        if (err != ESP_OK) {
             ESP_LOGE(TAG, "Camera Init Failed");
             return err;
         }
-        mcu_c->cam_initiated= true;
+        mcu_c->cam_initiated = true;
+        mcu_c->content_type = type;
     }
-    return ESP_OK;
+    else if (type == PICTURE) {
+        if (mcu_c->content_type == STREAM) {
+            err = esp_camera_deinit();
+            ESP_LOGI(TAG, "Changed camera content type from Stream to Picture");
+            if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Camera De-Init Failed");
+                return err;
+            }
+
+            //initialize the camera
+            camera_config.jpeg_quality = DEFAULT_PIC_JPEG_QUALITY;
+            camera_config.fb_count = 1;
+            err = esp_camera_init(&camera_config);
+            if (err != ESP_OK) {
+                ESP_LOGE(TAG, "Camera Init Failed");
+                return err;
+            }
+            mcu_c->cam_initiated = true;
+            mcu_c->content_type = PICTURE;
+        }
+        else
+            ESP_LOGI(TAG, "Camera already init");
+    }
+    else if (type == STREAM) {
+        if (mcu_c->content_type == PICTURE) {
+            err = esp_camera_deinit();
+            ESP_LOGI(TAG, "Changed camera content type from Picture to Stream");
+            if (err != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Camera De-Init Failed");
+                return err;
+            }
+
+            //initialize the camera
+            camera_config.jpeg_quality = DEFAULT_STREAM_JPEG_QUALITY;
+            camera_config.fb_count = 2;
+            err = esp_camera_init(&camera_config);
+            if (err != ESP_OK)
+            {
+                ESP_LOGE(TAG, "Camera Init Failed");
+                return err;
+            }
+            mcu_c->cam_initiated = true;
+            mcu_c->content_type = STREAM;
+        }
+        else
+            ESP_LOGI(TAG, "Camera already init");
+    }
+    else {
+        ESP_LOGE(TAG, "Passed invalid type %i", (int) type);
+        return ESP_FAIL;
+    }
+    return err;
 }
 
 esp_err_t init_sdcard(mcu_content_t* mcu_c)
@@ -222,24 +289,18 @@ camera_fb_t* camera_take_picture(mcu_content_t* mcu_c)
 
 esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_len) {
     esp_err_t res = ESP_OK;
-    ESP_LOGI(TAG, "Frame width %i", fb->width);
-    //if(fb->width > 400 && fb->format != PIXFORMAT_JPEG){
+
+    if(fb->format != PIXFORMAT_JPEG){
         bool jpeg_converted = frame2jpg(fb, 80, jpeg_buf, jpeg_buf_len);
 
-        esp_camera_fb_return(fb);
-        fb = NULL;
         if(!jpeg_converted){
             ESP_LOGE(TAG, "JPEG compression failed");
             res = ESP_FAIL;
         } 
-    //} 
-    // else {
-    //     *jpeg_buf_len = fb->len;
-    //     *jpeg_buf     = fb->buf;
-
-    //     esp_camera_fb_return(fb);
-    //     fb = NULL;
-    // }
-    ESP_LOGI(TAG, "buffer length at the end: %i\r\nframebuffer length at the end: %i", *jpeg_buf_len, fb->len);
+    } 
+    else {
+        *jpeg_buf_len = fb->len;
+        *jpeg_buf     = fb->buf;
+    }
     return res;
 }

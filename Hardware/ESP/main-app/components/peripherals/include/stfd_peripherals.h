@@ -54,7 +54,7 @@ wifi_scan_method_t getDefaultScanMethod(void);
 /**
  * @brief Initilize the camera
  */
-esp_err_t init_camera(mcu_content_t* cam_c);
+esp_err_t init_camera(mcu_content_t* cam_c, mcu_content_type_t type);
 
 /**
  * @brief Initilize the SD card

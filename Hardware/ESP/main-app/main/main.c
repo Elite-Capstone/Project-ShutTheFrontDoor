@@ -110,6 +110,8 @@ void exec_recording_task(mcu_content_t* mcu_c) {
 
     switch (mcu_c->content_type) {
         case (mcu_content_type_t) PICTURE:
+            init_camera(mcu_c, PICTURE);
+            
             camera_pic = camera_take_picture(mcu_c);
             convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
 
@@ -125,6 +127,8 @@ void exec_recording_task(mcu_content_t* mcu_c) {
             break;
 
         case (mcu_content_type_t) STREAM:
+            init_camera(mcu_c, STREAM);
+
             if (!(mcu_c->cam_server_init)) {
             startStreamServer(mcu_c->device_ip);
             mcu_c->cam_server_init = true;
@@ -165,7 +169,6 @@ void app_main(void) {
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
     gpio_setup_for_picture(gpio_isr_handler);
-    init_camera(mcu_c);
     if (INIT_SDCARD)
         init_sdcard(mcu_c);
 
