@@ -111,7 +111,7 @@ void exec_recording_task(mcu_content_t* mcu_c) {
     switch (mcu_c->content_type) {
         case (mcu_content_type_t) PICTURE:
             init_camera(mcu_c, PICTURE);
-            
+
             camera_pic = camera_take_picture(mcu_c);
             convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
 

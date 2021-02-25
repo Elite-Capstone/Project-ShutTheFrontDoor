@@ -154,6 +154,8 @@ static const char* TAG = "stfd_gpio";
 
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
     //return ((io_num == GPIO_INPUT_PIC || io_num == GPIO_INPUT_STREAM) && gpio_get_level(io_num) == sg_level);
+    if (io_num == GPIO_INPUT_STREAM)
+        return gpio_get_level(io_num) != sg_level;
     return gpio_get_level(io_num) == sg_level;
 }
 
@@ -216,7 +218,8 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     //set as input mode    
     io_conf.mode = GPIO_MODE_INPUT;
     //enable pull-up mode
-    io_conf.pull_up_en = 1;
+    //io_conf.pull_up_en = 1;
+    io_conf.pull_down_en = 1;
     ESP_ERROR_CHECK(gpio_config(&io_conf));
 
     ///interrupt of rising edge
