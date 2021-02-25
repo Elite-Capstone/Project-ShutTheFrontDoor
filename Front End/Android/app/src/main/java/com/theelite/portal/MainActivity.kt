@@ -1,25 +1,25 @@
 package com.theelite.portal
 
+import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.os.StrictMode
-import android.util.Log
 import android.view.View
+import android.widget.ImageView
 import androidx.activity.viewModels
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager.findFragment
-import androidx.fragment.app.findFragment
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.theelite.portal.ui.home.HomeFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.gson.GsonBuilder
 import com.theelite.portal.ui.home.HomeViewModel
-import kotlinx.android.synthetic.main.activity_main.*
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.URL
+import com.theelite.portal.ui.media.mediaInt
+import kotlinx.android.synthetic.main.fragment_home.*
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -56,29 +56,38 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun sendGet(view: View) {
-        try {
-            //disable the strict mode otherwise perform this operation on netWork Thread
-            val policy = StrictMode.ThreadPolicy.Builder().permitAll().build()
-            StrictMode.setThreadPolicy(policy)
+       // val retrofit = RetroFit.get(getString(R.string.url))
 
-            // GET Request
-            val request = "http://34.122.235.66/file/download/1614216243554_venom.jpg"
-            val url = URL(request)
-            val conn = url.openConnection()
-            conn.doOutput = true
-            // Get the response
-            val rd = BufferedReader(InputStreamReader(conn.getInputStream()))
-            var line: String
-            var sResult = ""
-            while (rd.readLine().also { line = it } != null) {
-                // Process line...
-                sResult = "$sResult$line "
+        val gson = GsonBuilder()
+            .setLenient()
+            .create()
+
+        val retrofit: Retrofit = Retrofit.Builder()
+            .baseUrl("http://34.122.235.66/")
+            //.addConverterFactory(BitmapFactory.create())
+            .build()
+
+        val mediaService = retrofit.create(mediaInt::class.java)
+
+        val call = mediaService.getMovies()
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    println("File Downloaded!")
+                    if (response.body() != null) {
+                        // display the image data in a ImageView or save it
+                        val bm = BitmapFactory.decodeStream(response.body()!!.byteStream())
+                       findViewById<ImageView>(R.id.image1).setImageBitmap(bm)
+                    }
+
+                }
             }
-            rd.close()
-            Log.e("RESULT", sResult)
-        } catch (e: Exception) {
-            println("Error $e")
-        }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                println("Failure" + t.message)
+            }
+        })
+
     }
 
 
