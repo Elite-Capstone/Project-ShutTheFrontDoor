@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="250dp"
         android:gravity="center_horizontal"
-        android:text="NOTIF"
+        android:text="Notifications"
         android:textAlignment="center"
         android:textSize="50sp"
         app:layout_constraintStart_toStartOf="parent"

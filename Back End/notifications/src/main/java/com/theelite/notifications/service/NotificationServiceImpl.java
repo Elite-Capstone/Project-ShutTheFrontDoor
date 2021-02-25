@@ -54,7 +54,7 @@ public class NotificationServiceImpl implements NotificationService {
 
         //TODO retrieve notification as pojo
         String topic = "00b288a8-3db1-40b5-b30f-532af4e12f4b";
-        KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(accountId, userId, bootStrapServer));
+        KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(userId, accountId, bootStrapServer));
         consumer.subscribe(Collections.singleton(topic));
         ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
         consumer.commitAsync();

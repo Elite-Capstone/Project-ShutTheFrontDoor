@@ -5,9 +5,14 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
+import java.time.temporal.TemporalAdjusters.previous
+import java.util.*
+import java.util.concurrent.TimeUnit
 
-class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
+
+class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>) :
     RecyclerView.Adapter<RecentNotificationsAdapter.ViewHolder>() {
 
 
@@ -40,13 +45,27 @@ class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view: View
 
-        if (viewType % 2 == 0) {
-            println("View type $viewType is even")
+        println("View type $viewType is odd")
+        view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.recent_notifications_w_actions, parent, false)
+        view.setTag(R.layout.recent_notifications_w_actions, "recent")
+        val MAX_DURATION: Long = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES)
+        val now = Date()
+        val duration: Long = now.getTime() - dataSet[viewType].date.getTime()
+
+//        = Minutes.minutesBetween(new DateTime(previous), new DateTime())
+//            .isGreaterThan(Minutes.minutes(20));
+        if (duration >= MAX_DURATION) {
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_no_actions, parent, false)
             view.setTag(R.layout.recent_notifications_no_actions, "old")
+        }
+        /*if (viewType % 2 == 0) {
+            println("View type $viewType is even")
 
-        } else {
+
+        } */
+        else {
             println("View type $viewType is odd")
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_w_actions, parent, false)
@@ -56,9 +75,9 @@ class RecentNotificationsAdapter(private val dataSet: ArrayList<String>) :
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.titleTextView.text = dataSet[position]
-        holder.descriptionTextView.text = dataSet[position]
-        holder.dateTextView.text = dataSet[position]
+        holder.titleTextView.text = dataSet[position].notification
+        holder.descriptionTextView.text = dataSet[position].notification
+        holder.dateTextView.text = dataSet[position].date.toString()
     }
 
     override fun getItemCount(): Int {
