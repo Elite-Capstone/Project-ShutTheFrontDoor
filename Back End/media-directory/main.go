@@ -27,10 +27,10 @@ func main() {
 func setUpAppRoutes(app *fiber.App) {
 	app.Get("/getMedias/:accId", media.GetMedias)
 	app.Get("/health", media.GetAppHealth)
-	app.Put("/insertMedia/:accId/:name", media.InsertMedia)
+	app.Get("/insertMedia/:accId/:name", media.InsertMedia)
 	app.Get("/nameExists/:name", media.NameExists)
-	app.Delete("/media/:name", media.DeleteMedia)
-	app.Delete("/medias/:accId", media.DeleteMedias)
+	app.Get("/deleteMedia/:name", media.DeleteMedia)
+	app.Get("/deleteMedias/:accId", media.DeleteMedias)
 }
 
 func setUpDatabase() {

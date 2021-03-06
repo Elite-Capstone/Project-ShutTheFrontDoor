@@ -13,11 +13,20 @@ type Media struct {
 	AccountId string `gorm:"notNull" json:"accountId"`
 }
 
+
 func GetMedias(f *fiber.Ctx) error {
 	db := dao.Db
-	accountId := f.Params("id")
-	var medias []Media
-	db.Find(&medias, db.Where("accountId = ?", accountId))
+	accountId := f.Params("accId")
+	var medias []string
+	results, err := db.Table("media").Where("account_id = ?", accountId).Select("name").Rows()
+	if err != nil {
+		panic(err.Error())
+	}
+	var name string
+	for results.Next() {
+		results.Scan(&name)
+		medias = append(medias, name)
+	}
 	return f.JSON(medias)
 }
 
@@ -38,7 +47,7 @@ func DeleteMedia(f *fiber.Ctx) error {
 	name := f.Params("name")
 	if ExistsWithName(name) {
 		db := dao.Db
-		db.Delete(Media{}, db.Where("name = ?", name))
+		db.Exec("delete from doorhub.media m where m.name = ?", name)
 		return f.JSON(true)
 	}
 	return f.JSON(false)
@@ -47,7 +56,7 @@ func DeleteMedia(f *fiber.Ctx) error {
 func DeleteMedias(f *fiber.Ctx) error {
 	accId := f.Params("accId")
 	db := dao.Db
-	db.Delete(Media{}, db.Where("account_id = ?", accId))
+	db.Exec("delete from doorhub.media m where m.account_id = ?", accId)
 	return f.SendString("Deleted All Records")
 }
 
@@ -61,13 +70,20 @@ func GetAppHealth(f *fiber.Ctx) error {
 }
 
 func NameExists(f *fiber.Ctx) error {
-	name := f.Params("name")
-	return f.JSON(ExistsWithName(name))
+	return f.JSON(ExistsWithName(f.Params("name")))
 }
 
 func ExistsWithName(name string) bool {
 	db := dao.Db
-	var media Media
-	db.First(&media, db.Where("name = ?", name))
-	return media.Name != ""
+	var count int
+
+	results, err := db.Table("media").Where("name = ?", name).Select("COUNT(name)").Rows()
+	if err != nil {
+		panic(err.Error())
+	}
+	for results.Next() {
+		_ = results.Scan(&count)
+	}
+	return count > 0
+
 }
