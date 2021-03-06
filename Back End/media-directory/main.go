@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber"
 	"github.com/jinzhu/gorm"
+	"os"
 )
 import "./media"
 import "./dao"
@@ -17,7 +18,7 @@ func main() {
 	setUpDatabase()
 	defer closeDbConnection()
 
-	err := app.Listen(":6969")
+	err := app.Listen(os.Getenv("SERVER_PORT"))
 
 	if err != nil {
 		panic(err.Error())
@@ -35,7 +36,7 @@ func setUpAppRoutes(app *fiber.App) {
 
 func setUpDatabase() {
 	var err error
-	var connectionString = ""
+	var connectionString = os.Getenv("mysqlDB")
 	dao.Db, err = gorm.Open("mysql", connectionString)
 	if err != nil {
 		panic(err.Error())
