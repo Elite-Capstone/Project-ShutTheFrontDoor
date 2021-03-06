@@ -1,9 +1,10 @@
 package dao
 
 import (
-	"database/sql"
+	"github.com/jinzhu/gorm"
+
 )
 
 var (
-	Db *sql.DB
+	Db *gorm.DB
 )

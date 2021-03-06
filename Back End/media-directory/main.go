@@ -1,10 +1,10 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gofiber/fiber"
+	"github.com/jinzhu/gorm"
 )
 import "./media"
 import "./dao"
@@ -25,21 +25,23 @@ func main() {
 }
 
 func setUpAppRoutes(app *fiber.App) {
-	app.Get("/getMedias", media.GetMedias)
+	app.Get("/getMedias/:id", media.GetMedias)
 	app.Get("/health", media.GetAppHealth)
 	app.Put("/insertMedia", media.GetMedias)
-	app.Delete("/media", media.DeleteMedia)
+	app.Delete("/media/:name", media.DeleteMedia)
 	app.Delete("/medias", media.DeleteMedias)
 }
 
 func setUpDatabase() {
 	var err error
-	dao.Db, err = sql.Open("mysql", "")
-
+	var connectionString = ""
+	dao.Db, err = gorm.Open("mysql", connectionString)
 	if err != nil {
 		panic(err.Error())
 	}
 	fmt.Println("Successfully connected to Database")
+
+	dao.Db.AutoMigrate(&media.Media{})
 }
 
 func closeDbConnection() {
