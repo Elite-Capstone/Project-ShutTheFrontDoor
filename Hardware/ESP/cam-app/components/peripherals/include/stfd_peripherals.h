@@ -6,10 +6,6 @@
 
     Desc:       Header file containing all the added peripheral functions
 */
-
-#ifndef STFD_PERIPHERALS_H_
-#define STFD_PERIPHERALS_H_
-
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_event.h>
@@ -31,17 +27,12 @@
 #define SIGNAL_LOW 0
 
 typedef enum {
-    INVALID     = -1,
-    STANDBY     = 0,
-    PICTURE     = 1,
-    STREAM      = 2,
-    DRBELL      = 3,
-    REEDSW      = 4,
-    MS          = 5,
-    NSW         = 6,
-    BATTERY     = 7,
-    MTR_CTRL    = 8
-
+    INVALID = -1,
+    STANDBY = 0,
+    PICTURE = 1,
+    STREAM  = 2,
+    DRBELL  = 3,
+    REEDSW  = 4
 } mcu_content_type_t;
 
 typedef struct {
@@ -53,7 +44,7 @@ typedef struct {
     mcu_content_type_t content_type;
     wifi_ap_record_t* ap_info;
     char* device_ip;
-    uint64_t pic_counter;
+    long long int pic_counter;
 } mcu_content_t;
 
 uint32_t getDefaultScanListSize(void);
@@ -131,28 +122,9 @@ mcu_content_type_t gpio_io_type(uint32_t io_num);
 void IRAM_ATTR gpio_isr_handler(void* arg);
 
 /**
- * @brief Does the configuration for the desired GPIO passed with its bit mask in @param bit_mask. 
- * 
- * @note The pull-down and pull-up functions cannot be used simultaneously. This function will return an error if both are set to 1.
- * 
- * @param int_type  Selects the interrupt type for the GPIO 
- *                  @note Possible values: DISABLE, POSEDGE, NEGEDGE, ANYEDGE, LOLEVEL, HILEVEL
- * @param bit_mask  The bit mask of the GPIO that will be configured
- * @param i2c_mode  The GPIO communication type (DISABLE, INPUT, OUTPUT, OUTPUT_OD, INPUT_OUTPUT_OD, INPUT_OUTPUT) 
- *                  *@note OD == Open-Drain mode
- * @param pull_down Pull-down enable/disable 
- *                  @note GPIO_PULLDOWN_DISABLE == 0 == pull-down deactivated, GPIO_PULLDOWN_ENABLE == 1 == pull-down activated
- * @param pull_up   Pull-up enable/disable 
- *                  @note GPIO_PULLUP_DISABLE == 0 == pull-up deactivated, GPIO_PULLUP_ENABLE == 1 == pull-up activated
+ * @brief Sets up the selected input and output GPIO from the configuration menu selection
  */
-esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_t gpio_mode, gpio_pulldown_t pull_down, gpio_pullup_t pull_up);
-
-/**
- * @brief Sets up the selected input and output GPIO from the configuration menu selection.
- * 
- * @param isr_handler function that will handle the interrupt events on the gpio it is installed on
- */
-void gpio_init_setup(gpio_isr_t isr_handler);
+void gpio_setup_for_picture(gpio_isr_t isr_handler);
 void gpio_setup_input(gpio_isr_t isr_handler);
 void gpio_setup_output(void);
 
@@ -225,5 +197,3 @@ void fast_scan(wifi_ap_record_t* ap_info);
  * @param ap_info Pointer to which the list is assigned to
  */
 void wifi_scan(mcu_content_t* cam_content);
-
-#endif /*STFD_PERIPHERALS_H_*/

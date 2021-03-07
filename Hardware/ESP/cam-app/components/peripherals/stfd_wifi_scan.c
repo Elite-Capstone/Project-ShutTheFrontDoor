@@ -265,9 +265,11 @@ void wifi_scan(mcu_content_t* mcu_c) {
 
     if (getDefaultScanMethod() == WIFI_FAST_SCAN) {
         fast_scan(mcu_c->ap_info);
+        gpio_blink_output(2);
     }
     else { //WIFI_ALL_CHANNEL_SCAN:
         wifi_all_ch_scan(mcu_c->ap_info);
+        gpio_blink_output(3);
         // TODO: Send list to BlueTooth connected user
         // Set the default wifi to the returned selection from the user
     }

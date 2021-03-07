@@ -63,7 +63,6 @@
     "xlocmes": "c",
     "xlocmon": "c",
     "xlocnum": "c",
-    "xloctime": "c",
-    "stdio.h": "c"
+    "xloctime": "c"
   }
 }
