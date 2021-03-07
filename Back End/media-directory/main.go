@@ -7,8 +7,8 @@ import (
 	"github.com/jinzhu/gorm"
 	"os"
 )
-import "./media"
-import "./dao"
+import "github.com/superDeano/media-directory/media"
+import "github.com/superDeano/media-directory/dao"
 
 func main() {
 
@@ -26,12 +26,12 @@ func main() {
 }
 
 func setUpAppRoutes(app *fiber.App) {
-	app.Get("/getMedias/:accId", media.GetMedias)
-	app.Get("/health", media.GetAppHealth)
-	app.Get("/insertMedia/:accId/:name", media.InsertMedia)
-	app.Get("/nameExists/:name", media.NameExists)
-	app.Get("/deleteMedia/:name", media.DeleteMedia)
-	app.Get("/deleteMedias/:accId", media.DeleteMedias)
+	app.Get("mediaDirectory/getMedias/:accId", media.GetMedias)
+	app.Get("mediaDirectory/health", media.GetAppHealth)
+	app.Get("mediaDirectory/insertMedia/:accId/:name", media.InsertMedia)
+	app.Get("mediaDirectory/nameExists/:name", media.NameExists)
+	app.Get("mediaDirectory/deleteMedia/:name", media.DeleteMedia)
+	app.Get("mediaDirectory/deleteMedias/:accId", media.DeleteMedias)
 }
 
 func setUpDatabase() {

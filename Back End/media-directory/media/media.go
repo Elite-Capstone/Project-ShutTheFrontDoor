@@ -1,9 +1,9 @@
 package media
 
 import (
-	"../dao"
 	"github.com/gofiber/fiber"
 	"github.com/jinzhu/gorm"
+	"github.com/superDeano/media-directory/dao"
 	"net/http"
 )
 
@@ -14,7 +14,7 @@ type Media struct {
 }
 
 
-func GetMedias(f *fiber.Ctx) error {
+func GetMedias(f *fiber.Ctx)  {
 	db := dao.Db
 	accountId := f.Params("accId")
 	var medias []string
@@ -27,50 +27,50 @@ func GetMedias(f *fiber.Ctx) error {
 		results.Scan(&name)
 		medias = append(medias, name)
 	}
-	return f.JSON(medias)
+	f.JSON(medias)
 }
 
-func InsertMedia(f *fiber.Ctx) error {
+func InsertMedia(f *fiber.Ctx)  {
 	name := f.Params("name")
 	if ExistsWithName(name) {
-		return f.JSON(false)
+		 f.JSON(false)
 	}
 	db := dao.Db
 	media := new(Media)
 	media.Name = name
 	media.AccountId = f.Params("accId")
 	db.Save(media)
-	return f.JSON(true)
+	 f.JSON(true)
 }
 
-func DeleteMedia(f *fiber.Ctx) error {
+func DeleteMedia(f *fiber.Ctx)  {
 	name := f.Params("name")
 	if ExistsWithName(name) {
 		db := dao.Db
 		db.Exec("delete from doorhub.media m where m.name = ?", name)
-		return f.JSON(true)
+		f.JSON(true)
 	}
-	return f.JSON(false)
+	 f.JSON(false)
 }
 
-func DeleteMedias(f *fiber.Ctx) error {
+func DeleteMedias(f *fiber.Ctx)  {
 	accId := f.Params("accId")
 	db := dao.Db
 	db.Exec("delete from doorhub.media m where m.account_id = ?", accId)
-	return f.SendString("Deleted All Records")
+	 f.SendString("Deleted All Records")
 }
 
-func GetAppHealth(f *fiber.Ctx) error {
+func GetAppHealth(f *fiber.Ctx)  {
 	db := dao.Db
 	var err = db.Error
 	if err != nil {
-		return f.SendStatus(http.StatusInternalServerError)
+		 f.SendStatus(http.StatusInternalServerError)
 	}
-	return f.SendStatus(http.StatusOK)
+	 f.SendStatus(http.StatusOK)
 }
 
-func NameExists(f *fiber.Ctx) error {
-	return f.JSON(ExistsWithName(f.Params("name")))
+func NameExists(f *fiber.Ctx)  {
+	 f.JSON(ExistsWithName(f.Params("name")))
 }
 
 func ExistsWithName(name string) bool {

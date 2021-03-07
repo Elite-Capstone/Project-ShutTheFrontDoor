@@ -1,19 +1,26 @@
-FROM golang:1.10
+FROM golang:alpine
+
+#ENV SERVER_PORT=8080
+#    MYSQLDB=test
+
 
 # Set the Current Working Directory inside the container
-WORKDIR $GOPATH/src/go/media-directory
+WORKDIR /app
 
-# Copy everything from the current directory to the PWD (Present Working Directory) inside the container
-COPY . .
-
+# Copy go mod and sum files
+COPY go.mod ./
+COPY go.sum ./
+RUN ls -al
 # Download all the dependencies
-RUN go get -d -v ./...
+RUN go mod download
 
-# Install the package
-RUN go install -v ./...
+# Copy binary from build to main folder
+COPY . .
+RUN go build -o main .
 
 # This container exposes port 8080 to the outside world
 EXPOSE 8080
 
 # Run the executable
-CMD ["go-media-directory"]
+#CMD ["go-media-directory"]
+CMD ["./main"]
