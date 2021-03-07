@@ -1,16 +1,13 @@
-FROM golang:alpine
+FROM golang:alpine as BUILD
 
-#ENV SERVER_PORT=8080
-#    MYSQLDB=test
-
+LABEL maintainer="superDeano"
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
 # Copy go mod and sum files
-COPY go.mod ./
-COPY go.sum ./
-RUN ls -al
+COPY go.mod go.sum ./
+
 # Download all the dependencies
 RUN go mod download
 
@@ -18,6 +15,13 @@ RUN go mod download
 COPY . .
 RUN go build -o main .
 
+FROM alpine:latest
+
+WORKDIR app/
+
+COPY --from=BUILD /app/main .
+#COPY /resources ./resources
+RUN chmod +x main
 # This container exposes port 8080 to the outside world
 EXPOSE 8080
 

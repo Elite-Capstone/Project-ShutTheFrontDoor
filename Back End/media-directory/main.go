@@ -36,7 +36,7 @@ func setUpAppRoutes(app *fiber.App) {
 
 func setUpDatabase() {
 	var err error
-	var connectionString = os.Getenv("mysqlDB")
+	var connectionString = os.Getenv("MYSQLDB")
 	dao.Db, err = gorm.Open("mysql", connectionString)
 	if err != nil {
 		panic(err.Error())
