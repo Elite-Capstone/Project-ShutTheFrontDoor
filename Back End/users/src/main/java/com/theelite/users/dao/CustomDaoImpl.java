@@ -60,10 +60,10 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
-    public long testDatabaseConnection() {
+    public void testDatabaseConnection() {
         Query query = new Query();
         query.addCriteria(Criteria.where("email").is("").not());
-        return mongoOperations.count(query, User.class);
+        mongoOperations.count(query, User.class);
     }
 
     @Override
@@ -95,9 +95,8 @@ public class CustomDaoImpl implements CustomDao {
     @Override
     public boolean validateUser(String email, String token) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("email").is(email));
-        User user = (User) mongoOperations.find(query, User.class);
-        return user.getTokens().contains(token);
+        query.addCriteria(Criteria.where("email").is(email).and("tokens").elemMatch(Criteria.where("token").is(token))).limit(1);
+        return mongoOperations.exists(query, User.class);
     }
 
     @Override
