@@ -16,7 +16,7 @@ public class UserController {
     private UserServiceImpl userService;
 
     @GetMapping("/")
-    public ResponseEntity pong(){
+    public ResponseEntity<String> pong() {
         return userService.getHealth();
     }
 

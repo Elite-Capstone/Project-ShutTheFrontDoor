@@ -48,10 +48,11 @@ public class UserServiceImpl implements UserService {
             user.setRole(UserRole.Admin);
         }
 
+        user.setTokens(Collections.singletonList(userToken));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
 
-        return true;
+        return token;
     }
 
     @Override

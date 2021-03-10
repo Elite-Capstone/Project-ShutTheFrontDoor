@@ -3,6 +3,7 @@ package com.theelite.users.dao;
 import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.model.UserRole;
+import com.theelite.users.model.UserToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -59,7 +60,7 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
-    public long testDatabaseConnection(){
+    public long testDatabaseConnection() {
         Query query = new Query();
         query.addCriteria(Criteria.where("email").is("").not());
         return mongoOperations.count(query, User.class);
@@ -100,7 +101,7 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
-    public void addNewTokenToUser(String email, String token) {
+    public void addNewTokenToUser(String email, UserToken token) {
         Query query = new Query();
         query.addCriteria(Criteria.where("email").is(email));
         Update update = new Update();
