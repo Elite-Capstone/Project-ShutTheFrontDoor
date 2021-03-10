@@ -14,6 +14,7 @@ public interface CustomDao {
     void updateUserInfo(User user);
     boolean validateUser(String email, String token);
     void addNewTokenToUser(String email, UserToken token);
+    void removeToken();
     void updateUserPassword(String user, String password);
     void updateUserRole(String user, UserRole userRole);
     void testDatabaseConnection();

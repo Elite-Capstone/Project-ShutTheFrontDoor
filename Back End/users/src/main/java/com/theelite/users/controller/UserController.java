@@ -64,6 +64,12 @@ public class UserController {
     public User getUserWithEmail(@RequestBody User user) {
         return userService.getUserWithEmail(user.getEmail());
     }
+
+//    @GetMapping("/token")
+//    public String testToken() {
+//        return userService.testToken();
+//    }
+
     @GetMapping("/validateUser/{email}/{token}")
     public boolean validateUser(@PathVariable("email") String email, @PathVariable("token") String token) {
         return userService.validateUser(email, token);
