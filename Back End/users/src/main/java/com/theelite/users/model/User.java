@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 
+import java.util.List;
 import java.util.UUID;
 
 @AllArgsConstructor
@@ -21,6 +22,8 @@ public class User {
     private String email;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private UUID accountId;
+    private List<String> tokens;
     private UserRole role;
 }

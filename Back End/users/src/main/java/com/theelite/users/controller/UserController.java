@@ -21,12 +21,12 @@ public class UserController {
     }
 
     @PutMapping("/new")
-    public boolean addNewUser(@RequestBody User user) {
+    public String addNewUser(@RequestBody User user) {
         return userService.addUser(user);
     }
 
     @PostMapping("/auth")
-    public boolean authenticateUser(@RequestBody User user) {
+    public String authenticateUser(@RequestBody User user) {
         return userService.authenticateUser(user);
     }
 

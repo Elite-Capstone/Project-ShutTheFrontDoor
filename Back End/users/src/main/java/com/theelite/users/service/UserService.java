@@ -6,9 +6,9 @@ import org.springframework.http.ResponseEntity;
 
 public interface UserService {
 
-    boolean addUser(User user);
+    String addUser(User user);
 
-    boolean authenticateUser(User user);
+    String authenticateUser(User user);
 
     boolean updateUserInfo(User user);
 
