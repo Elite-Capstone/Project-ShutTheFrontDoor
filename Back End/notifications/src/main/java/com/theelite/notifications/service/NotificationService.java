@@ -7,7 +7,7 @@ import java.util.List;
 
 //@Service
 public interface NotificationService {
-    ResponseEntity getHealth();
+    ResponseEntity<String> getHealth();
     List<Notification> getRecentNotifications(String accountId, String userId);
     boolean publishNotification(Notification notification);
     boolean addNewDoorIdAsTopic(String doorId);
