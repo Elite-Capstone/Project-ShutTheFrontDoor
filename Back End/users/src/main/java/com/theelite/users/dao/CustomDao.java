@@ -10,6 +10,8 @@ public interface CustomDao {
     boolean userExistsWithEmail(String email);
     void updateUserAccount(String user, UUID accountId);
     void updateUserInfo(User user);
+    boolean validateUser(String email, String token);
+    void addNewTokenToUser(String email, String token);
     void updateUserPassword(String user, String password);
     void updateUserRole(String user, UserRole userRole);
     long testDatabaseConnection();

@@ -1,7 +1,7 @@
 package com.theelite.users.service;
 
 import com.theelite.users.dao.UserDao;
-import com.theelite.users.model.Invitation;
+import com.theelite.users.model.*;
 import com.theelite.users.model.User;
 import com.theelite.users.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,12 +10,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import java.security.SecureRandom;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
     //    private ArrayList<Invitation> invitations = new ArrayList<>();
+    @Autowired
+    private SecureRandom secureRandom;
+
+    @Autowired
+    private Base64.Encoder base64Encoder;
+
     @Autowired
     private PasswordEncoder passwordEncoder;
 
@@ -23,12 +29,14 @@ public class UserServiceImpl implements UserService {
     private UserDao userDao;
 
 
+    // User Signs up
     @Override
-    public boolean addUser(User user) {
-        if (userDao.userExistsWithEmail(user.getEmail())) return false;
+    public String addUser(User user) {
+        if (userDao.userExistsWithEmail(user.getEmail())) return ApiResponses.unsuccessful;
 
         Invitation userInvitation = userDao.getInvitation(user.getEmail());
-
+        String token = generateNewToken();
+        UserToken userToken = new UserToken(token, new Date());
         if (userInvitation != null) {
             user.setAccountId(userInvitation.getAccountId());
             userDao.cancelInvitation(user.getEmail());
@@ -47,10 +55,14 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean authenticateUser(User user) {
-        if (!userDao.userExistsWithEmail(user.getEmail())) return false;
+    public String authenticateUser(User user) {
+        if (!userDao.userExistsWithEmail(user.getEmail())) return ApiResponses.unsuccessful;
         User savedUserInfo = userDao.findById(user.getEmail()).get();
-        return passwordEncoder.matches(user.getPassword(), savedUserInfo.getPassword());
+        if (passwordEncoder.matches(user.getPassword(), savedUserInfo.getPassword())) {
+            UserToken userToken = new UserToken(generateNewToken(), new Date());
+            // TODO userDao.addTokenToUser;
+            return userToken.getToken();
+        } else return ApiResponses.unsuccessful;
     }
 
     @Override
@@ -117,11 +129,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public ResponseEntity getHealth() {
+
+    @Override
+    public ResponseEntity<String> getHealth() {
         try {
             userDao.testDatabaseConnection();
         } catch (Exception e) {
-            return new ResponseEntity("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity("Everything seems to be fine!", HttpStatus.OK);
+        return new ResponseEntity<>("Everything seems to be fine!", HttpStatus.OK);
+    }
+
+    private String generateNewToken() {
+        byte[] randomBytes = new byte[24];
+        secureRandom.nextBytes(randomBytes);
+        return base64Encoder.encodeToString(randomBytes);
+
+    }
+
+    public String testToken() {
+        return generateNewToken();
     }
 }

@@ -35,7 +35,11 @@ public class CustomDaoImpl implements CustomDao {
 
     @Override
     public void updateUserPassword(String user, String password) {
-
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(user));
+        Update update = new Update();
+        update.set("password", password);
+        mongoOperations.findAndModify(query, update, User.class);
     }
 
     @Override
@@ -84,6 +88,35 @@ public class CustomDaoImpl implements CustomDao {
 
     @Override
     public void saveNewInvitation(Invitation invitation) {
-         mongoOperations.save(invitation);
+        mongoOperations.save(invitation);
+    }
+
+    @Override
+    public boolean validateUser(String email, String token) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email));
+        User user = (User) mongoOperations.find(query, User.class);
+        return user.getTokens().contains(token);
+    }
+
+    @Override
+    public void addNewTokenToUser(String email, String token) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email));
+        Update update = new Update();
+        update.addToSet("tokens", token);
+        mongoOperations.findAndModify(query, update, User.class);
+    }
+
+    @Override
+    public void removeToken() {
+        //TODO implement
+    }
+
+    @Override
+    public void deleteUserAccount(String email) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email));
+        mongoOperations.findAndRemove(query, User.class);
     }
 }

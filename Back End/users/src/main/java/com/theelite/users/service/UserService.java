@@ -12,6 +12,8 @@ public interface UserService {
 
     boolean updateUserInfo(User user);
 
+    boolean validateUser(String email, String token);
+
     boolean deleteUser(User user);
 
     User getUserWithEmail(String email);
@@ -24,6 +26,6 @@ public interface UserService {
 
     boolean removeUserFromAccount(String user);
 
-    ResponseEntity getHealth();
+    ResponseEntity<String> getHealth();
 
 }
