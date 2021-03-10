@@ -68,4 +68,11 @@ public class UserController {
     public boolean validateUser(@PathVariable("email") String email, @PathVariable("token") String token) {
         return userService.validateUser(email, token);
     }
+
+    @GetMapping("/familyAccount/{email}")
+    public String getFamilyAccountForUserWithEmail(@PathVariable("email") String email){
+        return userService.getFamilyAccountForUser(email);
+    }
+
+
 }

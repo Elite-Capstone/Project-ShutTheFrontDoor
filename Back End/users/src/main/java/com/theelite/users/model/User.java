@@ -24,6 +24,7 @@ public class User {
     private String password;
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private UUID accountId;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private List<UserToken> tokens;
     private UserRole role;
 }

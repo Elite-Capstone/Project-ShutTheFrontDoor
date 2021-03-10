@@ -26,6 +26,8 @@ public interface UserService {
 
     boolean removeUserFromAccount(String user);
 
+    String getFamilyAccountForUser(String email);
+
     ResponseEntity<String> getHealth();
 
 }

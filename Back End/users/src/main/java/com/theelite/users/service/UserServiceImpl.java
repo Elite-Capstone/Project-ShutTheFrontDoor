@@ -2,8 +2,6 @@ package com.theelite.users.service;
 
 import com.theelite.users.dao.UserDao;
 import com.theelite.users.model.*;
-import com.theelite.users.model.User;
-import com.theelite.users.model.UserRole;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,7 +13,6 @@ import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
-    //    private ArrayList<Invitation> invitations = new ArrayList<>();
     @Autowired
     private SecureRandom secureRandom;
 
@@ -55,13 +52,14 @@ public class UserServiceImpl implements UserService {
         return token;
     }
 
+    // User Logs in
     @Override
     public String authenticateUser(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return ApiResponses.unsuccessful;
         User savedUserInfo = userDao.findById(user.getEmail()).get();
         if (passwordEncoder.matches(user.getPassword(), savedUserInfo.getPassword())) {
             UserToken userToken = new UserToken(generateNewToken(), new Date());
-            // TODO userDao.addTokenToUser;
+            userDao.addNewTokenToUser(user.getEmail(), userToken);
             return userToken.getToken();
         } else return ApiResponses.unsuccessful;
     }
@@ -129,7 +127,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getHealth() {
+    public boolean validateUser(String email, String token) {
+        return userDao.validateUser(email, token);
+    }
 
     @Override
     public ResponseEntity<String> getHealth() {
@@ -139,6 +139,11 @@ public class UserServiceImpl implements UserService {
             return new ResponseEntity<>("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>("Everything seems to be fine!", HttpStatus.OK);
+    }
+
+    @Override
+    public String getFamilyAccountForUser(String email) {
+        return getUserWithEmail(email).getAccountId().toString();
     }
 
     private String generateNewToken() {
