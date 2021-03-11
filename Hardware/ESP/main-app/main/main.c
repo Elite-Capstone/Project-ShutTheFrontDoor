@@ -41,27 +41,28 @@
 static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
+static const char* NSW_MSG    = "The lock was turned";
 
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
-    .cam_initiated      = false,
-    .sdcard_initiated   = false,
-    .cam_server_init    = false,
-    .save_to_sdcard     = false,
-    .upload_content     = false,
-    .content_type       = STANDBY,
-    .ap_info            = NULL,
-    .device_ip          = "",
-    .pic_counter        = 0
+.cam_initiated      = false,
+.sdcard_initiated   = false,
+.cam_server_init    = false,
+.save_to_sdcard     = false,
+.upload_content     = false,
+.trig_signal        = SIGNAL_LOW,
+.content_type       = STANDBY,
+.ap_info            = NULL,
+.device_ip          = "",
+.pic_counter        = 0
 };
-
 static mcu_content_t* mcu_c = &_mcu_c;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
 static void gpio_trig_action(void* arg);
-void exec_recording_task(mcu_content_t* mcu_c);
+void exec_gpio_task(mcu_content_t* mcu_c);
 
 /**
  * @brief Handler for GPIO interrupts
@@ -83,15 +84,18 @@ static void gpio_trig_action(void* arg)
     for(;;) {
         if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
-            mcu_c->content_type = gpio_io_type(io_num);
+            get_io_type(io_num, mcu_c);
             mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
             mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
 
-            if (trig_valid_gpio(io_num, SIGNAL_LOW)) {
-                exec_recording_task(mcu_c);
+            if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
+                exec_gpio_task(mcu_c);
             }
+            // if else (trig_motor_gpio(io_num, SIGNAL_LOW)) {
+            //     exec_toggle_motor();
+            // }
             else {
-                ESP_LOGI(TAG, "Triggered the wrong input pin");
+                ESP_LOGI(TAG, "Triggered the wrong input pin or level");
             }   
         }
     }
@@ -102,13 +106,13 @@ static void gpio_trig_action(void* arg)
  * 
  * @param mcu_c Camera current status with its content
  */
-void exec_recording_task(mcu_content_t* mcu_c) {    
+void exec_gpio_task(mcu_content_t* mcu_c) {    
     camera_fb_t* camera_pic;
     uint8_t* jpeg_buf = NULL;
     size_t jpeg_buf_len = 0;
 
     switch (mcu_c->content_type) {
-        case (mcu_content_type_t) PICTURE:
+        case PICTURE:
             init_camera(mcu_c, PICTURE);
 
             camera_pic = camera_take_picture(mcu_c);
@@ -125,7 +129,8 @@ void exec_recording_task(mcu_content_t* mcu_c) {
             }
             break;
 
-        case (mcu_content_type_t) STREAM:
+        case MS:
+        case STREAM:
             init_camera(mcu_c, STREAM);
 
             if (!(mcu_c->cam_server_init)) {
@@ -135,16 +140,25 @@ void exec_recording_task(mcu_content_t* mcu_c) {
             else {
             stopStreamServer();
             mcu_c->cam_server_init = false;
+            mcu_c->content_type    = STANDBY;
             }
             break;
 
-        case (mcu_content_type_t) DRBELL:
+        case DRBELL:
             http_rest_with_url_notification(DRBELL_MSG);
             break;
-        case (mcu_content_type_t) REEDSW:
+        case REEDSW:
             http_rest_with_url_notification(REEDSW_MSG);
             break;
-        case (mcu_content_type_t) INVALID:
+        case MTR_CTRL:
+            exec_toggle_motor();
+            break;
+        case NSW:
+            ESP_LOGW(TAG, "Triggered NSW switch of e-motor");
+            http_rest_with_url_notification(NSW_MSG);
+            break;
+        case BATTERY:
+        case INVALID:
         default:
             ESP_LOGE(TAG, "Invalid type detected when executing queue task");
     }

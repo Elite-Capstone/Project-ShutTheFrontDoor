@@ -4,6 +4,74 @@ menu "Project ShutTheFrontDoor Configuration"
 
         menu "Input Configuration"
 
+            choice GPIO_INPUT_BOOT
+                prompt "Boot button"
+                default GPIO_INPUT_22_BOOT
+                help
+                    The selected GPIO will be pulled down when the button is pressed
+
+                config GPIO_INPUT_0_BOOT
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_BOOT
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_BOOT
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_BOOT
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_BOOT
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_BOOT
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_BOOT
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_BOOT
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_BOOT
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_BOOT
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_BOOT
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_BOOT
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_BOOT
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_BOOT
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_BOOT
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_BOOT
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_BOOT
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_BOOT
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_BOOT
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_BOOT
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_BOOT
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_BOOT
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_BOOT
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_BOOT
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_BOOT
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_BOOT
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_BOOT
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_BOOT
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_BOOT
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_BOOT
+                    bool "GPIO 39"
+            endchoice
+
             choice GPIO_INPUT_MS
                 prompt "Motion Sensor"
                 default GPIO_INPUT_15_MS

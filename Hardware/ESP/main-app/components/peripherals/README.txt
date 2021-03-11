@@ -22,8 +22,8 @@ GPIO List of the ESP32-SOLO-1 in ascending order
 19:
 NO 20
 21:
-22:
-23:
+22: BOOT Button
+23: 
 NO 24
 25: (in)  Motor Fault Detect.
 26: (in)  N-switch

@@ -237,8 +237,6 @@ esp_err_t init_sdcard(mcu_content_t* mcu_c)
     return ret;
 }
 
-
-
 //================================================
 //===== Section - Taking Pictures and upload =====
 //================================================

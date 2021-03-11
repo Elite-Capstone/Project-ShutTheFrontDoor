@@ -27,21 +27,23 @@
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
 
-#define SIGNAL_HIGH 1
-#define SIGNAL_LOW 0
+typedef enum {
+    SIGNAL_LOW  = 0x0,
+    SIGNAL_HIGH = 0x1
+} gpio_sig_level_t;
 
 typedef enum {
     INVALID     = -1,
     STANDBY     = 0,
-    PICTURE     = 1,
-    STREAM      = 2,
-    DRBELL      = 3,
-    REEDSW      = 4,
-    MS          = 5,
-    NSW         = 6,
-    BATTERY     = 7,
-    MTR_CTRL    = 8
-
+    BOOT        = 1,
+    PICTURE     = 2,
+    STREAM      = 3,
+    DRBELL      = 4,
+    REEDSW      = 5,
+    MS          = 6,
+    NSW         = 7,
+    BATTERY     = 8,
+    MTR_CTRL    = 9
 } mcu_content_type_t;
 
 typedef struct {
@@ -50,6 +52,7 @@ typedef struct {
     bool cam_server_init;
     bool save_to_sdcard;
     bool upload_content;
+    bool trig_signal;
     mcu_content_type_t content_type;
     wifi_ap_record_t* ap_info;
     char* device_ip;
@@ -102,26 +105,25 @@ esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_
  * 
  * @param io_num   GPIO input pin number,
  * @param sg_level Desired signal level
+ * 
+ * @return         Return value indicates if the correct gpio was triggered with the correct signal value
  */
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level);
+//bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level);
 
 /**
- * @brief This function sends a signal pulse through an output GPIO. This function is used for 
- *        debugging communications. Helps confirming operations should have occured.
- * 
- * @param num_blinks number of times the LED should blink (one blink = 1 on/off cycle)
+ * @brief This function sends a signal pulse through the output GPIOs for motor control.
+ *        This function toggles the motor to rotate once CW and once CCW
  */
-void gpio_blink_output(uint32_t num_blinks);
+void exec_toggle_motor(void);
 
 /**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)
  * 
  * @param io_num            GPIO used to create the interrupt
- * @param http_upload       Boolean from configuration menu indicating if the content is to uploaded
- * @param save_to_sdcard    Boolean from configuration menu. Indicates if the content is to 
- *                          be saved on the local SD card
+ * @param mcu_content   MCU content array to which will be passed the type and the desired signal level
  */
-mcu_content_type_t gpio_io_type(uint32_t io_num);
+void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
 
 /**
  * @brief This function programs what to do upon interrupt
@@ -144,6 +146,7 @@ void IRAM_ATTR gpio_isr_handler(void* arg);
  *                  @note GPIO_PULLDOWN_DISABLE == 0 == pull-down deactivated, GPIO_PULLDOWN_ENABLE == 1 == pull-down activated
  * @param pull_up   Pull-up enable/disable 
  *                  @note GPIO_PULLUP_DISABLE == 0 == pull-up deactivated, GPIO_PULLUP_ENABLE == 1 == pull-up activated
+ * @return          Returns an error code. The desired output is ESP_OK to indicate normal operations
  */
 esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_t gpio_mode, gpio_pulldown_t pull_down, gpio_pullup_t pull_up);
 
@@ -161,7 +164,8 @@ void gpio_setup_output(void);
 /**
  * @brief Interrupt handler for an HTTP event
  * 
- * @param evt
+ * @param evt   ...
+ * @return      Returns an error code. The desired output is ESP_OK to indicate normal operations
  */
 esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 
@@ -184,6 +188,7 @@ void http_rest_with_url_notification(const char* _message);
  * @brief HTTP event handler for streaming
  * 
  * @param req HTTP request
+ * @return    Returns an error code. The desired output is ESP_OK to indicate normal operations
  */
 esp_err_t stream_handler(httpd_req_t *req);
 
