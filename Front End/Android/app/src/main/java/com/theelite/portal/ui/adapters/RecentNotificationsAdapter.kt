@@ -56,7 +56,7 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
         view = LayoutInflater.from(parent.context)
             .inflate(R.layout.recent_notifications_w_actions, parent, false)
         view.setTag(R.layout.recent_notifications_w_actions, "recent")
-        val MAX_DURATION: Long = TimeUnit.MILLISECONDS.convert(20, TimeUnit.MINUTES)
+        val MAX_DURATION: Long = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)
         val now = Date()
         val duration: Long = now.getTime() - dataSet[viewType].date.getTime()
 
