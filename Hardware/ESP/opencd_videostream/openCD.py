@@ -49,6 +49,8 @@ def pubVideo(config):
     print("End Time: ", datetime.datetime.now())
 
 
+#sub with python CvZmq.py sub --subport=5555
+
 def subVideo(config):
     context = zmq.Context()
     footage_socket = context.socket(zmq.SUB)
