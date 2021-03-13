@@ -42,6 +42,7 @@ static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
 
+static httpd_handle_t stream_httpd = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
@@ -130,19 +131,19 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 
             if (!(mcu_c->cam_server_init)) {
                 init_camera(mcu_c, STREAM);
-                startStreamServer(mcu_c->device_ip);
+                stream_httpd = startStreamServer(mcu_c->device_ip);
                 mcu_c->cam_server_init = true;
             }
 
-            else {
-                stopStreamServer();
-                mcu_c->cam_server_init = false;
+            // else {
+            //     stopStreamServer(&stream_httpd);
+            //     mcu_c->cam_server_init = false;
 
-                if (esp_camera_deinit() != ESP_OK)
-                    ESP_LOGE(TAG, "Camera De-Init Failed");
-                else
-                    mcu_c->cam_initiated = false;
-            }
+            //     if (esp_camera_deinit() != ESP_OK)
+            //         ESP_LOGE(TAG, "Camera De-Init Failed");
+            //     else
+            //         mcu_c->cam_initiated = false;
+            // }
             break;
 
         case (mcu_content_type_t) DRBELL:
@@ -179,8 +180,28 @@ void app_main(void) {
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
     gpio_init_setup(gpio_isr_handler);
-    if (INIT_SDCARD)
+    //if (INIT_SDCARD)
         init_sdcard(mcu_c);
 
     wifi_scan(mcu_c);
+
+    //Continuously sample ADC
+    // while (1) {
+    //     uint32_t adc_reading = 0;
+    //     //Multisampling
+    //     for (int i = 0; i < NO_OF_SAMPLES; i++) {
+    //         if (unit == ADC_UNIT_1) {
+    //             adc_reading += adc1_get_raw((adc1_channel_t)channel);
+    //         } else {
+    //             int raw;
+    //             adc2_get_raw((adc2_channel_t)channel, width, &raw);
+    //             adc_reading += raw;
+    //         }
+    //     }
+    //     adc_reading /= NO_OF_SAMPLES;
+    //     //Convert adc_reading to voltage in mV
+    //     uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
+    //     printf("Raw: %d\tVoltage: %dmV\n", adc_reading, voltage);
+    //     vTaskDelay(pdMS_TO_TICKS(1000));
+    // }
 }

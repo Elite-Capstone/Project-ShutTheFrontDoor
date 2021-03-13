@@ -31,9 +31,6 @@ static const char* PIC_CONTENT_TYPE = "multipart/mixed;boundary=" PART_BOUNDARY;
 static const char* MEDIA_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* MEDIA_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-
-static httpd_handle_t stream_httpd = NULL;
-
 static const char *TAG = "stfd_http_client";
 
 /* Root cert for howsmyssl.com, taken from howsmyssl_com_root_cert.pem
@@ -153,6 +150,7 @@ void http_rest_with_url_upload_picture(uint8_t* buf, size_t len) {
     esp_http_client_set_method(client, HTTP_METHOD_POST);
     // Uploading strictly JPEG
     esp_http_client_set_header(client, "Content-Type", "image/jpeg");
+    esp_http_client_set_header(client, "Content-Disposition", "inline; filename=capture.jpg");
     
     // buf contains pixel data and len is the length of the data
     esp_http_client_set_post_field(client, (const char*)buf, len);
@@ -266,7 +264,8 @@ esp_err_t stream_handler(httpd_req_t *req) {
             res = ESP_FAIL;
             break;
         }
-        convert_to_jpeg(fb, &_jpg_buf, &_jpg_buf_len);
+        if (convert_to_jpeg(fb, &_jpg_buf, &_jpg_buf_len) != ESP_OK)
+            break;
 
         // if(res == ESP_OK){
         //     size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
@@ -321,29 +320,31 @@ esp_err_t stream_handler(httpd_req_t *req) {
 }
 
 httpd_handle_t startStreamServer(char* device_ip) {
+    httpd_handle_t httpd_handle = NULL;
+
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = DEFAULT_CAM_STREAM_PORT;
     config.recv_wait_timeout = 30;
     config.send_wait_timeout = 30;
 
     httpd_uri_t index_uri = {
-    .uri       = "/stream",
+    .uri       = DEFAULT_STREAM_URI,
     .method    = HTTP_GET,
     .handler   = stream_handler,
     .user_ctx  = NULL
     };
 
     ESP_LOGI(TAG,"Starting web server on port: '%d'\n", config.server_port);
-    ESP_LOGI(TAG, "Connect to http://%s%s", device_ip, DEFAULT_STREAM_URI);
-    if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-    httpd_register_uri_handler(stream_httpd, &index_uri);
+    ESP_LOGI(TAG, "Connect to http://%s%s", device_ip, index_uri.uri);
+    if (httpd_start(&httpd_handle, &config) == ESP_OK) {
+    httpd_register_uri_handler(httpd_handle, &index_uri);
     }
-    return stream_httpd;
+    return httpd_handle;
 }
 
-void stopStreamServer() {
+void stopStreamServer(httpd_handle_t* httpd_handle) {
     ESP_LOGI(TAG, "Trying to stop stream");
-    if (httpd_stop(&stream_httpd) == ESP_OK)
+    if (httpd_stop(httpd_handle) == ESP_OK)
         ESP_LOGI(TAG,"Stopping web server");
     else
         ESP_LOGE(TAG, "Could not successfully stop the camera server on port %d", DEFAULT_CAM_STREAM_PORT);
