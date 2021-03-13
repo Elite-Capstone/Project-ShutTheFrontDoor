@@ -29,46 +29,53 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
-    @Autowired
-    private AdminClient kafkaAdmin;
+    public NotificationServiceImpl(AdminClient kafkaAdmin) {
+        this.kafkaAdmin = kafkaAdmin;
+        this.buildRetrofitObjects();
+    }
+
+    private final AdminClient kafkaAdmin;
 
     @Value("${user.ms.url}")
     private String userMsUrl;
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootStrapServer;
+    private UserService userService = null;
 
     @Override
-    public ResponseEntity getHealth() {
+    public ResponseEntity<String> getHealth() {
         try {
             kafkaAdmin.listTopics();
         } catch (Exception e) {
-            return new ResponseEntity("Error with Kafka or something", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error with Kafka or something", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity("Everything seems to be fine", HttpStatus.OK);
+        return new ResponseEntity<>("Everything seems to be fine", HttpStatus.OK);
     }
 
     @Override
-    public List<Notification> getRecentNotifications(String accountId, String userId) {
-
-
-        //TODO retrieve notification as pojo
-        String topic = "00b288a8-3db1-40b5-b30f-532af4e12f4b";
-        KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(userId, accountId, bootStrapServer));
-        consumer.subscribe(Collections.singleton(topic));
-        ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
-        consumer.commitAsync();
-        List<Notification> notifications = new ArrayList<>();
-        for (ConsumerRecord<String, Notification> r : records) {
-            notifications.add(r.value());
+    public List<Notification> getRecentNotifications(String email, String token) {
+        if (!userIsLegit(email, token)) return null;
+        String accountId = getFamilyAccountForUser(email);
+        if (accountId != null) {
+            //TODO retrieveAll topic -- doorIds from accountId
+            String topic = "00b288a8-3db1-40b5-b30f-532af4e12f4b";
+            KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, accountId, bootStrapServer));
+            consumer.subscribe(Collections.singleton(topic));
+            ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
+            consumer.commitAsync();
+            List<Notification> notifications = new ArrayList<>();
+            for (ConsumerRecord<String, Notification> r : records) {
+                notifications.add(r.value());
+            }
+            consumer.close();
+            return notifications;
         }
-        consumer.close();
-        return notifications;
+        return null;
     }
 
     @Override
     public boolean publishNotification(Notification notification) {
-        // TODO publish notification as pojo
         KafkaProducer<String, Notification> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
         notification.setDate(new Date());
         producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification));
@@ -97,7 +104,7 @@ public class NotificationServiceImpl implements NotificationService {
         try {
             topics = new ArrayList<>(kafkaAdmin.listTopics().names().get());
         } catch (Exception e) {
-            System.out.println(e);
+            System.out.println(e.getMessage());
         }
         return topics;
     }
@@ -132,21 +139,33 @@ public class NotificationServiceImpl implements NotificationService {
         return result;
     }
 
-    public boolean userIsNotLegit(String account, String email) {
-        if (userMsUrl == null || userMsUrl.equals("")) return false;
-
+    private void buildRetrofitObjects() {
+        if (userMsUrl == null || userMsUrl.equals("")) return;
         Retrofit retrofit = new Retrofit.Builder().baseUrl(userMsUrl).build();
-        UserService userService = retrofit.create(UserService.class);
-        User user = new User();
-        user.setEmail(email);
-        User userSavedInfo = null;
+        userService = retrofit.create(UserService.class);
+    }
+
+    private boolean userIsLegit(String email, String token) {
+        boolean result = false;
         try {
-            userSavedInfo = userService.getUserWithId(user).execute().body();
-            return userSavedInfo.getAccountId().equals(account);
+            result = userService.validateUser(email, token).execute().body();
+        } catch (NullPointerException npr) {
+            System.out.println("Null pointer exception when trying to validate user");
+            return false;
         } catch (IOException e) {
             e.printStackTrace();
         }
-        if (userSavedInfo == null) return false;
-        else return userSavedInfo.getAccountId().equals(account);
+        return result;
+    }
+
+    private String getFamilyAccountForUser(String email) {
+        String accountId = null;
+        try {
+            accountId = userService.getFamilyAccount(email).execute().body();
+        } catch (NullPointerException | IOException nullPointerException) {
+            System.out.println(nullPointerException.getMessage());
+        }
+
+        return accountId;
     }
 }

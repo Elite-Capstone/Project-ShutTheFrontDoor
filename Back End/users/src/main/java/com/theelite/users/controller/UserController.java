@@ -16,17 +16,17 @@ public class UserController {
     private UserServiceImpl userService;
 
     @GetMapping("/")
-    public ResponseEntity pong(){
+    public ResponseEntity<String> pong() {
         return userService.getHealth();
     }
 
     @PutMapping("/new")
-    public boolean addNewUser(@RequestBody User user) {
+    public String addNewUser(@RequestBody User user) {
         return userService.addUser(user);
     }
 
     @PostMapping("/auth")
-    public boolean authenticateUser(@RequestBody User user) {
+    public String authenticateUser(@RequestBody User user) {
         return userService.authenticateUser(user);
     }
 
@@ -64,4 +64,21 @@ public class UserController {
     public User getUserWithEmail(@RequestBody User user) {
         return userService.getUserWithEmail(user.getEmail());
     }
+
+//    @GetMapping("/token")
+//    public String testToken() {
+//        return userService.testToken();
+//    }
+
+    @GetMapping("/validateUser/{email}/{token}")
+    public boolean validateUser(@PathVariable("email") String email, @PathVariable("token") String token) {
+        return userService.validateUser(email, token);
+    }
+
+    @GetMapping("/familyAccount/{email}")
+    public String getFamilyAccountForUserWithEmail(@PathVariable("email") String email){
+        return userService.getFamilyAccountForUser(email);
+    }
+
+
 }

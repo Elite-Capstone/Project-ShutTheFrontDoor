@@ -3,6 +3,7 @@ package com.theelite.users.dao;
 import com.theelite.users.model.Invitation;
 import com.theelite.users.model.User;
 import com.theelite.users.model.UserRole;
+import com.theelite.users.model.UserToken;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -35,7 +36,11 @@ public class CustomDaoImpl implements CustomDao {
 
     @Override
     public void updateUserPassword(String user, String password) {
-
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(user));
+        Update update = new Update();
+        update.set("password", password);
+        mongoOperations.findAndModify(query, update, User.class);
     }
 
     @Override
@@ -55,10 +60,10 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
-    public long testDatabaseConnection(){
+    public void testDatabaseConnection() {
         Query query = new Query();
         query.addCriteria(Criteria.where("email").is("").not());
-        return mongoOperations.count(query, User.class);
+        mongoOperations.count(query, User.class);
     }
 
     @Override
@@ -84,6 +89,34 @@ public class CustomDaoImpl implements CustomDao {
 
     @Override
     public void saveNewInvitation(Invitation invitation) {
-         mongoOperations.save(invitation);
+        mongoOperations.save(invitation);
+    }
+
+    @Override
+    public boolean validateUser(String email, String token) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email).and("tokens").elemMatch(Criteria.where("token").is(token))).limit(1);
+        return mongoOperations.exists(query, User.class);
+    }
+
+    @Override
+    public void addNewTokenToUser(String email, UserToken token) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email));
+        Update update = new Update();
+        update.addToSet("tokens", token);
+        mongoOperations.findAndModify(query, update, User.class);
+    }
+
+    @Override
+    public void removeToken() {
+        //TODO implement
+    }
+
+    @Override
+    public void deleteUserAccount(String email) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("email").is(email));
+        mongoOperations.findAndRemove(query, User.class);
     }
 }
