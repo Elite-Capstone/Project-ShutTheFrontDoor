@@ -45,23 +45,23 @@ static const char* REEDSW_MSG = "The Door opened";
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
-    .cam_initiated      = false,
-    .sdcard_initiated   = false,
-    .cam_server_init    = false,
-    .save_to_sdcard     = false,
-    .upload_content     = false,
-    .content_type       = STANDBY,
-    .ap_info            = NULL,
-    .device_ip          = "",
-    .pic_counter        = 0
+.cam_initiated      = false,
+.sdcard_initiated   = false,
+.cam_server_init    = false,
+.save_to_sdcard     = false,
+.upload_content     = false,
+.trig_signal        = SIGNAL_LOW,
+.content_type       = STANDBY,
+.ap_info            = NULL,
+.device_ip          = "",
+.pic_counter        = 0
 };
-
 static mcu_content_t* mcu_c = &_mcu_c;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
 static void gpio_trig_action(void* arg);
-void exec_recording_task(mcu_content_t* mcu_c);
+void exec_gpio_task(mcu_content_t* mcu_c);
 
 /**
  * @brief Handler for GPIO interrupts
@@ -83,16 +83,16 @@ static void gpio_trig_action(void* arg)
     for(;;) {
         if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
-            mcu_c->content_type = gpio_io_type(io_num);
+            get_io_type(io_num, mcu_c);
             mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
             mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
 
-            if (trig_valid_gpio(io_num, SIGNAL_LOW)) {
-                gpio_blink_output(1);
-                exec_recording_task(mcu_c);
+            if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
+                gpio_blink(1);
+                exec_gpio_task(mcu_c);
             }
             else {
-                ESP_LOGI(TAG, "Triggered the wrong input pin");
+                ESP_LOGI(TAG, "Triggered the wrong input pin or wrong signal level");
             }   
         }
     }
@@ -103,7 +103,7 @@ static void gpio_trig_action(void* arg)
  * 
  * @param mcu_c Camera current status with its content
  */
-void exec_recording_task(mcu_content_t* mcu_c) {    
+void exec_gpio_task(mcu_content_t* mcu_c) {    
     camera_fb_t* camera_pic;
     uint8_t* jpeg_buf = NULL;
     size_t jpeg_buf_len = 0;
@@ -127,15 +127,21 @@ void exec_recording_task(mcu_content_t* mcu_c) {
             break;
 
         case (mcu_content_type_t) STREAM:
-            init_camera(mcu_c, STREAM);
 
             if (!(mcu_c->cam_server_init)) {
-            startStreamServer(mcu_c->device_ip);
-            mcu_c->cam_server_init = true;
+                init_camera(mcu_c, STREAM);
+                startStreamServer(mcu_c->device_ip);
+                mcu_c->cam_server_init = true;
             }
+
             else {
-            stopStreamServer();
-            mcu_c->cam_server_init = false;
+                stopStreamServer();
+                mcu_c->cam_server_init = false;
+
+                if (esp_camera_deinit() != ESP_OK)
+                    ESP_LOGE(TAG, "Camera De-Init Failed");
+                else
+                    mcu_c->cam_initiated = false;
             }
             break;
 
@@ -144,6 +150,10 @@ void exec_recording_task(mcu_content_t* mcu_c) {
             break;
         case (mcu_content_type_t) REEDSW:
             http_rest_with_url_notification(REEDSW_MSG);
+            break;
+        case (mcu_content_type_t) STANDBY:
+            ESP_LOGI(TAG, "Standing by... 10sec");
+            vTaskDelay(10000/portTICK_RATE_MS);
             break;
         case (mcu_content_type_t) INVALID:
         default:
@@ -168,7 +178,7 @@ void app_main(void) {
     //start gpio task
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
-    gpio_setup_for_picture(gpio_isr_handler);
+    gpio_init_setup(gpio_isr_handler);
     if (INIT_SDCARD)
         init_sdcard(mcu_c);
 

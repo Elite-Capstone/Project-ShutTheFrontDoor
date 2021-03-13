@@ -2,6 +2,18 @@ menu "Project ShutTheFrontDoor Configuration"
 
     menu "GPIO Configuration"
 
+        choice MCU_TYPE
+            prompt "Which MCU will this firmware be installed on?"
+            default MAIN_MCU
+            help
+                The selected MCU type will have different functionalities installed
+            
+            config MAIN_MCU
+                bool "Main MCU"
+            config ESP32_CAM_MCU
+                bool "ESP32 CAM"
+        endchoice
+
         menu "Input Configuration"
 
             choice GPIO_INPUT_BOOT

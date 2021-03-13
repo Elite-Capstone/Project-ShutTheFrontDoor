@@ -46,18 +46,24 @@ static const char* NSW_MSG    = "The lock was turned";
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
-.cam_initiated      = false,
-.sdcard_initiated   = false,
-.cam_server_init    = false,
-.save_to_sdcard     = false,
-.upload_content     = false,
-.trig_signal        = SIGNAL_LOW,
-.content_type       = STANDBY,
-.ap_info            = NULL,
-.device_ip          = "",
-.pic_counter        = 0
+    .save_to_sdcard     = false,
+    .upload_content     = false,
+    .trig_signal        = SIGNAL_LOW,
+    .content_type       = STANDBY,
+    .ap_info            = NULL,
+    .device_ip          = "",
+    .pic_counter        = 0
 };
 static mcu_content_t* mcu_c = &_mcu_c;
+
+mcu_status_t _mcu_s = {
+    .cam_initiated      = false,
+    .sdcard_initiated   = false,
+    .cam_server_init    = false,
+    .nsw_status         = false,
+    .door_is_closed     = false
+};
+static mcu_status_t* mcu_s;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
@@ -113,12 +119,12 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 
     switch (mcu_c->content_type) {
         case PICTURE:
-            init_camera(mcu_c, PICTURE);
+            init_camera(mcu_c, mcu_s, PICTURE);
 
             camera_pic = camera_take_picture(mcu_c);
             convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
 
-            if (mcu_c->save_to_sdcard && mcu_c->sdcard_initiated)
+            if (mcu_c->save_to_sdcard && mcu_s->sdcard_initiated)
                 save_image_to_sdcard(jpeg_buf, jpeg_buf_len, mcu_c->pic_counter);
 
             if (mcu_c->upload_content) {   
@@ -131,15 +137,15 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 
         case MS:
         case STREAM:
-            init_camera(mcu_c, STREAM);
+            init_camera(mcu_c, mcu_s, STREAM);
 
-            if (!(mcu_c->cam_server_init)) {
+            if (!(mcu_s->cam_server_init)) {
             startStreamServer(mcu_c->device_ip);
-            mcu_c->cam_server_init = true;
+            mcu_s->cam_server_init = true;
             }
             else {
             stopStreamServer();
-            mcu_c->cam_server_init = false;
+            mcu_s->cam_server_init = false;
             mcu_c->content_type    = STANDBY;
             }
             break;
@@ -156,6 +162,10 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
         case NSW:
             ESP_LOGW(TAG, "Triggered NSW switch of e-motor");
             http_rest_with_url_notification(NSW_MSG);
+            break;
+        case STANDBY:
+            ESP_LOGI(TAG, "Standing by... 10sec");
+            vTaskDelay(10000/portTICK_RATE_MS);
             break;
         case BATTERY:
         case INVALID:
@@ -183,7 +193,7 @@ void app_main(void) {
 
     gpio_init_setup(gpio_isr_handler);
     if (INIT_SDCARD)
-        init_sdcard(mcu_c);
+        init_sdcard(mcu_s);
 
     wifi_scan(mcu_c);
 }

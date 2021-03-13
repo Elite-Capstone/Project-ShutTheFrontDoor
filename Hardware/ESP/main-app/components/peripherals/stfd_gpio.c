@@ -30,8 +30,10 @@ bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
 
 void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
     switch(io_num) {
-        // case GPIO_INPUT_BOOT:
-        //     return BOOT;
+        // case GPIO_INPUT_BOOT:     
+        //    mcu_content->content_type = BOOT;
+        //    mcu_content->trig_signal  = SIGNAL_LOW;
+        //    break;
         case GPIO_INPUT_MS:
             mcu_content->content_type = MS;
             mcu_content->trig_signal  = SIGNAL_HIGH;
@@ -71,12 +73,17 @@ void exec_toggle_motor(void) {
     // Rotate Clockwise
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
-    vTaskDelay(3000 / portTICK_RATE_MS);
+    vTaskDelay(5000 / portTICK_RATE_MS);
+
+    // Sleep mode
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
+    vTaskDelay(1000 / portTICK_RATE_MS);
 
     // Rotate Counter-clockwise
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 1);
-    vTaskDelay(3000 / portTICK_RATE_MS);
+    vTaskDelay(5000 / portTICK_RATE_MS);
 
     // Sleep mode
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
@@ -111,17 +118,7 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
 void gpio_setup_input(gpio_isr_t isr_handler) {
     // BOOT
     if( stfd_gpio_config(
-        GPIO_PIN_INTR_DISABLE, 
-        GPIO_0_PIN_SEL, 
-        GPIO_MODE_INPUT, 
-        GPIO_PULLDOWN_DISABLE, 
-        GPIO_PULLUP_ENABLE
-        ) != ESP_OK) 
-    {
-        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MS);
-    }
-    if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_PIN_INTR_NEGEDGE, 
         GPIO_INPUT_BOOT_PIN_SEL, 
         GPIO_MODE_INPUT, 
         GPIO_PULLDOWN_DISABLE, 
@@ -140,28 +137,6 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
         ) != ESP_OK) 
     {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MS);
-    }
-    // NSW
-    if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
-        GPIO_INPUT_NSW_PIN_SEL, 
-        GPIO_MODE_INPUT, 
-        GPIO_PULLDOWN_DISABLE, 
-        GPIO_PULLUP_ENABLE
-        ) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_NSW);
-    }
-    // MOTOR FAULT
-    if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
-        GPIO_INPUT_MOTOR_FAULT_PIN_SEL, 
-        GPIO_MODE_INPUT, 
-        GPIO_PULLDOWN_DISABLE, 
-        GPIO_PULLUP_ENABLE
-        ) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MOTOR_FAULT);
     }
     // DRBELL
     if( stfd_gpio_config(
@@ -185,6 +160,29 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_REEDSW_STATUS);
     }
+#if CONFIG_MAIN_MCU
+    // NSW
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_NSW_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_NSW);
+    }
+    // MOTOR FAULT
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_MOTOR_FAULT_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MOTOR_FAULT);
+    }
 
     // Setup ADC
     /*if( stfd_gpio_config(
@@ -198,6 +196,19 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_BATTERY);
     }
     */
+#elif CONFIG_ESP32_CAM_MCU
+    // PIC
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_NEGEDGE, 
+        GPIO_INPUT_PIC_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_PIC);
+    }
+#endif
 
     //install gpio isr service
     //hook isr handler for specific gpio pin
@@ -205,14 +216,20 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_BOOT, isr_handler, (void*) GPIO_INPUT_BOOT));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MS, isr_handler, (void*) GPIO_INPUT_MS));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_NSW, isr_handler, (void*) GPIO_INPUT_NSW));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MOTOR_FAULT, isr_handler, (void*) GPIO_INPUT_MOTOR_FAULT));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_DRBELL_NOTIF, isr_handler, (void*) GPIO_INPUT_DRBELL_NOTIF));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_REEDSW_STATUS, isr_handler, (void*) GPIO_INPUT_REEDSW_STATUS));
+
+#if CONFIG_MAIN_MCU
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_NSW, isr_handler, (void*) GPIO_INPUT_NSW));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MOTOR_FAULT, isr_handler, (void*) GPIO_INPUT_MOTOR_FAULT));
+#elif CONFIG_ESP32_CAM_MCU
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, isr_handler, (void*) GPIO_INPUT_PIC));
+#endif
 }
 
 void gpio_setup_output(void) {
-
+    
+#if CONFIG_MAIN_MCU
     if( stfd_gpio_config(
         GPIO_PIN_INTR_DISABLE, 
         GPIO_OUTPUT_MOTOR_IN1_PIN_SEL, 
@@ -233,10 +250,23 @@ void gpio_setup_output(void) {
     {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_MOTOR_IN2);
     }
-
     //Initialize to 0
     ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN1_PIN_SEL, 0));
     ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN2_PIN_SEL, 0));
+
+#elif CONFIG_ESP32_CAM_MCU
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_DISABLE, 
+        GPIO_OUTPUT_CONFIRM_PIN_SEL, 
+        GPIO_MODE_OUTPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_CONFIRM_UPLOAD);
+    }
+    ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_CONFIRM_PIN_SEL, 0));
+#endif
 }
 
 void gpio_init_setup(gpio_isr_t isr_handler) {

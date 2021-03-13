@@ -64,5 +64,6 @@
     "xlocmon": "c",
     "xlocnum": "c",
     "xloctime": "c"
-  }
+  },
+  "idf.portWin": "COM3"
 }

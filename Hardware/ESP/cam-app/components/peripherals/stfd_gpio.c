@@ -12,268 +12,239 @@
 #include <stdlib.h>
 
 #include "stfd_peripherals.h"
-
-#if CONFIG_GPIO_INPUT_0_PIC
-#define GPIO_INPUT_PIC 0
-#elif CONFIG_GPIO_INPUT_2_PIC
-#define GPIO_INPUT_PIC 4
-#elif CONFIG_GPIO_INPUT_12_PIC
-#define GPIO_INPUT_PIC 12
-#elif CONFIG_GPIO_INPUT_13_PIC
-#define GPIO_INPUT_PIC 13
-#elif CONFIG_GPIO_INPUT_14_PIC
-#define GPIO_INPUT_PIC 14
-#elif CONFIG_GPIO_INPUT_15_PIC
-#define GPIO_INPUT_PIC 15
-#elif CONFIG_GPIO_INPUT_16_PIC
-#define GPIO_INPUT_PIC 16
-#else
-#define GPIO_INPUT_PIC 16
-#endif /* CONFIG_GPIO_INPUT_PIC */
-
-#if CONFIG_GPIO_INPUT_0_STREAM
-#define GPIO_INPUT_STREAM 0
-#elif CONFIG_GPIO_INPUT_2_STREAM
-#define GPIO_INPUT_STREAM 4
-#elif CONFIG_GPIO_INPUT_12_STREAM
-#define GPIO_INPUT_STREAM 12
-#elif CONFIG_GPIO_INPUT_13_STREAM
-#define GPIO_INPUT_STREAM 13
-#elif CONFIG_GPIO_INPUT_14_STREAM
-#define GPIO_INPUT_STREAM 14
-#elif CONFIG_GPIO_INPUT_15_STREAM
-#define GPIO_INPUT_STREAM 15
-#elif CONFIG_GPIO_INPUT_16_STREAM
-#define GPIO_INPUT_STREAM 16
-#else
-#define GPIO_INPUT_STREAM 12
-#endif /* CONFIG_GPIO_INPUT_STREAM */
-
-#if  CONFIG_GPIO_INPUT_0_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 0
-#elif  CONFIG_GPIO_INPUT_4_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 4
-#elif  CONFIG_GPIO_INPUT_12_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 12
-#elif  CONFIG_GPIO_INPUT_13_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 13
-#elif  CONFIG_GPIO_INPUT_14_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 14
-#elif  CONFIG_GPIO_INPUT_15_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 15
-#elif  CONFIG_GPIO_INPUT_16_DRBELL_NOTIF
-#define GPIO_INPUT_DRBELL_NOTIF 16
-#else
-#define GPIO_INPUT_DRBELL_NOTIF 13
-#endif /* CONFIG_GPIO_INPUT_DRBELL_NOTIF */
-
-#if  GPIO_INPUT_0_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 0
-#elif  CONFIG_GPIO_INPUT_4_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 4
-#elif  CONFIG_GPIO_INPUT_12_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 12
-#elif  CONFIG_GPIO_INPUT_13_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 13
-#elif  CONFIG_GPIO_INPUT_14_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 14
-#elif  CONFIG_GPIO_INPUT_15_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 15
-#elif  CONFIG_GPIO_INPUT_16_REEDSW_STATUS
-#define GPIO_INPUT_REEDSW_STATUS 16
-#else
-#define GPIO_INPUT_REEDSW_STATUS 15
-#endif /* CONFIG_GPIO_INPUT_REEDSW_STATUS */
-
-#if CONFIG_GPIO_OUTPUT_0_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 0
-#elif CONFIG_GPIO_OUTPUT_2_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 4
-#elif CONFIG_GPIO_OUTPUT_12_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 12
-#elif CONFIG_GPIO_OUTPUT_13_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 13
-#elif CONFIG_GPIO_OUTPUT_14_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 14
-#elif CONFIG_GPIO_OUTPUT_15_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 15
-#elif CONFIG_GPIO_OUTPUT_16_CONFIRM
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 16
-#else
-#define GPIO_OUTPUT_CONFIRM_UPLOAD 4
-#endif /* CONFIG_GPIO_OUTPUT_CONFIRM_UPLOAD */
-
-// Wrong GPIO assignment check
-#define GPIO_MULTA_ERR_MSG "Multiple functions assigned to same GPIO: "
-
-#if (GPIO_INPUT_PIC == GPIO_INPUT_STREAM)
-#error GPIO_MULTA_ERR_MSG "Picture & Stream"
-#endif
-
-#if (GPIO_INPUT_PIC == GPIO_INPUT_DRBELL_NOTIF)
-#error GPIO_MULTA_ERR_MSG "Picture & Doorbell Notif."
-#endif
-
-#if (GPIO_INPUT_PIC == GPIO_INPUT_REEDSW_STATUS)
-#error GPIO_MULTA_ERR_MSG "Picture & Reed Switch Status"
-#endif
-
-#if (GPIO_INPUT_PIC == GPIO_OUTPUT_CONFIRM_UPLOAD)
-#error GPIO_MULTA_ERR_MSG "Picture & Output confirm"
-#endif
-
-#if (GPIO_INPUT_STREAM == GPIO_INPUT_DRBELL_NOTIF)
-#error GPIO_MULTA_ERR_MSG "Stream & Doorbell Notif."
-#endif
-
-#if (GPIO_INPUT_STREAM == GPIO_INPUT_REEDSW_STATUS)
-#error GPIO_MULTA_ERR_MSG "Stream & Reed Switch Status"
-#endif
-
-#if (GPIO_INPUT_STREAM == GPIO_OUTPUT_CONFIRM_UPLOAD)
-#error GPIO_MULTA_ERR_MSG "Stream & Output confirm"
-#endif
-
-#if (GPIO_INPUT_DRBELL_NOTIF == GPIO_INPUT_REEDSW_STATUS)
-#error GPIO_MULTA_ERR_MSG "Doorbell Notif & Reed Switch Status"
-#endif
-
-#if (GPIO_INPUT_DRBELL_NOTIF == GPIO_OUTPUT_CONFIRM_UPLOAD)
-#error GPIO_MULTA_ERR_MSG "Doorbell Notif & Output confirm"
-#endif
-
-#define GPIO_INPUT_PIC_PIN_SEL      (1ULL<<GPIO_INPUT_PIC)
-#define GPIO_INPUT_STREAM_PIN_SEL   (1ULL<<GPIO_INPUT_STREAM)
-#define GPIO_INPUT_DRBELL_PIN_SEL   (1ULL<<GPIO_INPUT_DRBELL_NOTIF)
-#define GPIO_INPUT_REEDSW_PIN_SEL   (1ULL<<GPIO_INPUT_REEDSW_STATUS)
-#define GPIO_OUTPUT_PIN_SEL         (1ULL<<GPIO_OUTPUT_CONFIRM_UPLOAD)
+#include "stfd_gpio_config.h"
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
 static const char* TAG = "stfd_gpio";
 
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
-    //return ((io_num == GPIO_INPUT_PIC || io_num == GPIO_INPUT_STREAM) && gpio_get_level(io_num) == sg_level);
-    if (io_num == GPIO_INPUT_STREAM)
-        return gpio_get_level(io_num) != sg_level;
     return gpio_get_level(io_num) == sg_level;
 }
 
-void gpio_blink_output(uint32_t num_blinks) {
+void gpio_blink(uint32_t num_blinks) {
     ESP_LOGI(TAG, "blinking %u times...", num_blinks);
 
     for (uint32_t b = 0; b < num_blinks; b++) {
+#if CONFIG_ESP32_CAM_MCU
         gpio_set_level(GPIO_OUTPUT_CONFIRM_UPLOAD, 1);
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(500 / portTICK_RATE_MS);
         gpio_set_level(GPIO_OUTPUT_CONFIRM_UPLOAD, 0);
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        vTaskDelay(500 / portTICK_RATE_MS);
+#endif
     }
 }
 
-mcu_content_type_t gpio_io_type(uint32_t io_num) {
+void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
     switch(io_num) {
-        case GPIO_INPUT_PIC:
-            return PICTURE;
-        case GPIO_INPUT_STREAM:
-            return STREAM;
+        case GPIO_INPUT_BOOT:
+            mcu_content->content_type = STANDBY;
+            mcu_content->trig_signal  = SIGNAL_IGNORED;
+            break;
+        case GPIO_INPUT_MS:
+            mcu_content->content_type = STREAM;
+            mcu_content->trig_signal  = SIGNAL_HIGH;
+            break;
         case GPIO_INPUT_DRBELL_NOTIF:
-            return DRBELL;
+            mcu_content->content_type = DRBELL;
+            mcu_content->trig_signal  = SIGNAL_LOW;
+            break;
         case GPIO_INPUT_REEDSW_STATUS:
-            return REEDSW;
+            mcu_content->content_type = REEDSW;
+            mcu_content->trig_signal  = SIGNAL_LOW;
+            break;
+#if CONFIG_ESP32_CAM_MCU
+        case GPIO_INPUT_PIC:
+            mcu_content->content_type = STREAM;
+            mcu_content->trig_signal  = SIGNAL_LOW;
+            break;
+#endif
         default:
-            return INVALID;
+            mcu_content->content_type = (mcu_content_type_t) INVALID;
+            mcu_content->trig_signal  = SIGNAL_LOW;
     }
 }
 
-// esp_err_t stfd_gpio_config() {
-//     ///interrupt of rising edge
-//     io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-//     //bit mask of the pins, use GPIO4/5 here
-//     io_conf.pin_bit_mask = GPIO_INPUT_PIC_PIN_SEL;
-//     //set as input mode    
-//     io_conf.mode = GPIO_MODE_INPUT;
-//     //enable pull-up mode
-//     io_conf.pull_up_en = 1;
-//     return ESP_ERROR_CHECK(gpio_config(&io_conf));
-// }
+esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_t gpio_mode, gpio_pulldown_t pull_down, gpio_pullup_t pull_up) {
+    gpio_config_t io_conf;
+
+    ///interrupt of rising edge
+    io_conf.intr_type = int_type;
+    //bit mask of the pins, use GPIO4/5 here
+    io_conf.pin_bit_mask = bit_mask;
+    //set as input mode    
+    io_conf.mode = gpio_mode;
+
+    if(pull_up && pull_down == 0x1) {
+        ESP_LOGE(TAG, "Simulaneous Pull up and Pull down requested");
+        return ESP_FAIL;
+    }
+    else {
+        // enable/disable pull-up mode
+        io_conf.pull_up_en = pull_up;
+        // enable/disable pull-down mode
+        io_conf.pull_down_en = pull_down;
+    }
+    ESP_ERROR_CHECK(gpio_config(&io_conf));
+    return ESP_OK;
+}
 
 void gpio_setup_input(gpio_isr_t isr_handler) {
-    gpio_config_t io_conf;
-    //esp_err_t err = ESP_OK;
+    // BOOT
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_NEGEDGE, 
+        GPIO_INPUT_BOOT_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK) 
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MS);
+    }
+    // MS
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_MS_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_ENABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK) 
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MS);
+    }
+    // DRBELL
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_DRBELL_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_DRBELL_NOTIF);
+    }
+    // REEDSW
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_REEDSW_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_REEDSW_STATUS);
+    }
+#if CONFIG_MAIN_MCU
+    // NSW
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_NSW_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_NSW);
+    }
+    // MOTOR FAULT
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_MOTOR_FAULT_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MOTOR_FAULT);
+    }
 
-    ///interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4/5 here
-    io_conf.pin_bit_mask = GPIO_INPUT_PIC_PIN_SEL;
-    //set as input mode    
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    io_conf.pull_up_en = 1;
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
-
-    ///interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4/5 here
-    io_conf.pin_bit_mask = GPIO_INPUT_STREAM_PIN_SEL;
-    //set as input mode    
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    //io_conf.pull_up_en = 1;
-    io_conf.pull_down_en = 1;
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
-
-    ///interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4/5 here
-    io_conf.pin_bit_mask = GPIO_INPUT_DRBELL_PIN_SEL;
-    //set as input mode    
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    io_conf.pull_up_en = 1;
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
-
-    ///interrupt of rising edge
-    io_conf.intr_type = GPIO_PIN_INTR_POSEDGE;
-    //bit mask of the pins, use GPIO4/5 here
-    io_conf.pin_bit_mask = GPIO_INPUT_REEDSW_PIN_SEL;
-    //set as input mode    
-    io_conf.mode = GPIO_MODE_INPUT;
-    //enable pull-up mode
-    io_conf.pull_up_en = 1;
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
+    // Setup ADC
+    /*if( stfd_gpio_config(
+        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_INPUT_BATTERY_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_BATTERY);
+    }
+    */
+#elif CONFIG_ESP32_CAM_MCU
+    // PIC
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_NEGEDGE, 
+        GPIO_INPUT_PIC_PIN_SEL, 
+        GPIO_MODE_INPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_PIC);
+    }
+#endif
 
     //install gpio isr service
+    //hook isr handler for specific gpio pin
     //Must only be done once. But each gpio can have their own isr handler
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
-    //hook isr handler for specific gpio pin
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, isr_handler, (void*) GPIO_INPUT_PIC));
-    //hook isr handler for specific gpio pin
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_STREAM, isr_handler, (void*) GPIO_INPUT_STREAM));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_BOOT, isr_handler, (void*) GPIO_INPUT_BOOT));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MS, isr_handler, (void*) GPIO_INPUT_MS));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_DRBELL_NOTIF, isr_handler, (void*) GPIO_INPUT_DRBELL_NOTIF));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_REEDSW_STATUS, isr_handler, (void*) GPIO_INPUT_REEDSW_STATUS));
+
+#if CONFIG_MAIN_MCU
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_NSW, isr_handler, (void*) GPIO_INPUT_NSW));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MOTOR_FAULT, isr_handler, (void*) GPIO_INPUT_MOTOR_FAULT));
+#elif CONFIG_ESP32_CAM_MCU
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, isr_handler, (void*) GPIO_INPUT_PIC));
+#endif
 }
 
 void gpio_setup_output(void) {
-    gpio_config_t io_conf;
 
-    //disable interrupt
-    io_conf.intr_type = GPIO_PIN_INTR_DISABLE;
-    //set as output mode
-    io_conf.mode = GPIO_MODE_OUTPUT;
-    //bit mask of the pins that you want to set,e.g.GPIO18/19
-    io_conf.pin_bit_mask = GPIO_OUTPUT_PIN_SEL;
-    //disable pull-down mode
-    io_conf.pull_down_en = 0;
-    //disable pull-up mode
-    io_conf.pull_up_en = 0;
-    //configure GPIO with the given settings
-    ESP_ERROR_CHECK(gpio_config(&io_conf));
-
+#if CONFIG_MAIN_MCU
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_DISABLE, 
+        GPIO_OUTPUT_MOTOR_IN1_PIN_SEL, 
+        GPIO_MODE_OUTPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_MOTOR_IN1);
+    }
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_DISABLE, 
+        GPIO_OUTPUT_MOTOR_IN2_PIN_SEL, 
+        GPIO_MODE_OUTPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_MOTOR_IN2);
+    }
     //Initialize to 0
-    ESP_ERROR_CHECK(gpio_set_level(GPIO_OUTPUT_CONFIRM_UPLOAD, 0));
+    ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN1_PIN_SEL, 0));
+    ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN2_PIN_SEL, 0));
+
+#elif CONFIG_ESP32_CAM_MCU
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_DISABLE, 
+        GPIO_OUTPUT_CONFIRM_PIN_SEL, 
+        GPIO_MODE_OUTPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_CONFIRM_UPLOAD);
+    }
+    ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_CONFIRM_PIN_SEL, 0));
+#endif
 }
 
-void gpio_setup_for_picture(gpio_isr_t isr_handler) {
+void gpio_init_setup(gpio_isr_t isr_handler) {
+    gpio_overlap_check(TAG);
     ESP_LOGI(TAG, "GPIO setup...");
     gpio_setup_input(isr_handler);
     gpio_setup_output();

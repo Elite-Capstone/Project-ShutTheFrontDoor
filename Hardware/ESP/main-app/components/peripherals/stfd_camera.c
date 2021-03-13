@@ -25,10 +25,8 @@ static const char *TAG = "stfd_camera";
 
 #define MOUNT_POINT "/sdcard"
 
-#define BOARD_ESP32CAM_AITHINKER 1
-
 // ESP32Cam (AiThinker) PIN Map
-#ifdef BOARD_ESP32CAM_AITHINKER
+//#if CONFIG_ESP32_CAM_MCU
 
 #define CAM_PIN_PWDN 32
 #define CAM_PIN_RESET -1 //software reset will be performed
@@ -48,7 +46,7 @@ static const char *TAG = "stfd_camera";
 #define CAM_PIN_HREF 23
 #define CAM_PIN_PCLK 22
 
-#endif /* CAM PIN ASSIGNMENT */
+//#endif /* CAM PIN ASSIGNMENT */
 
 #if CONFIG_IMAGE_FORMAT_QVGA
 #define IMAGE_FORMAT_SIZE FRAMESIZE_QVGA
@@ -114,9 +112,9 @@ static camera_config_t camera_config = {
     .fb_count     = 2   //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
 
-esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
+esp_err_t init_camera(mcu_content_t* mcu_c, mcu_status_t* mcu_s, mcu_content_type_t type) {
     esp_err_t err = ESP_OK;
-    if (!mcu_c->cam_initiated) {
+    if (!mcu_s->cam_initiated) {
         if (type == PICTURE) {
             camera_config.jpeg_quality = DEFAULT_PIC_JPEG_QUALITY;
             camera_config.fb_count = 1;
@@ -136,7 +134,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
             ESP_LOGE(TAG, "Camera Init Failed");
             return err;
         }
-        mcu_c->cam_initiated = true;
+        mcu_s->cam_initiated = true;
         mcu_c->content_type = type;
     }
     else if (type == PICTURE) {
@@ -156,7 +154,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
                 ESP_LOGE(TAG, "Camera Init Failed");
                 return err;
             }
-            mcu_c->cam_initiated = true;
+            mcu_s->cam_initiated = true;
             mcu_c->content_type = PICTURE;
         }
         else
@@ -181,7 +179,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
                 ESP_LOGE(TAG, "Camera Init Failed");
                 return err;
             }
-            mcu_c->cam_initiated = true;
+            mcu_s->cam_initiated = true;
             mcu_c->content_type = STREAM;
         }
         else
@@ -194,11 +192,11 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
     return err;
 }
 
-esp_err_t init_sdcard(mcu_content_t* mcu_c)
+esp_err_t init_sdcard(mcu_status_t* mcu_s)
 {
     esp_err_t ret = ESP_FAIL;
 
-    if (!(mcu_c->sdcard_initiated)) {
+    if (!(mcu_s->sdcard_initiated)) {
         esp_vfs_fat_sdmmc_mount_config_t mount_config = {
             .format_if_mount_failed = false,
             .max_files = 5,
@@ -225,7 +223,7 @@ esp_err_t init_sdcard(mcu_content_t* mcu_c)
         if (ret == ESP_OK)
         {
         ESP_LOGI(TAG, "SD card mount successfully!");
-        mcu_c->sdcard_initiated = true;
+        mcu_s->sdcard_initiated = true;
         }
         else
         {

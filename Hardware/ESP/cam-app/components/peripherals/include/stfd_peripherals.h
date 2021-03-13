@@ -6,6 +6,10 @@
 
     Desc:       Header file containing all the added peripheral functions
 */
+
+#ifndef STFD_PERIPHERALS_H_
+#define STFD_PERIPHERALS_H_
+
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_event.h>
@@ -23,16 +27,21 @@
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
 
-#define SIGNAL_HIGH 1
-#define SIGNAL_LOW 0
+typedef enum {
+    SIGNAL_IGNORED = -1,
+    SIGNAL_LOW  = 0x0,
+    SIGNAL_HIGH = 0x1
+} gpio_sig_level_t;
 
 typedef enum {
-    INVALID = -1,
-    STANDBY = 0,
-    PICTURE = 1,
-    STREAM  = 2,
-    DRBELL  = 3,
-    REEDSW  = 4
+    INVALID     = -1,
+    STANDBY     = 0,
+    BOOT        = 1,
+    PICTURE     = 2,
+    STREAM      = 3,
+    DRBELL      = 4,
+    REEDSW      = 5,
+    MS          = 6
 } mcu_content_type_t;
 
 typedef struct {
@@ -41,10 +50,11 @@ typedef struct {
     bool cam_server_init;
     bool save_to_sdcard;
     bool upload_content;
+    bool trig_signal;
     mcu_content_type_t content_type;
     wifi_ap_record_t* ap_info;
     char* device_ip;
-    long long int pic_counter;
+    uint64_t pic_counter;
 } mcu_content_t;
 
 uint32_t getDefaultScanListSize(void);
@@ -93,26 +103,30 @@ esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_
  * 
  * @param io_num   GPIO input pin number,
  * @param sg_level Desired signal level
+ * 
+ * @return         Return value indicates if the correct gpio was triggered with the correct signal value
  */
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level);
+//bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level);
 
 /**
- * @brief This function sends a signal pulse through an output GPIO. This function is used for 
- *        debugging communications. Helps confirming operations should have occured.
- * 
- * @param num_blinks number of times the LED should blink (one blink = 1 on/off cycle)
+ * @brief This function sends a signal pulse through the output GPIOs for motor control.
+ *        This function toggles the motor to rotate once CW and once CCW
  */
-void gpio_blink_output(uint32_t num_blinks);
+void exec_toggle_motor(void);
+
+/**
+ * @brief This function toggles an output gpio in the goal of blinking an LED
+ */
+void gpio_blink(uint32_t num_blinks);
 
 /**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)
  * 
  * @param io_num            GPIO used to create the interrupt
- * @param http_upload       Boolean from configuration menu indicating if the content is to uploaded
- * @param save_to_sdcard    Boolean from configuration menu. Indicates if the content is to 
- *                          be saved on the local SD card
+ * @param mcu_content   MCU content array to which will be passed the type and the desired signal level
  */
-mcu_content_type_t gpio_io_type(uint32_t io_num);
+void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
 
 /**
  * @brief This function programs what to do upon interrupt
@@ -122,9 +136,29 @@ mcu_content_type_t gpio_io_type(uint32_t io_num);
 void IRAM_ATTR gpio_isr_handler(void* arg);
 
 /**
- * @brief Sets up the selected input and output GPIO from the configuration menu selection
+ * @brief Does the configuration for the desired GPIO passed with its bit mask in @param bit_mask. 
+ * 
+ * @note The pull-down and pull-up functions cannot be used simultaneously. This function will return an error if both are set to 1.
+ * 
+ * @param int_type  Selects the interrupt type for the GPIO 
+ *                  @note Possible values: DISABLE, POSEDGE, NEGEDGE, ANYEDGE, LOLEVEL, HILEVEL
+ * @param bit_mask  The bit mask of the GPIO that will be configured
+ * @param i2c_mode  The GPIO communication type (DISABLE, INPUT, OUTPUT, OUTPUT_OD, INPUT_OUTPUT_OD, INPUT_OUTPUT) 
+ *                  *@note OD == Open-Drain mode
+ * @param pull_down Pull-down enable/disable 
+ *                  @note GPIO_PULLDOWN_DISABLE == 0 == pull-down deactivated, GPIO_PULLDOWN_ENABLE == 1 == pull-down activated
+ * @param pull_up   Pull-up enable/disable 
+ *                  @note GPIO_PULLUP_DISABLE == 0 == pull-up deactivated, GPIO_PULLUP_ENABLE == 1 == pull-up activated
+ * @return          Returns an error code. The desired output is ESP_OK to indicate normal operations
  */
-void gpio_setup_for_picture(gpio_isr_t isr_handler);
+esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_t gpio_mode, gpio_pulldown_t pull_down, gpio_pullup_t pull_up);
+
+/**
+ * @brief Sets up the selected input and output GPIO from the configuration menu selection.
+ * 
+ * @param isr_handler function that will handle the interrupt events on the gpio it is installed on
+ */
+void gpio_init_setup(gpio_isr_t isr_handler);
 void gpio_setup_input(gpio_isr_t isr_handler);
 void gpio_setup_output(void);
 
@@ -133,7 +167,8 @@ void gpio_setup_output(void);
 /**
  * @brief Interrupt handler for an HTTP event
  * 
- * @param evt
+ * @param evt   ...
+ * @return      Returns an error code. The desired output is ESP_OK to indicate normal operations
  */
 esp_err_t _http_event_handler(esp_http_client_event_t *evt);
 
@@ -156,6 +191,7 @@ void http_rest_with_url_notification(const char* _message);
  * @brief HTTP event handler for streaming
  * 
  * @param req HTTP request
+ * @return    Returns an error code. The desired output is ESP_OK to indicate normal operations
  */
 esp_err_t stream_handler(httpd_req_t *req);
 
@@ -164,7 +200,7 @@ esp_err_t stream_handler(httpd_req_t *req);
  * 
  * @param device_ip ESP camera's IP address on which it is streaming on
  */
-void startStreamServer(char* device_ip);
+httpd_handle_t startStreamServer(char* device_ip);
 
 /**
  * @brief Function stop camera server from streaming and deallocates the memory
@@ -197,3 +233,5 @@ void fast_scan(wifi_ap_record_t* ap_info);
  * @param ap_info Pointer to which the list is assigned to
  */
 void wifi_scan(mcu_content_t* cam_content);
+
+#endif /*STFD_PERIPHERALS_H_*/

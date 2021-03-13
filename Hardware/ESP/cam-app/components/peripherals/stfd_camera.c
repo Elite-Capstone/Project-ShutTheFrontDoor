@@ -25,10 +25,8 @@ static const char *TAG = "stfd_camera";
 
 #define MOUNT_POINT "/sdcard"
 
-#define BOARD_ESP32CAM_AITHINKER 1
-
 // ESP32Cam (AiThinker) PIN Map
-#ifdef BOARD_ESP32CAM_AITHINKER
+#ifdef CONFIG_ESP32_CAM_MCU
 
 #define CAM_PIN_PWDN 32
 #define CAM_PIN_RESET -1 //software reset will be performed
@@ -80,7 +78,7 @@ static const char *TAG = "stfd_camera";
 #define IMAGE_PIXEL_FORMAT PIXFORMAT_JPEG
 #endif /* CONFIG_IMAGE_PIXEL_FORMAT */
 
-#define DEFAULT_STREAM_JPEG_QUALITY 12
+#define DEFAULT_STREAM_JPEG_QUALITY 10
 #define DEFAULT_PIC_JPEG_QUALITY 10
 
 static camera_config_t camera_config = {
@@ -116,7 +114,8 @@ static camera_config_t camera_config = {
 
 esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
     esp_err_t err = ESP_OK;
-    if (!mcu_c->cam_initiated) {
+
+    if (!(mcu_c->cam_initiated)) {
         if (type == PICTURE) {
             camera_config.jpeg_quality = DEFAULT_PIC_JPEG_QUALITY;
             camera_config.fb_count = 1;
@@ -139,6 +138,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
         mcu_c->cam_initiated = true;
         mcu_c->content_type = type;
     }
+
     else if (type == PICTURE) {
         if (mcu_c->content_type == STREAM) {
             err = esp_camera_deinit();
@@ -162,6 +162,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
         else
             ESP_LOGI(TAG, "Camera already init");
     }
+
     else if (type == STREAM) {
         if (mcu_c->content_type == PICTURE) {
             err = esp_camera_deinit();
@@ -187,6 +188,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
         else
             ESP_LOGI(TAG, "Camera already init");
     }
+
     else {
         ESP_LOGE(TAG, "Passed invalid type %i", (int) type);
         return ESP_FAIL;

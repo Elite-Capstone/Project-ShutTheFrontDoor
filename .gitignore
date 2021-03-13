@@ -226,3 +226,4 @@ Back End/notifications/src/main/resources/application.properties
 Back End/notifications/target/
 
 Back End/file-storage-service/target/
+Hardware/ESP/arduino-esp32-master/

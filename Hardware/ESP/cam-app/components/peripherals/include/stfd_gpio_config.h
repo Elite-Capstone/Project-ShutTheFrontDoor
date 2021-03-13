@@ -502,9 +502,31 @@
     #define GPIO_INPUT_BOOT 0
     #endif /* CONFIG_GPIO_INPUT_BOOT */
 
+    #if CONFIG_GPIO_INPUT_0_MS
+    #define GPIO_INPUT_MS 0
+    #elif CONFIG_GPIO_INPUT_2_MS
+    #define GPIO_INPUT_BOOT 2
+    #elif CONFIG_GPIO_INPUT_4_MS
+    #define GPIO_INPUT_MS 4
+    #elif CONFIG_GPIO_INPUT_12_MS
+    #define GPIO_INPUT_MS 12
+    #elif CONFIG_GPIO_INPUT_13_MS
+    #define GPIO_INPUT_MS 13
+    #elif CONFIG_GPIO_INPUT_14_MS
+    #define GPIO_INPUT_MS 14
+    #elif CONFIG_GPIO_INPUT_15_MS
+    #define GPIO_INPUT_MS 15
+    #elif CONFIG_GPIO_INPUT_16_MS
+    #define GPIO_INPUT_MS 16
+    #else
+    #define GPIO_INPUT_MS 12
+    #endif /* CONFIG_GPIO_INPUT_MS */
+
     #if CONFIG_GPIO_INPUT_0_PIC
     #define GPIO_INPUT_PIC 0
     #elif CONFIG_GPIO_INPUT_2_PIC
+    #define GPIO_INPUT_PIC 2
+    #elif CONFIG_GPIO_INPUT_4_PIC
     #define GPIO_INPUT_PIC 4
     #elif CONFIG_GPIO_INPUT_12_PIC
     #define GPIO_INPUT_PIC 12
@@ -517,29 +539,13 @@
     #elif CONFIG_GPIO_INPUT_16_PIC
     #define GPIO_INPUT_PIC 16
     #else
-    #define GPIO_INPUT_PIC 16
+    #define GPIO_INPUT_PIC 2
     #endif /* CONFIG_GPIO_INPUT_PIC */
-
-    #if CONFIG_GPIO_INPUT_0_STREAM
-    #define GPIO_INPUT_STREAM 0
-    #elif CONFIG_GPIO_INPUT_2_STREAM
-    #define GPIO_INPUT_STREAM 4
-    #elif CONFIG_GPIO_INPUT_12_STREAM
-    #define GPIO_INPUT_STREAM 12
-    #elif CONFIG_GPIO_INPUT_13_STREAM
-    #define GPIO_INPUT_STREAM 13
-    #elif CONFIG_GPIO_INPUT_14_STREAM
-    #define GPIO_INPUT_STREAM 14
-    #elif CONFIG_GPIO_INPUT_15_STREAM
-    #define GPIO_INPUT_STREAM 15
-    #elif CONFIG_GPIO_INPUT_16_STREAM
-    #define GPIO_INPUT_STREAM 16
-    #else
-    #define GPIO_INPUT_STREAM 12
-    #endif /* CONFIG_GPIO_INPUT_STREAM */
 
     #if  CONFIG_GPIO_INPUT_0_DRBELL_NOTIF
     #define GPIO_INPUT_DRBELL_NOTIF 0
+    #elif CONFIG_GPIO_INPUT_2_DRBELL_NOTIF
+    #define GPIO_INPUT_DRBELL_NOTIF 2
     #elif  CONFIG_GPIO_INPUT_4_DRBELL_NOTIF
     #define GPIO_INPUT_DRBELL_NOTIF 4
     #elif  CONFIG_GPIO_INPUT_12_DRBELL_NOTIF
@@ -558,6 +564,8 @@
 
     #if  GPIO_INPUT_0_REEDSW_STATUS
     #define GPIO_INPUT_REEDSW_STATUS 0
+    #elif CONFIG_GPIO_INPUT_2_REEDSW_STATUS
+    #define GPIO_INPUT_REEDSW_STATUS 2
     #elif  CONFIG_GPIO_INPUT_4_REEDSW_STATUS
     #define GPIO_INPUT_REEDSW_STATUS 4
     #elif  CONFIG_GPIO_INPUT_12_REEDSW_STATUS
@@ -582,10 +590,14 @@
 #define GPIO_INPUT_REEDSW_PIN_SEL       (1ULL<<GPIO_INPUT_REEDSW_STATUS)
 
 #if CONFIG_MAIN_MCU
-#define GPIO_INPUT_MOTOR_FAULT_PIN_SEL  (1ULL<<GPIO_INPUT_MOTOR_FAULT)
-#define GPIO_INPUT_NSW_PIN_SEL          (1ULL<<GPIO_INPUT_NSW)
-#define GPIO_INPUT_BATTERY_PIN_SEL      (1ULL<<GPIO_INPUT_BATTERY)
+    #define GPIO_INPUT_MOTOR_FAULT_PIN_SEL  (1ULL<<GPIO_INPUT_MOTOR_FAULT)
+    #define GPIO_INPUT_NSW_PIN_SEL          (1ULL<<GPIO_INPUT_NSW)
+    #define GPIO_INPUT_BATTERY_PIN_SEL      (1ULL<<GPIO_INPUT_BATTERY)
 #endif /* MAIN_MCU specific GPIOs */
+
+#if CONFIG_ESP32_CAM_MCU
+    #define GPIO_INPUT_PIC_PIN_SEL          (1ULL<<GPIO_INPUT_PIC)
+#endif /* ESP32_CAM specific GPIOs */
 
 //===========================================
 //
@@ -748,14 +760,16 @@
     #define GPIO_OUTPUT_CONFIRM_UPLOAD 4
     #endif /* CONFIG_GPIO_OUTPUT_CONFIRM_UPLOAD */
  
-    #define GPIO_OUTPUT_CONFIRM_PIN_SEL         (1ULL<<GPIO_OUTPUT_CONFIRM_UPLOAD)
+    #define GPIO_OUTPUT_CONFIRM_PIN_SEL   (1ULL<<GPIO_OUTPUT_CONFIRM_UPLOAD)
 
 #endif /* ESP32_CAM_MCU specific GPIOs */
 
 #if CONFIG_MAIN_MCU
-#define NUM_GPIOS 9
+#define NUM_GPIO 9
 #elif CONFIG_ESP32_CAM_MCU
-#define NUM_GPIOS 5
+#define NUM_GPIO 6
+#else
+#define NUM_GPIO 4
 #endif
 
 //===========================================
@@ -764,10 +778,9 @@
 //
 //===========================================
 
-#define GPIO_0_PIN_SEL (1ULL<<0)
 #define GPIO_MULTA_ERR_MSG "Multiple functions assigned to same GPIO: "
 
-static const uint8_t gpio_array[9] = {
+static const uint8_t gpio_array[NUM_GPIO] = {
 #if CONFIG_MAIN_MCU
     GPIO_INPUT_BATTERY, 
     GPIO_INPUT_MOTOR_FAULT,
@@ -775,6 +788,7 @@ static const uint8_t gpio_array[9] = {
     GPIO_OUTPUT_MOTOR_IN1,
     GPIO_OUTPUT_MOTOR_IN2,
 #elif CONFIG_ESP32_CAM_MCU
+    GPIO_INPUT_PIC,
     GPIO_OUTPUT_CONFIRM_UPLOAD,
 #endif
     GPIO_INPUT_BOOT, 
@@ -830,7 +844,7 @@ static const uint8_t gpio_array[9] = {
 #error GPIO_MULTA_ERR_MSG CHECK_GPIO_ASSIGNMENT(GPIO_INPUT_MOTOR_IN2)
 #endif*/
 
-static void check_gpio_assignment(uint8_t _gpio, char* _err) {
+static void check_single_gpio_assignment(uint8_t _gpio, char* _err) {
     char err[100];
     int cnt = 0;
     if(_gpio == GPIO_INPUT_BOOT) {
@@ -841,6 +855,15 @@ static void check_gpio_assignment(uint8_t _gpio, char* _err) {
         strcat(err, "Motion Sensor & ");
         cnt++;
     }
+    if(_gpio == GPIO_INPUT_DRBELL_NOTIF) {
+        strcat(err, "Doorbell & ");
+        cnt++;
+    }
+    if(_gpio == GPIO_INPUT_REEDSW_STATUS) {
+        strcat(err, "Reed Switch & ");
+        cnt++;
+    }
+#if CONFIG_MAIN_MCU
     if(_gpio == GPIO_INPUT_MOTOR_FAULT) {
         strcat(err, "Motor Fault & ");
         cnt++;
@@ -853,14 +876,6 @@ static void check_gpio_assignment(uint8_t _gpio, char* _err) {
         strcat(err, "Battery & ");
         cnt++;
     }
-    if(_gpio == GPIO_INPUT_DRBELL_NOTIF) {
-        strcat(err, "Doorbell & ");
-        cnt++;
-    }
-    if(_gpio == GPIO_INPUT_REEDSW_STATUS) {
-        strcat(err, "Reed Switch & ");
-        cnt++;
-    }
     if(_gpio == GPIO_OUTPUT_MOTOR_IN1) {
         strcat(err, "Motor CW (In 1) & ");
         cnt++;
@@ -869,6 +884,16 @@ static void check_gpio_assignment(uint8_t _gpio, char* _err) {
         strcat(err, "Motor CCW (In 2) & ");
         cnt++;
     }
+#elif CONFIG_ESP32_CAM_MCU
+    if(_gpio == GPIO_INPUT_PIC) {
+        strcat(err, "Picture & ");
+        cnt++;
+    }
+    if(_gpio == GPIO_OUTPUT_CONFIRM_UPLOAD) {
+        strcat(err, "Confirm Upload & ");
+        cnt++;
+    }
+#endif
     if(cnt > 1) {
         memmove(_err, err, strlen(err)-3);
     }
@@ -878,10 +903,10 @@ static void check_gpio_assignment(uint8_t _gpio, char* _err) {
     }
 }
 
-static void gpio_assign_check(const char* TAG) {
+static void gpio_overlap_check(const char* TAG) {
     char* err = NULL;
     for (uint32_t active_gpio = 0; active_gpio < sizeof(gpio_array)/sizeof(uint8_t); active_gpio++) {
-        check_gpio_assignment(gpio_array[active_gpio], err);
+        check_single_gpio_assignment(gpio_array[active_gpio], err);
         if (err != NULL)
             ESP_LOGE(TAG, "%s %s", GPIO_MULTA_ERR_MSG, err);
     }

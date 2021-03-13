@@ -19,10 +19,12 @@
 
 #define MAX_HTTP_RECV_BUFFER   512
 #define MAX_HTTP_OUTPUT_BUFFER 2048
-#define DEFAULT_HTTP_URL  "http://34.117.160.50/"
-#define DEFAULT_DOOR_UUID "00b288a8-3db1-40b5-b30f-532af4e12f4b"
 
+#define DEFAULT_HTTP_URL   "http://34.117.160.50/"
+#define DEFAULT_DOOR_UUID  "00b288a8-3db1-40b5-b30f-532af4e12f4b"
+#define DEFAULT_STREAM_URI "/stream"
 #define DEFAULT_CAM_STREAM_PORT 80
+
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
 static const char* PIC_CONTENT_TYPE = "multipart/mixed;boundary=" PART_BOUNDARY;
@@ -30,7 +32,7 @@ static const char* MEDIA_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* MEDIA_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
 
-httpd_handle_t stream_httpd = NULL;
+static httpd_handle_t stream_httpd = NULL;
 
 static const char *TAG = "stfd_http_client";
 
@@ -318,7 +320,7 @@ esp_err_t stream_handler(httpd_req_t *req) {
     return res;
 }
 
-void startStreamServer(char* device_ip) {
+httpd_handle_t startStreamServer(char* device_ip) {
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.server_port = DEFAULT_CAM_STREAM_PORT;
     config.recv_wait_timeout = 30;
@@ -332,10 +334,11 @@ void startStreamServer(char* device_ip) {
     };
 
     ESP_LOGI(TAG,"Starting web server on port: '%d'\n", config.server_port);
-    ESP_LOGI(TAG, "Connect to http://%s", device_ip);
+    ESP_LOGI(TAG, "Connect to http://%s%s", device_ip, DEFAULT_STREAM_URI);
     if (httpd_start(&stream_httpd, &config) == ESP_OK) {
     httpd_register_uri_handler(stream_httpd, &index_uri);
     }
+    return stream_httpd;
 }
 
 void stopStreamServer() {

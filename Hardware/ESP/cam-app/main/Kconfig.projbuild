@@ -1,128 +1,436 @@
 menu "Project ShutTheFrontDoor Configuration"
 
+    choice MCU_TYPE
+        prompt "Which MCU will this firmware be installed on?"
+        default MAIN_MCU
+        help
+            The selected MCU type will have different functionalities installed
+        
+        config MAIN_MCU
+            bool "Main MCU"
+        config ESP32_CAM_MCU
+            bool "ESP32 CAM"
+    endchoice
+    
     menu "GPIO Configuration"
 
-        choice GPIO_INPUT_TAKE_PIC
-            prompt "Take Picture GPIO"
-            default GPIO_INPUT_16_PIC
-            help 
-                The selected GPIO will be pulled high and must be pulled down to take a picture
+        menu "Input Configuration"
 
-            config GPIO_INPUT_0_PIC
-                bool "GPIO 0"
-            config GPIO_INPUT_2_PIC
-                bool "GPIO 2"
-            config GPIO_INPUT_4_PIC
-                bool "GPIO 4"
-            config GPIO_INPUT_12_PIC
-                bool "GPIO 12"
-            config GPIO_INPUT_13_PIC
-                bool "GPIO 13"
-            config GPIO_INPUT_14_PIC
-                bool "GPIO 14"
-            config GPIO_INPUT_15_PIC
-                bool "GPIO 15"
-            config GPIO_INPUT_16_PIC
-                bool "GPIO 16"
-        endchoice
+            choice GPIO_INPUT_BOOT
+                prompt "Boot button"
+                default GPIO_INPUT_0_BOOT
+                help
+                    The selected GPIO will be pulled down when the button is pressed
 
-        choice GPIO_INPUT_TOGGLE_STREAM
-            prompt "GPIO to toggle start/end stream"
-            default GPIO_INPUT_12_STREAM
-            help 
-                The selected GPIO will be pulled high and must be pulled down to toggle the video stream
+                config GPIO_INPUT_0_BOOT
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_BOOT
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_BOOT
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_BOOT
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_BOOT
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_BOOT
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_BOOT
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_BOOT
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_BOOT
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_BOOT
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_BOOT
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_BOOT
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_BOOT
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_BOOT
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_BOOT
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_BOOT
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_BOOT
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_BOOT
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_BOOT
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_BOOT
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_BOOT
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_BOOT
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_BOOT
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_BOOT
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_BOOT
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_BOOT
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_BOOT
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_BOOT
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_BOOT
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_BOOT
+                    bool "GPIO 39"
+            endchoice
 
-            config GPIO_INPUT_0_STREAM
-                bool "GPIO 0"
-            config GPIO_INPUT_2_STREAM
-                bool "GPIO 2"
-            config GPIO_INPUT_4_STREAM
-                bool "GPIO 4"
-            config GPIO_INPUT_12_STREAM
-                bool "GPIO 12"
-            config GPIO_INPUT_13_STREAM
-                bool "GPIO 13"
-            config GPIO_INPUT_14_STREAM
-                bool "GPIO 14"
-            config GPIO_INPUT_15_STREAM
-                bool "GPIO 15"
-            config GPIO_INPUT_16_STREAM
-                bool "GPIO 16"
-        endchoice
+            choice GPIO_INPUT_MS
+                prompt "Motion Sensor"
+                default GPIO_INPUT_12_MS
+                help
+                    The selected GPIO will be pulled down and the motion sensor will pull the line high
 
-        choice GPIO_INPUT_DOORBELL_NOTIF
-            prompt "GPIO to send notification on doorbell push"
-            default GPIO_INPUT_13_DRBELL_NOTIF
-            help 
-                The selected GPIO will be pulled high and must be pulled down to signal the doorbell has been pressed
+                config GPIO_INPUT_0_MS
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_MS
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_MS
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_MS
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_MS
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_MS
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_MS
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_MS
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_MS
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_MS
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_MS
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_MS
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_MS
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_MS
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_MS
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_MS
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_MS
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_MS
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_MS
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_MS
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_MS
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_MS
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_MS
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_MS
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_MS
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_MS
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_MS
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_MS
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_MS
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_MS
+                    bool "GPIO 39"
+            endchoice
 
-            config GPIO_INPUT_0_DRBELL_NOTIF
-                bool "GPIO 0"
-            config GPIO_INPUT_2_DRBELL_NOTIF
-                bool "GPIO 2"
-            config GPIO_INPUT_4_DRBELL_NOTIF
-                bool "GPIO 4"
-            config GPIO_INPUT_12_DRBELL_NOTIF
-                bool "GPIO 12"
-            config GPIO_INPUT_13_DRBELL_NOTIF
-                bool "GPIO 13"
-            config GPIO_INPUT_14_DRBELL_NOTIF
-                bool "GPIO 14"
-            config GPIO_INPUT_15_DRBELL_NOTIF
-                bool "GPIO 15"
-            config GPIO_INPUT_16_DRBELL_NOTIF
-                bool "GPIO 16"
-        endchoice
+            choice GPIO_INPUT_PIC
+                prompt "Picture Button"
+                default GPIO_INPUT_2_PIC
+                help
+                    The selected GPIO will be pulled up and the button will pull the gpio down to trigger the picture taking
 
-        choice GPIO_INPUT_DOOR_REEDSW_STATUS
-            prompt "GPIO to signal when door has been open/closed"
-            default GPIO_INPUT_15_REEDSW_STATUS
-            help 
-                The selected GPIO will be pulled high and must be pulled down to toggle the door open/close status
+                config GPIO_INPUT_0_PIC
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_PIC
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_PIC
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_PIC
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_PIC
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_PIC
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_PIC
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_PIC
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_PIC
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_PIC
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_PIC
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_PIC
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_PIC
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_PIC
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_PIC
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_PIC
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_PIC
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_PIC
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_PIC
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_PIC
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_PIC
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_PIC
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_PIC
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_PIC
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_PIC
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_PIC
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_PIC
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_PIC
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_PIC
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_PIC
+                    bool "GPIO 39"
+            endchoice
 
-            config GPIO_INPUT_0_REEDSW_STATUS
-                bool "GPIO 0"
-            config GPIO_INPUT_2_REEDSW_STATUS
-                bool "GPIO 2"
-            config GPIO_INPUT_4_REEDSW_STATUS
-                bool "GPIO 4"
-            config GPIO_INPUT_12_REEDSW_STATUS
-                bool "GPIO 12"
-            config GPIO_INPUT_13_REEDSW_STATUS
-                bool "GPIO 13"
-            config GPIO_INPUT_14_REEDSW_STATUS
-                bool "GPIO 14"
-            config GPIO_INPUT_15_REEDSW_STATUS
-                bool "GPIO 15"
-            config GPIO_INPUT_16_REEDSW_STATUS
-                bool "GPIO 16"
-        endchoice
+            choice GPIO_INPUT_DOORBELL_NOTIF
+                prompt "GPIO to send notification on doorbell push"
+                default GPIO_INPUT_13_DRBELL_NOTIF
+                help 
+                    The selected GPIO will be pulled high and must be pulled down to signal the doorbell has been pressed
 
-        choice GPIO_OUTPUT_CONFIRM
-            prompt "Output confirm GPIO"
-            default GPIO_OUTPUT_4_CONFIRM
-            help 
-                The selected GPIO will pulse when the picture is uploaded or stream has toggled
+                config GPIO_INPUT_0_DRBELL_NOTIF
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_DRBELL_NOTIF
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_DRBELL_NOTIF
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_DRBELL_NOTIF
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_DRBELL_NOTIF
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_DRBELL_NOTIF
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_DRBELL_NOTIF
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_DRBELL_NOTIF
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_DRBELL_NOTIF
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_DRBELL_NOTIF
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_DRBELL_NOTIF
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_DRBELL_NOTIF
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_DRBELL_NOTIF
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_DRBELL_NOTIF
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_DRBELL_NOTIF
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_DRBELL_NOTIF
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_DRBELL_NOTIF
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_DRBELL_NOTIF
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_DRBELL_NOTIF
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_DRBELL_NOTIF
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_DRBELL_NOTIF
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_DRBELL_NOTIF
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_DRBELL_NOTIF
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_DRBELL_NOTIF
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_DRBELL_NOTIF
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_DRBELL_NOTIF
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_DRBELL_NOTIF
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_DRBELL_NOTIF
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_DRBELL_NOTIF
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_DRBELL_NOTIF
+                    bool "GPIO 39"
+            endchoice
 
-            config GPIO_OUTPUT_0_CONFIRM
-                bool "GPIO 0"
-            config GPIO_OUTPUT_2_CONFIRM
-                bool "GPIO 2"
-            config GPIO_OUTPUT_4_CONFIRM
-                bool "GPIO 4"
-            config GPIO_OUTPUT_12_CONFIRM
-                bool "GPIO 12"
-            config GPIO_OUTPUT_13_CONFIRM
-                bool "GPIO 13"
-            config GPIO_OUTPUT_14_CONFIRM
-                bool "GPIO 14"
-            config GPIO_OUTPUT_15_CONFIRM
-                bool "GPIO 15"
-            config GPIO_OUTPUT_16_CONFIRM
-                bool "GPIO 16"
-        endchoice
-    
-    endmenu
+            choice GPIO_INPUT_DOOR_REEDSW_STATUS
+                prompt "GPIO to signal when door has been open/closed"
+                default GPIO_INPUT_15_REEDSW_STATUS
+                help 
+                    The selected GPIO will be pulled high and must be pulled down to toggle the door open/close status
+
+                config GPIO_INPUT_0_REEDSW_STATUS
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_REEDSW_STATUS
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_REEDSW_STATUS
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_REEDSW_STATUS
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_REEDSW_STATUS
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_REEDSW_STATUS
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_REEDSW_STATUS
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_REEDSW_STATUS
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_REEDSW_STATUS
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_REEDSW_STATUS
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_REEDSW_STATUS
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_REEDSW_STATUS
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_REEDSW_STATUS
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_REEDSW_STATUS
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_REEDSW_STATUS
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_REEDSW_STATUS
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_REEDSW_STATUS
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_REEDSW_STATUS
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_REEDSW_STATUS
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_REEDSW_STATUS
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_REEDSW_STATUS
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_REEDSW_STATUS
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_REEDSW_STATUS
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_REEDSW_STATUS
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_REEDSW_STATUS
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_REEDSW_STATUS
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_REEDSW_STATUS
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_REEDSW_STATUS
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_REEDSW_STATUS
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_REEDSW_STATUS
+                    bool "GPIO 39"
+            endchoice
+
+        endmenu
+
+        menu "Output Configuration"
+
+            choice GPIO_OUTPUT_CONFIRM_UPLOAD
+                prompt "GPIO confirm output signal"
+                default GPIO_OUTPUT_CONFIRM_UPLOAD_14
+                help 
+                    The selected GPIO toggle its output in the goal of blinking an LED
+
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_0
+                    bool "GPIO 0"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_2
+                    bool "GPIO 2"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_4
+                    bool "GPIO 4"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_5
+                    bool "GPIO 5"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_6
+                    bool "GPIO 6"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_7
+                    bool "GPIO 7"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_8
+                    bool "GPIO 8"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_9
+                    bool "GPIO 9"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_10
+                    bool "GPIO 10"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_11
+                    bool "GPIO 11"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_12
+                    bool "GPIO 12"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_13
+                    bool "GPIO 13"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_14
+                    bool "GPIO 14"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_15
+                    bool "GPIO 15"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_16
+                    bool "GPIO 16"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_17
+                    bool "GPIO 17"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_18
+                    bool "GPIO 18"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_19
+                    bool "GPIO 19"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_21
+                    bool "GPIO 21"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_22
+                    bool "GPIO 22"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_23
+                    bool "GPIO 23"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_25
+                    bool "GPIO 25"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_26
+                    bool "GPIO 26"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_27
+                    bool "GPIO 27"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_32
+                    bool "GPIO 32"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_33
+                    bool "GPIO 33"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_34
+                    bool "GPIO 34"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_35
+                    bool "GPIO 35"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_36
+                    bool "GPIO 36"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_39
+                    bool "GPIO 39"
+            endchoice
+
+        endmenu
+
+    endmenu  
 
     menu "Camera configuration"
 

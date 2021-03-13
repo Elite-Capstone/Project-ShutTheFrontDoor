@@ -29,8 +29,7 @@ static const char* PIC_CONTENT_TYPE = "multipart/mixed;boundary=" PART_BOUNDARY;
 static const char* MEDIA_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* MEDIA_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-
-httpd_handle_t stream_httpd = NULL;
+static httpd_handle_t stream_httpd = NULL;
 
 static const char *TAG = "stfd_http_client";
 
