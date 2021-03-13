@@ -6,6 +6,10 @@ import numpy as np
 import imutils
 from imutils.video import FPS
 
+##pip install opencv-python
+##pip install pyzmq
+##pip install imutils
+
 ### run with python openCD.py pub --192.168.1.19/stream --pubport=80
 
 def pubVideo(config):
@@ -14,10 +18,10 @@ def pubVideo(config):
     # 'tcp://localhost:5555'
     ip = "192.168.1.19/stream"
     port = 80
-    target_address = "tcp://{}:{}".format(ip, port) 
+    target_address = "tcp://{}:{}".format(ip, port)
     print("Publish Video to ", target_address)
     footage_socket.connect(target_address)
-    impath = 0 # For the first USB camera attached
+    impath = 0  # For the first USB camera attached
     camera = cv2.VideoCapture(impath)  # init the camera
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -44,11 +48,12 @@ def pubVideo(config):
             break
     print("End Time: ", datetime.datetime.now())
 
+
 def subVideo(config):
     context = zmq.Context()
     footage_socket = context.socket(zmq.SUB)
     port = 5555
-    bind_address = "tcp://*:{}".format(port) # 'tcp://*:5555'
+    bind_address = "tcp://*:{}".format(port)  # 'tcp://*:5555'
     print("Subscribe Video at ", bind_address)
     footage_socket.bind(bind_address)
     footage_socket.setsockopt_string(zmq.SUBSCRIBE, str(''))
