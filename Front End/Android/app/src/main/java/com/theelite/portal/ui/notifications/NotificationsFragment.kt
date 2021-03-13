@@ -103,7 +103,7 @@ class NotificationsFragment : Fragment(), ClickListener {
     override fun onItemClicked(name: String) {
         val i = Intent(Intent.ACTION_VIEW)
         i.data = Uri.parse(name)
-        requireActivity().startActivity(i)
+        activity!!.startActivity(i)
     }
 
 }
