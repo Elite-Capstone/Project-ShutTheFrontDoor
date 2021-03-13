@@ -31,13 +31,15 @@
 
     <!-- Programmatically selected Display Strings -->
     <string name="registration_message">Welcome to Doorhub!</string>
-    <string name="login_message1">Welcome back pleb!</string>
+    <string name="login_message1">Welcome back!</string>
     <string name="login_message2">Welcome home!</string>
     <string name="login_message3">Now\'s the time to go to the washroom</string>
     <string name="smart_door_status_summary">Fully operational</string>
 
     <!-- Programmatically used strings -->
-    <string name="url">http://3.131.85.201/api/profile/authenticate</string>
+    <string name="url">http://34.117.160.50/</string>
     <string name="notifications_title">Notifications</string>
+    <string name="firstname_hint">First Name</string>
+    <string name="lastname_hint">Last Name</string>
 
 </resources>

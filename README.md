@@ -6,3 +6,6 @@ On one side, it can cost a manufacturer tens of thousands of dollars for hundred
 The aim of this project is to develop a smart door equipped with an expandable IoT platform as a two-part IoT device. The first part, the door, will come as an all-in-one solution for the customer while the second part, the expandable platform, will be available for manufacturers to add new devices to the ecosystem.
 
 The smart door will include functionalities controlled and monitored through a mobile application. These include a smart lock, which can be locked/unlocked from the mobile interface; a camera that will allow the user to view any activities and people at their front door and a doorbell that will notify the homeowner of the presence of a visitor. All features will be enabled and powered through the use of a board. The board’s wifi module will then allow the communications for the IoT capabilities. The expandable platform will facilitate the addition of new devices to the IoT ecosystem. The prototype will use a general modular board that can be integrated in future IoT devices by simply connecting them and mapping them to the board module. All in all, this will solve both the manufacturer’s and the customer’s challenges.
+
+Regards
+STFD Team

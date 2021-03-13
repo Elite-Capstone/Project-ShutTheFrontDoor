@@ -18,7 +18,7 @@ public class NotificationController {
     private NotificationServiceImpl service;
 
     @GetMapping("/")
-    public ResponseEntity getMicroServiceHealth() {
+    public ResponseEntity<String> getMicroServiceHealth() {
         return service.getHealth();
     }
 
@@ -51,13 +51,21 @@ public class NotificationController {
         return service.getKafkaTopics();
     }
 
-    @GetMapping("/getRecent/{accId}/{userId}")
-    public List<Notification> getRecentNotifications(@PathVariable String accId, @PathVariable String userId) {
-        return service.getRecentNotifications(accId, userId);
+    @GetMapping("/getRecent/{email}/{token}")
+    public List<Notification> getRecentNotifications(@PathVariable String email, @PathVariable String token) {
+        return service.getRecentNotifications(email, token);
     }
 
     @PutMapping("/newNotif")
-    public void publishNotification(@RequestBody Notification notification) {
+    public boolean publishNotification(@RequestBody Notification notification) {
+       return service.publishNotification(notification);
+    }
+
+    @PutMapping("/newNotif/{doorId}/{event}")
+    public void publishNotification(@PathVariable("doorId") String doorId, @PathVariable("event") String event) {
+        Notification notification = new Notification();
+        notification.setNotification(event);
+        notification.setDoorId(UUID.fromString(doorId));
         service.publishNotification(notification);
     }
 }
