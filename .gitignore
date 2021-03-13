@@ -227,3 +227,5 @@ Back End/notifications/target/
 
 Back End/file-storage-service/target/
 Hardware/ESP/esp32-cam/.vscode/
+
+*.vscode/
