@@ -1,18 +1,22 @@
 package com.theelite.portal.ui.adapters
 
+import android.content.Intent
+import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.TextView
+import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
-import java.time.temporal.TemporalAdjusters.previous
+import com.theelite.portal.ui.ClickListener
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>) :
+class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>, var context: ClickListener) :
     RecyclerView.Adapter<RecentNotificationsAdapter.ViewHolder>() {
 
 
@@ -21,6 +25,7 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>)
         val titleTextView: TextView
         val descriptionTextView: TextView
         val dateTextView: TextView
+        val recentNotificationsWActionsPeekButton: Button?
 
         init {
             if (view.getTag(R.layout.recent_notifications_w_actions) == "recent") {
@@ -28,11 +33,13 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>)
                 descriptionTextView =
                     view.findViewById(R.id.recentNotificationsWActionsDescriptionLabel)
                 dateTextView = view.findViewById(R.id.recentNotificationsWActionsDateLabel)
+                recentNotificationsWActionsPeekButton = view.findViewById(R.id.recentNotificationsWActionsPeekButton)
             } else {
                 titleTextView = view.findViewById(R.id.recentNotificationsNoActionsTitleLabel)
                 descriptionTextView =
                     view.findViewById(R.id.recentNotificationsNoActionsDescriptionLabel)
                 dateTextView = view.findViewById(R.id.recentNotificationsNoActionsDateLabel)
+                recentNotificationsWActionsPeekButton = null
             }
         }
 
@@ -78,6 +85,9 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>)
         holder.titleTextView.text = dataSet[position].notification
         holder.descriptionTextView.text = dataSet[position].notification
         holder.dateTextView.text = dataSet[position].date.toString()
+        holder.recentNotificationsWActionsPeekButton?.setOnClickListener {
+            context.onItemClicked("http://192.168.1.19/stream")
+        }
     }
 
     override fun getItemCount(): Int {
