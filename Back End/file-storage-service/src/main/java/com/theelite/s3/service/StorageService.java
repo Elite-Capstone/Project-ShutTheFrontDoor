@@ -5,11 +5,13 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.IOUtils;
+import com.theelite.s3.communication.MediaDirectoryService;
+import com.theelite.s3.communication.UsersService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import retrofit2.Retrofit;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,8 +24,23 @@ public class StorageService {
     @Value("${application.bucket.name}")
     private String bucketName;
 
-    @Autowired
+    @Value("${media-directory.url}")
+    private String mediaDirectoryUrl;
+    @Value("${users.url}")
+    private String usersUrl;
+
+
     private AmazonS3 s3Client;
+    private MediaDirectoryService mediaDirectoryService;
+    private UsersService usersService;
+
+
+    public StorageService(AmazonS3 s3Client) {
+        this.s3Client = s3Client;
+        mediaDirectoryService = buildRetrofitObjects(mediaDirectoryUrl, MediaDirectoryService.class);
+        usersService = buildRetrofitObjects(usersUrl, UsersService.class);
+    }
+
 
     public String uploadFile(MultipartFile file) {
         File fileObj = convertMultiPartFileToFile(file);
@@ -61,5 +78,15 @@ public class StorageService {
             log.error("Error converting multipartFile to file", e);
         }
         return convertedFile;
+    }
+
+    public boolean saveFileNameToUserAccount(String filename) {
+        return false;
+    }
+
+    private <T> T buildRetrofitObjects(String url, Class<T> service) {
+        if (url == null || url.isBlank() || url.isBlank()) return null;
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        return retrofit.create(service);
     }
 }

@@ -69,6 +69,9 @@
     <orderEntry type="library" name="Maven: org.springframework.cloud:spring-cloud-aws-autoconfigure:2.2.5.RELEASE" level="project" />
     <orderEntry type="library" name="Maven: org.slf4j:slf4j-api:1.7.30" level="project" />
     <orderEntry type="library" name="Maven: javax.activation:javax.activation-api:1.2.0" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup.retrofit2:retrofit:2.9.0" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup.okhttp3:okhttp:3.14.9" level="project" />
+    <orderEntry type="library" name="Maven: com.squareup.okio:okio:1.17.2" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-java-sdk:1.11.327" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:aws-java-sdk-iotanalytics:1.11.792" level="project" />
     <orderEntry type="library" name="Maven: com.amazonaws:jmespath-java:1.11.792" level="project" />
