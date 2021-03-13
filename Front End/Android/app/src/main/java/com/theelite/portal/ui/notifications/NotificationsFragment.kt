@@ -1,5 +1,7 @@
 package com.theelite.portal.ui.notifications
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,16 +15,14 @@ import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
 import com.theelite.portal.request.NotificationService
 import com.theelite.portal.request.RetroFit
+import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.adapters.RecentNotificationsAdapter
-import okhttp3.OkHttpClient
-import okhttp3.internal.notify
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
-class NotificationsFragment : Fragment() {
+
+class NotificationsFragment : Fragment(), ClickListener {
 
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recentNotificationRecyclerView: RecyclerView
@@ -58,7 +58,7 @@ class NotificationsFragment : Fragment() {
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        recentNotificationsAdapter = RecentNotificationsAdapter(notifications)
+        recentNotificationsAdapter = RecentNotificationsAdapter(notifications,this)
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
         getNotifications()
     }
@@ -94,8 +94,16 @@ class NotificationsFragment : Fragment() {
 
     }
 
+
+
     private fun orderNotifications() {
         notifications.sortByDescending { it.date }
+    }
+
+    override fun onItemClicked(name: String) {
+        val i = Intent(Intent.ACTION_VIEW)
+        i.data = Uri.parse(name)
+        requireActivity().startActivity(i)
     }
 
 }
