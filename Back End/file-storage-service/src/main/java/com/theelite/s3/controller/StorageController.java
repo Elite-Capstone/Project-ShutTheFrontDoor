@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/file")
 public class StorageController {
@@ -16,13 +18,13 @@ public class StorageController {
     private StorageService service;
 
     @GetMapping("/")
-    public String pong(){
+    public String pong() {
         return "App is running!";
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<String> uploadFile(@RequestParam(value = "file") MultipartFile file) {
-        return new ResponseEntity<>(service.uploadFile(file), HttpStatus.OK);
+    @PostMapping("/upload/{id}")
+    public ResponseEntity<String> uploadFile(@RequestParam(value = "file") MultipartFile file, @PathVariable String id) {
+        return new ResponseEntity<>(service.uploadFile(file, id), HttpStatus.OK);
     }
 
     @GetMapping("/download/{fileName}")
@@ -43,7 +45,12 @@ public class StorageController {
     }
 
     @DeleteMapping("/familyAccountDeleted/{acc}")
-    public void deleteAllFilesRelatedToAccount(@PathVariable String acc){
+    public void deleteAllFilesRelatedToAccount(@PathVariable String acc) {
         service.familyAccountDeleted(acc);
+    }
+
+    @GetMapping("/list/{email}/{token}")
+    public List<String> getListForUser(@PathVariable("email") String email, @PathVariable("token") String token) {
+        return service.getFilenamesForUser(email, token);
     }
 }

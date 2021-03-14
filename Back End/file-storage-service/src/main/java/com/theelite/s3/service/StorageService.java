@@ -5,6 +5,7 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.IOUtils;
+import com.theelite.s3.communication.DeviceService;
 import com.theelite.s3.communication.MediaDirectoryService;
 import com.theelite.s3.communication.UsersService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,29 +27,32 @@ public class StorageService {
     @Value("${application.bucket.name}")
     private String bucketName;
 
-    @Value("${media-directory.url}")
+    @Value("${media.directory.url}")
     private String mediaDirectoryUrl;
     @Value("${users.url}")
     private String usersUrl;
-
+    @Value("${device.url}")
+    private String deviceUrl;
 
     private AmazonS3 s3Client;
     private MediaDirectoryService mediaDirectoryService;
     private UsersService usersService;
-
+    private DeviceService deviceService;
 
     public StorageService(AmazonS3 s3Client) {
         this.s3Client = s3Client;
         mediaDirectoryService = buildRetrofitObjects(mediaDirectoryUrl, MediaDirectoryService.class);
-        usersService = buildRetrofitObjects(usersUrl, UsersService.class);
+        this.usersService = buildRetrofitObjects(usersUrl, UsersService.class);
+        this.deviceService = buildRetrofitObjects(deviceUrl, DeviceService.class);
     }
 
 
-    public String uploadFile(MultipartFile file) {
+    public String uploadFile(MultipartFile file, String deviceId) {
         File fileObj = convertMultiPartFileToFile(file);
         String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
         s3Client.putObject(new PutObjectRequest(bucketName, fileName, fileObj));
         fileObj.delete();
+        saveFileNameToUserAccount(fileName, deviceId);
         return "File uploaded : " + fileName;
     }
 
@@ -111,8 +115,10 @@ public class StorageService {
         }
     }
 
-    public boolean saveFileNameToUserAccount(String filename, String familyAccount) {
+    public boolean saveFileNameToUserAccount(String filename, String deviceId) {
         Boolean nameExists = false;
+        String familyAccount = getFamilyName(deviceId);
+        if (familyAccount == null || familyAccount.isEmpty() || familyAccount.isBlank()) return false;
         try {
             nameExists = mediaDirectoryService.checkFileNameExists(filename).execute().body();
             // Name already saved in db
@@ -122,6 +128,16 @@ public class StorageService {
             System.out.println(e.getMessage());
         }
         return nameExists;
+    }
+
+    private String getFamilyName(String device) {
+        String familyAccount = null;
+        try {
+            familyAccount = deviceService.getFamilyAccountForDeviceWithId(device).execute().body();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        return familyAccount;
     }
 
     private <T> T buildRetrofitObjects(String url, Class<T> service) {
