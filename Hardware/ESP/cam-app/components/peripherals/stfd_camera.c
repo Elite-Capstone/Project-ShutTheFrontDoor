@@ -11,19 +11,12 @@
 #include <stdlib.h>
 #include <sys/param.h>
 
-#include "driver/sdmmc_host.h"
-#include "driver/sdmmc_defs.h"
-#include "sdmmc_cmd.h"
-#include "esp_vfs_fat.h"
-
 //#include "esp_timer.h"
 #include "img_converters.h"
 
 #include "stfd_peripherals.h"
 
 static const char *TAG = "stfd_camera";
-
-#define MOUNT_POINT "/sdcard"
 
 // ESP32Cam (AiThinker) PIN Map
 #ifdef CONFIG_ESP32_CAM_MCU
@@ -196,80 +189,9 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
     return err;
 }
 
-esp_err_t init_sdcard(mcu_content_t* mcu_c)
-{
-    esp_err_t ret = ESP_FAIL;
-
-    if (!(mcu_c->sdcard_initiated)) {
-        esp_vfs_fat_sdmmc_mount_config_t mount_config = {
-            .format_if_mount_failed = false,
-            .max_files = 5,
-            .allocation_unit_size = 16 * 1024
-        };
-
-        sdmmc_card_t *card;
-
-        const char mount_point[] = MOUNT_POINT;
-        ESP_LOGI(TAG, "Initializing SD card");
-
-        sdmmc_host_t host = SDMMC_HOST_DEFAULT();
-        sdmmc_slot_config_t slot_config = SDMMC_SLOT_CONFIG_DEFAULT();
-
-        ESP_LOGI(TAG, "Mounting SD card...");
-        gpio_set_pull_mode(15, GPIO_PULLUP_ONLY);   // CMD, needed in 4- and 1- line modes
-        gpio_set_pull_mode(2, GPIO_PULLUP_ONLY);    // D0, needed in 4- and 1-line modes
-        gpio_set_pull_mode(4, GPIO_PULLUP_ONLY);    // D1, needed in 4-line mode only
-        gpio_set_pull_mode(12, GPIO_PULLUP_ONLY);   // D2, needed in 4-line mode only
-        gpio_set_pull_mode(13, GPIO_PULLUP_ONLY);   // D3, needed in 4- and 1-line modes
-
-        ret = esp_vfs_fat_sdmmc_mount(mount_point, &host, &slot_config, &mount_config, &card);
-
-        if (ret == ESP_OK)
-        {
-        ESP_LOGI(TAG, "SD card mount successfully!");
-        mcu_c->sdcard_initiated = true;
-        }
-        else
-        {
-        ESP_LOGE(TAG, "Failed to mount SD card VFAT filesystem. Error: %s", esp_err_to_name(ret));
-        }
-        // Card has been initialized, print its properties
-        sdmmc_card_print_info(stdout, card);
-    }
-    return ret;
-}
-
-
-
 //================================================
 //===== Section - Taking Pictures and upload =====
 //================================================
-bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt)
-{
-    bool err = false;
-    char *pic_name = malloc(30 + sizeof(int64_t));
-    sprintf(pic_name, MOUNT_POINT"/pic_%lli.jpg", pic_cnt);
-    FILE *file = fopen(pic_name, "w");
-    
-    if (file != NULL)
-    {
-        fwrite(buf, 1, len, file);
-        ESP_LOGI(TAG, "File saved: %s", pic_name);
-        err = false;
-    }
-    else
-    {
-        ESP_LOGE(TAG, "Could not open file =(");
-        fclose(file);
-        free(pic_name);
-        err = true;
-    }
-
-    fclose(file);
-    free(pic_name);
-
-    return !err;
-}
 
 camera_fb_t* camera_take_picture(mcu_content_t* mcu_c)
 {

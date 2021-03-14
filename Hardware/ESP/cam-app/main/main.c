@@ -168,9 +168,10 @@ void app_main(void) {
     //start gpio task
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
-    gpio_init_setup(gpio_isr_handler);
     if (INIT_SDCARD)
         init_sdcard(mcu_c);
+
+    gpio_init_setup(gpio_isr_handler);
 
     wifi_scan(mcu_c);
 }

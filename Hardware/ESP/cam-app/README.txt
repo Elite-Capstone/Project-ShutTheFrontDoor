@@ -1,3 +1,5 @@
+In order to be able to use the SD card, the batch script "update_partition_for_sdcard.bat" must be executed. Details of the modifications are given in the batch file.
+
 GPIO List of the ESP32-CAM in ascending order
 1:  TXD0 (Reserved)
 2:  

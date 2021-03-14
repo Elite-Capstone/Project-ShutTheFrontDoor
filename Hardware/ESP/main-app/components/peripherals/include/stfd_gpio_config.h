@@ -537,44 +537,46 @@
     #define GPIO_INPUT_BOOT 0
     #endif /* CONFIG_GPIO_INPUT_BOOT */
 
+    // Commented out GPIOs are used for SD card comms.
     #if CONFIG_GPIO_INPUT_0_MS
     #define GPIO_INPUT_MS 0
-    #elif CONFIG_GPIO_INPUT_2_MS
-    #define GPIO_INPUT_BOOT 2
-    #elif CONFIG_GPIO_INPUT_4_MS
-    #define GPIO_INPUT_MS 4
-    #elif CONFIG_GPIO_INPUT_12_MS
-    #define GPIO_INPUT_MS 12
-    #elif CONFIG_GPIO_INPUT_13_MS
-    #define GPIO_INPUT_MS 13
+    // #elif CONFIG_GPIO_INPUT_2_MS
+    // #define GPIO_INPUT_BOOT 2
+    // #elif CONFIG_GPIO_INPUT_4_MS
+    // #define GPIO_INPUT_MS 4
+    // #elif CONFIG_GPIO_INPUT_12_MS
+    // #define GPIO_INPUT_MS 12
+    // #elif CONFIG_GPIO_INPUT_13_MS
+    // #define GPIO_INPUT_MS 13
     #elif CONFIG_GPIO_INPUT_14_MS
     #define GPIO_INPUT_MS 14
-    #elif CONFIG_GPIO_INPUT_15_MS
-    #define GPIO_INPUT_MS 15
+    // #elif CONFIG_GPIO_INPUT_15_MS
+    // #define GPIO_INPUT_MS 15
     #elif CONFIG_GPIO_INPUT_16_MS
     #define GPIO_INPUT_MS 16
     #else
-    #define GPIO_INPUT_MS 12
+    #define GPIO_INPUT_MS 16
     #endif /* CONFIG_GPIO_INPUT_MS */
 
+    // Commented out GPIOs are used for SD card comms.
     #if CONFIG_GPIO_INPUT_0_PIC
     #define GPIO_INPUT_PIC 0
-    #elif CONFIG_GPIO_INPUT_2_PIC
-    #define GPIO_INPUT_PIC 2
-    #elif CONFIG_GPIO_INPUT_4_PIC
-    #define GPIO_INPUT_PIC 4
-    #elif CONFIG_GPIO_INPUT_12_PIC
-    #define GPIO_INPUT_PIC 12
-    #elif CONFIG_GPIO_INPUT_13_PIC
-    #define GPIO_INPUT_PIC 13
+    // #elif CONFIG_GPIO_INPUT_2_PIC
+    // #define GPIO_INPUT_PIC 2
+    // #elif CONFIG_GPIO_INPUT_4_PIC
+    // #define GPIO_INPUT_PIC 4
+    // #elif CONFIG_GPIO_INPUT_12_PIC
+    // #define GPIO_INPUT_PIC 12
+    // #elif CONFIG_GPIO_INPUT_13_PIC
+    // #define GPIO_INPUT_PIC 13
     #elif CONFIG_GPIO_INPUT_14_PIC
     #define GPIO_INPUT_PIC 14
-    #elif CONFIG_GPIO_INPUT_15_PIC
-    #define GPIO_INPUT_PIC 15
+    // #elif CONFIG_GPIO_INPUT_15_PIC
+    // #define GPIO_INPUT_PIC 15
     #elif CONFIG_GPIO_INPUT_16_PIC
     #define GPIO_INPUT_PIC 16
     #else
-    #define GPIO_INPUT_PIC 2
+    #define GPIO_INPUT_PIC 14
     #endif /* CONFIG_GPIO_INPUT_PIC */
 
     #if  CONFIG_GPIO_INPUT_0_DRBELL_NOTIF

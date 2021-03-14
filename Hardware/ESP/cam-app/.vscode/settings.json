@@ -63,7 +63,8 @@
     "xlocmes": "c",
     "xlocmon": "c",
     "xlocnum": "c",
-    "xloctime": "c"
+    "xloctime": "c",
+    "sdmmc_cmd.h": "c"
   },
   "idf.portWin": "COM3"
 }

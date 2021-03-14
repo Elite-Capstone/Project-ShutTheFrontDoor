@@ -86,7 +86,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_MS
                 prompt "Motion Sensor"
-                default GPIO_INPUT_12_MS
+                default GPIO_INPUT_16_MS
                 help
                     The selected GPIO will be pulled down and the motion sensor will pull the line high.
 
@@ -154,7 +154,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_PIC
                 prompt "Picture Button"
-                default GPIO_INPUT_2_PIC
+                default GPIO_INPUT_14_PIC
                 help
                     The selected GPIO will be pulled up and the button will pull the gpio down to trigger the picture taking.
 

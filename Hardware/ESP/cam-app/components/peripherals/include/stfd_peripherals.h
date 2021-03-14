@@ -78,7 +78,7 @@ esp_err_t init_sdcard(mcu_content_t* cam_c);
  * @param len     Size of the image buffer
  * @param pic_cnt Current picture counter
  */
-bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt);
+esp_err_t save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt);
 
 /**
  * @brief Executes the picture taking routine and returns the picture framebuffer

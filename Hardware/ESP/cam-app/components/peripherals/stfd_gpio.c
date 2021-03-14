@@ -57,7 +57,7 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             break;
 #if CONFIG_ESP32_CAM_MCU
         case GPIO_INPUT_PIC:
-            mcu_content->content_type = STREAM;
+            mcu_content->content_type = PICTURE;
             mcu_content->trig_signal  = SIGNAL_LOW;
             break;
 #endif
