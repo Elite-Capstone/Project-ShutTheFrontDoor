@@ -18,4 +18,5 @@ public interface CustomDao {
 
     void testDBConnection();
 
+    void familyAccountDeleted(String acc);
 }

@@ -1,5 +1,6 @@
 package com.theelite.devices.service;
 
+import com.theelite.devices.communication.NotifService;
 import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.DeviceDao;
 
@@ -12,7 +13,6 @@ import retrofit2.Retrofit;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 @Service
 public class DeviceServiceImpl implements DeviceService {
@@ -20,11 +20,15 @@ public class DeviceServiceImpl implements DeviceService {
     private final DeviceDao deviceDao;
     @Value("${users.url}")
     private String usersUrl;
+    @Value("${notif.url}")
+    private String notifUrl;
     private UsersService usersService;
+    private NotifService notifService;
 
     public DeviceServiceImpl(DeviceDao deviceDao) {
         this.deviceDao = deviceDao;
-        this.initRetrofit();
+        this.usersService = this.buildRetrofit(usersUrl, UsersService.class);
+        this.notifService = this.buildRetrofit(notifUrl, NotifService.class);
     }
 
     @Override
@@ -35,6 +39,7 @@ public class DeviceServiceImpl implements DeviceService {
             if (deviceDao.deviceExistsWithId(device.getDeviceId())) return false;
             deviceDao.save(device);
             deviceDao.registerDeviceToAccount(device.getDeviceId(), familyAccount);
+            notifService.newDeviceAdded(device.getDeviceId()).execute();
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -48,7 +53,7 @@ public class DeviceServiceImpl implements DeviceService {
             if (familyAccount == null || familyAccount.isEmpty() || familyAccount.isBlank()) return false;
             deviceDao.deleteById(device.getDeviceId());
             deviceDao.removeDeviceFromAccount(device.getDeviceId(), familyAccount);
-
+            notifService.deviceDeleted(device.getDeviceId()).execute();
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
@@ -102,9 +107,14 @@ public class DeviceServiceImpl implements DeviceService {
         return new ResponseEntity<>("App seems fine", HttpStatus.OK);
     }
 
-    private void initRetrofit() {
-        if (usersUrl == null || usersUrl.isBlank() || usersUrl.isEmpty()) return;
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(usersUrl).build();
-        usersService = retrofit.create(UsersService.class);
+    @Override
+    public void familyAccountDeleted(String acc){
+        deviceDao.familyAccountDeleted(acc);
+    }
+
+    private <T> T buildRetrofit(String url, Class<T> tClass) {
+        if (url == null || url.isBlank() || url.isEmpty()) return null;
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        return retrofit.create(tClass);
     }
 }
