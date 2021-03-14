@@ -42,7 +42,7 @@ public class DeviceController {
     }
 
     @GetMapping("/getDeviceIdsForUser/{email}/{token}")
-    public List<String> getDeviceName(@PathVariable("email") String email, @PathVariable("token") String token) {
+    public List<String> getDeviceIdsForUser(@PathVariable("email") String email, @PathVariable("token") String token) {
         return deviceService.getDeviceIdsForUser(email, token);
     }
 
