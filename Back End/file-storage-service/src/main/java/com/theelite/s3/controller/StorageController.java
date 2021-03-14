@@ -42,4 +42,8 @@ public class StorageController {
         return new ResponseEntity<>(service.deleteFile(fileName), HttpStatus.OK);
     }
 
+    @DeleteMapping("/familyAccountDeleted/{acc}")
+    public void deleteAllFilesRelatedToAccount(@PathVariable String acc){
+        service.familyAccountDeleted(acc);
+    }
 }

@@ -17,6 +17,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -73,7 +74,7 @@ public class StorageService {
 
 
     private File convertMultiPartFileToFile(MultipartFile file) {
-        File convertedFile = new File(file.getOriginalFilename());
+        File convertedFile = new File(Objects.requireNonNull(file.getOriginalFilename()));
         try (FileOutputStream fos = new FileOutputStream(convertedFile)) {
             fos.write(file.getBytes());
         } catch (IOException e) {
@@ -98,7 +99,13 @@ public class StorageService {
 
     public void familyAccountDeleted(String accountId) {
         try {
+            List<String> fileNames = mediaDirectoryService.getFilesnamesForAccount(accountId).execute().body();
             mediaDirectoryService.deleteFilesnamesForAccount(accountId).execute();
+            if (fileNames == null && fileNames.size() == 0) return;
+            if (fileNames.size() > 10)
+                fileNames.parallelStream().forEach(fileName -> s3Client.deleteObject(bucketName, fileName));
+            else fileNames.forEach(fileName -> s3Client.deleteObject(bucketName, fileName));
+
         } catch (IOException e) {
             System.out.println(e.getMessage());
         }
