@@ -1,10 +1,8 @@
 package com.theelite.devices.dao;
 
 import com.theelite.devices.model.Device;
-import com.theelite.devices.model.DeviceType;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface CustomDao {
 

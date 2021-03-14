@@ -4,7 +4,6 @@ import com.theelite.devices.model.Device;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface DeviceService {
 
