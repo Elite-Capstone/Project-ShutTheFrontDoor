@@ -229,3 +229,7 @@ Back End/file-storage-service/target/
 Hardware/ESP/esp32-cam/.vscode/
 
 *.vscode/
+
+Back End/devices/target/
+
+Back End/file-storage-service/src/main/resources/META-INF/
