@@ -1,10 +1,9 @@
 package com.theelite.notifications.service;
 
+import com.theelite.notifications.communication.DeviceService;
 import com.theelite.notifications.communication.UserService;
 import com.theelite.notifications.configuration.NotificationConfigurations;
 import com.theelite.notifications.model.Notification;
-import com.theelite.notifications.model.User;
-import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,7 +11,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +27,6 @@ import java.util.concurrent.ExecutionException;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
-    public NotificationServiceImpl(AdminClient kafkaAdmin) {
-        this.kafkaAdmin = kafkaAdmin;
-        this.buildRetrofitObjects();
-    }
-
     private final AdminClient kafkaAdmin;
 
     @Value("${user.ms.url}")
@@ -41,7 +34,19 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootStrapServer;
+
+    @Value("${devices.url}")
+    private String devicesUrl;
+
     private UserService userService = null;
+    private DeviceService deviceService = null;
+
+    public NotificationServiceImpl(AdminClient kafkaAdmin) {
+        this.kafkaAdmin = kafkaAdmin;
+        this.userService = this.buildRetrofitObject(userMsUrl, UserService.class);
+        this.deviceService = this.buildRetrofitObject(devicesUrl, DeviceService.class);
+    }
+
 
     @Override
     public ResponseEntity<String> getHealth() {
@@ -57,14 +62,16 @@ public class NotificationServiceImpl implements NotificationService {
     public List<Notification> getRecentNotifications(String email, String token) {
         if (!userIsLegit(email, token)) return null;
         String accountId = getFamilyAccountForUser(email);
-        if (accountId != null) {
-            //TODO retrieveAll topic -- doorIds from accountId
-            String topic = "00b288a8-3db1-40b5-b30f-532af4e12f4b";
+        List<String> topics = getDeviceIdsForAccount(accountId);
+        if (accountId != null && topics != null && topics.size() > 0) {
+
+            List<Notification> notifications = new ArrayList<>();
             KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, accountId, bootStrapServer));
-            consumer.subscribe(Collections.singleton(topic));
+            
+            consumer.subscribe(topics);
             ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
             consumer.commitAsync();
-            List<Notification> notifications = new ArrayList<>();
+
             for (ConsumerRecord<String, Notification> r : records) {
                 notifications.add(r.value());
             }
@@ -139,16 +146,17 @@ public class NotificationServiceImpl implements NotificationService {
         return result;
     }
 
-    private void buildRetrofitObjects() {
-        if (userMsUrl == null || userMsUrl.equals("")) return;
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(userMsUrl).build();
-        userService = retrofit.create(UserService.class);
+    private <T> T buildRetrofitObject(String url, Class<T> retrofitClass) {
+        if (url == null || url.isBlank()) return null;
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        return retrofit.create(retrofitClass);
     }
 
     private boolean userIsLegit(String email, String token) {
-        boolean result = false;
+        Boolean result = false;
         try {
             result = userService.validateUser(email, token).execute().body();
+//            if (result == null) return false;
         } catch (NullPointerException npr) {
             System.out.println("Null pointer exception when trying to validate user");
             return false;
@@ -156,6 +164,16 @@ public class NotificationServiceImpl implements NotificationService {
             e.printStackTrace();
         }
         return result;
+    }
+
+    private List<String> getDeviceIdsForAccount(String accountId) {
+        List<String> deviceIds = null;
+        try {
+            deviceIds = deviceService.getDeviceIdsForAccount(accountId).execute().body();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        return deviceIds;
     }
 
     private String getFamilyAccountForUser(String email) {
