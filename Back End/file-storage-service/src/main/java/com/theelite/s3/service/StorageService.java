@@ -16,6 +16,7 @@ import retrofit2.Retrofit;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -81,8 +82,39 @@ public class StorageService {
         return convertedFile;
     }
 
-    public boolean saveFileNameToUserAccount(String filename) {
-        return false;
+    public List<String> getFilenamesForUser(String email, String token) {
+        List<String> filenames = null;
+        try {
+            Boolean userLegit = usersService.validateUser(email, token).execute().body();
+            if (userLegit == null || !userLegit) return null;
+            String accountId = usersService.getFamilyAccountFor(email).execute().body();
+            if (accountId == null || accountId.isBlank()) return null;
+            filenames = mediaDirectoryService.getFilesnamesForAccount(accountId).execute().body();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        return filenames;
+    }
+
+    public void familyAccountDeleted(String accountId) {
+        try {
+            mediaDirectoryService.deleteFilesnamesForAccount(accountId).execute();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    public boolean saveFileNameToUserAccount(String filename, String familyAccount) {
+        Boolean nameExists = false;
+        try {
+            nameExists = mediaDirectoryService.checkFileNameExists(filename).execute().body();
+            // Name already saved in db
+            if (nameExists == null || nameExists) return false;
+            nameExists = mediaDirectoryService.saveFilesnameForAccount(familyAccount, filename).execute().body();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+        return nameExists;
     }
 
     private <T> T buildRetrofitObjects(String url, Class<T> service) {
