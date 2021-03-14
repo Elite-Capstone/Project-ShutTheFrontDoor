@@ -46,6 +46,11 @@ public class DeviceController {
         return deviceService.getDeviceIdsForUser(email, token);
     }
 
+    @GetMapping("/getFamilyAccountForDevice/{device}")
+    public String getFamAccForDeviceWithId(@PathVariable String device){
+        return deviceService.getFamilyAccountForDevice(device);
+    }
+
     @DeleteMapping("/familyAccountDeleted/{acc}")
     public void familyAccountDeleted(@PathVariable String acc){
         deviceService.familyAccountDeleted(acc);

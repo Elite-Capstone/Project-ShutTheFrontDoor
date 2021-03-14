@@ -108,7 +108,13 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
-    public void familyAccountDeleted(String acc){
+    public String getFamilyAccountForDevice(String device) {
+        if (!deviceDao.deviceExistsWithId(device)) return null;
+        return deviceDao.getFamilyAccountForDevice(device);
+    }
+
+    @Override
+    public void familyAccountDeleted(String acc) {
         deviceDao.familyAccountDeleted(acc);
     }
 
