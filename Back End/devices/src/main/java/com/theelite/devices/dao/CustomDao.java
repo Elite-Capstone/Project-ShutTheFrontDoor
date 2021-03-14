@@ -18,7 +18,7 @@ public interface CustomDao {
 
     void testDBConnection();
 
-    void familyAccountDeleted(String acc);
+    List<String> familyAccountDeleted(String acc);
 
     String getFamilyAccountForDevice(String device);
 }

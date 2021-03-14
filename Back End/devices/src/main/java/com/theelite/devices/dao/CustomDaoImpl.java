@@ -60,12 +60,13 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
-    public void familyAccountDeleted(String acc) {
+    public List<String> familyAccountDeleted(String acc) {
         Query deleteAccountQuery = new Query().addCriteria(Criteria.where("accountId").is(acc));
         Account account = mongoOperations.find(deleteAccountQuery, Account.class).get(0);
         Query deleteDevicesQuery = new Query().addCriteria(Criteria.where("id").in(account.getDeviceIds()));
         mongoOperations.findAndRemove(deleteDevicesQuery, Device.class);
         mongoOperations.findAndRemove(deleteAccountQuery, Account.class);
+        return Arrays.asList(account.getDeviceIds());
     }
 
     @Override

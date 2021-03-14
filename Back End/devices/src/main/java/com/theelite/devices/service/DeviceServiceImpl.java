@@ -115,7 +115,12 @@ public class DeviceServiceImpl implements DeviceService {
 
     @Override
     public void familyAccountDeleted(String acc) {
-        deviceDao.familyAccountDeleted(acc);
+        List<String> deviceIds = deviceDao.familyAccountDeleted(acc);
+        try {
+            notifService.deviceDeleted(deviceIds).execute();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     private <T> T buildRetrofit(String url, Class<T> tClass) {
