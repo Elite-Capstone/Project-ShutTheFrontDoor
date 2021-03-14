@@ -160,7 +160,6 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
  */
 void gpio_init_setup(gpio_isr_t isr_handler);
 void gpio_setup_input(gpio_isr_t isr_handler);
-void gpio_setup_adc(void);
 void gpio_setup_output(void);
 
 //========== HTTP client ==========

@@ -51,7 +51,7 @@ mcu_content_t _mcu_c = {
 .cam_server_init    = false,
 .save_to_sdcard     = false,
 .upload_content     = false,
-.trig_signal        = SIGNAL_LOW,
+.trig_signal        = SIGNAL_IGNORED,
 .content_type       = STANDBY,
 .ap_info            = NULL,
 .device_ip          = "",
@@ -162,17 +162,6 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
     }
 }
 
-// static void http_client_task(void *pvParameters)
-// {
-//     /**
-//      * NOTE: We only need rest_with_url();
-//      */
-
-//     http_rest_with_url(/*insert JPEG*/);
-
-//     ESP_LOGI(TAG, "Finish http client task");
-// }
-
 void app_main(void) {
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
@@ -180,28 +169,8 @@ void app_main(void) {
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
     gpio_init_setup(gpio_isr_handler);
-    //if (INIT_SDCARD)
+    if (INIT_SDCARD)
         init_sdcard(mcu_c);
 
     wifi_scan(mcu_c);
-
-    //Continuously sample ADC
-    // while (1) {
-    //     uint32_t adc_reading = 0;
-    //     //Multisampling
-    //     for (int i = 0; i < NO_OF_SAMPLES; i++) {
-    //         if (unit == ADC_UNIT_1) {
-    //             adc_reading += adc1_get_raw((adc1_channel_t)channel);
-    //         } else {
-    //             int raw;
-    //             adc2_get_raw((adc2_channel_t)channel, width, &raw);
-    //             adc_reading += raw;
-    //         }
-    //     }
-    //     adc_reading /= NO_OF_SAMPLES;
-    //     //Convert adc_reading to voltage in mV
-    //     uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, adc_chars);
-    //     printf("Raw: %d\tVoltage: %dmV\n", adc_reading, voltage);
-    //     vTaskDelay(pdMS_TO_TICKS(1000));
-    // }
 }

@@ -36,3 +36,18 @@ NO 28-31
 36: SENSOR_VP
 NO 37-38
 39: SENSOR_VN
+
+Note: Can't use ADC 2 with Wifi driver as Wifi uses ADC 2
+
+ ADC 1           ADC 2
+ CH  GPIO        CH  GPIO
+ 0   36          0   4
+ 3   39          1   0
+ 4   32          2   2
+ 5   33          3   15
+ 6   34          4   13
+ 7   35          5   12
+                 6   14
+                 7   27
+                 8   25
+                 9   26

@@ -43,6 +43,7 @@ static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
 static const char* NSW_MSG    = "The lock was turned";
 
+static httpd_handle_t stream_httpd = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
@@ -140,14 +141,20 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
             init_camera(mcu_c, mcu_s, STREAM);
 
             if (!(mcu_s->cam_server_init)) {
-            startStreamServer(mcu_c->device_ip);
-            mcu_s->cam_server_init = true;
+                init_camera(mcu_c, mcu_s, STREAM);
+                stream_httpd = startStreamServer(mcu_c->device_ip);
+                mcu_s->cam_server_init = true;
             }
-            else {
-            stopStreamServer();
-            mcu_s->cam_server_init = false;
-            mcu_c->content_type    = STANDBY;
-            }
+
+            // else {
+            //     stopStreamServer(&stream_httpd);
+            //     mcu_s->cam_server_init = false;
+
+            //     if (esp_camera_deinit() != ESP_OK)
+            //         ESP_LOGE(TAG, "Camera De-Init Failed");
+            //     else
+            //         mcu_s->cam_initiated = false;
+            // }
             break;
 
         case DRBELL:
@@ -165,6 +172,7 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
             break;
         case STANDBY:
             ESP_LOGI(TAG, "Standing by... 10sec");
+            ESP_LOGI(TAG, "Current Battery Voltage: %i mV", get_battery_level());
             vTaskDelay(10000/portTICK_RATE_MS);
             break;
         case BATTERY:
@@ -173,17 +181,6 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
             ESP_LOGE(TAG, "Invalid type detected when executing queue task");
     }
 }
-
-// static void http_client_task(void *pvParameters)
-// {
-//     /**
-//      * NOTE: We only need rest_with_url();
-//      */
-
-//     http_rest_with_url(/*insert JPEG*/);
-
-//     ESP_LOGI(TAG, "Finish http client task");
-// }
 
 void app_main(void) {
     //create a queue to handle gpio event from isr

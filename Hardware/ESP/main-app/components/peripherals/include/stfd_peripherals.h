@@ -23,11 +23,14 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/gpio.h"
+#include "driver/adc.h"
+#include "esp_adc_cal.h"
 
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
 
 typedef enum {
+    SIGNAL_IGNORED = -1,
     SIGNAL_LOW  = 0x0,
     SIGNAL_HIGH = 0x1
 } gpio_sig_level_t;
@@ -131,11 +134,21 @@ void exec_toggle_motor(void);
 void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
 
 /**
+ * @brief
+ */
+uint32_t get_battery_level(void);
+
+/**
  * @brief This function programs what to do upon interrupt
  * 
  * @param arg   arguments passed from the isr queue
  */
 void IRAM_ATTR gpio_isr_handler(void* arg);
+
+/**
+ * @brief
+ */
+uint32_t get_adc_reading(adc_unit_t unit, adc_channel_t channel);
 
 /**
  * @brief Does the configuration for the desired GPIO passed with its bit mask in @param bit_mask. 
@@ -162,6 +175,7 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
  */
 void gpio_init_setup(gpio_isr_t isr_handler);
 void gpio_setup_input(gpio_isr_t isr_handler);
+void gpio_setup_adc(void);
 void gpio_setup_output(void);
 
 //========== HTTP client ==========
@@ -202,12 +216,12 @@ esp_err_t stream_handler(httpd_req_t *req);
  * 
  * @param device_ip ESP camera's IP address on which it is streaming on
  */
-void startStreamServer(char* device_ip);
+httpd_handle_t startStreamServer(char* device_ip);
 
 /**
  * @brief Function stop camera server from streaming and deallocates the memory
  */
-void stopStreamServer(void);
+void stopStreamServer(httpd_handle_t* httpd_handle);
 
 //========== WiFi Scan ==========
 

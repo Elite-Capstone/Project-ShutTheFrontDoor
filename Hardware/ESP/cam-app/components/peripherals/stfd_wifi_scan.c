@@ -65,12 +65,12 @@
 #define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
 #endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
-#define WIFI_RETRY_LIMIT 10
+#define WIFI_RETRY_LIMIT CONFIG_WIFI_RETRY_LIMIT
 
+static const char *TAG = "stfd_wifi_scan";
 #define IP_ADDR_BUF_LEN 12
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
 
-static const char *TAG = "stfd_wifi_scan";
                 
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
