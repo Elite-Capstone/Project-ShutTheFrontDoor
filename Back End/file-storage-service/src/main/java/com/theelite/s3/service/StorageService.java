@@ -66,6 +66,7 @@ public class StorageService {
 
     public String deleteFile(String fileName) {
         s3Client.deleteObject(bucketName, fileName);
+        mediaDirectoryService.deleteFilesnamesForAccount(fileName);
         return fileName + " removed ...";
     }
 
