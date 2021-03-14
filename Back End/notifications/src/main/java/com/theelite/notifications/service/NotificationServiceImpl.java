@@ -67,7 +67,7 @@ public class NotificationServiceImpl implements NotificationService {
 
             List<Notification> notifications = new ArrayList<>();
             KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, accountId, bootStrapServer));
-            
+
             consumer.subscribe(topics);
             ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
             consumer.commitAsync();
@@ -101,9 +101,15 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public boolean deleteDoorIdAsTopic(String accId) {
-        kafkaAdmin.deleteTopics(Collections.singleton(accId));
+        deleteTopics(Collections.singletonList(accId));
         return !kafkaTopicExist(accId);
     }
+
+    @Override
+    public void deleteTopics(List<String> accId) {
+        kafkaAdmin.deleteTopics(accId);
+    }
+
 
     @Override
     public List<String> getKafkaTopics() {
