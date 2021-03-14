@@ -43,6 +43,7 @@ public class UserServiceImpl implements UserService {
             // Only user in his family account
             user.setAccountId(UUID.randomUUID());
             user.setRole(UserRole.Admin);
+
         }
 
         user.setTokens(Collections.singletonList(userToken));
