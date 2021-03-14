@@ -10,7 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 class FileStorageServiceApplicationTests {
 
 
-    @Value("${media-directory.url}")
+    @Value("${media.directory.url}")
     private String mediaDirectoryUrl;
     @Value("${users.url}")
     private String usersUrl;
