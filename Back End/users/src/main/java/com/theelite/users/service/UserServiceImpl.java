@@ -1,30 +1,55 @@
 package com.theelite.users.service;
 
+import com.theelite.users.communication.DeviceService;
+import com.theelite.users.communication.MediaService;
+import com.theelite.users.communication.NotifService;
 import com.theelite.users.dao.UserDao;
 import com.theelite.users.model.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import retrofit2.Retrofit;
 
+import java.io.IOException;
 import java.security.SecureRandom;
 import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
-    @Autowired
-    private SecureRandom secureRandom;
+    private final SecureRandom secureRandom;
+    private final Base64.Encoder base64Encoder;
+    private final PasswordEncoder passwordEncoder;
+    private final UserDao userDao;
 
-    @Autowired
-    private Base64.Encoder base64Encoder;
+    @Value("${device.url}")
+    private String deviceUrl;
+    @Value("${notif.url}")
+    private String notifUrl;
+    @Value("${media.url}")
+    private String mediaUrl;
+    private DeviceService deviceService;
+    private NotifService notifService;
+    private MediaService mediaService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public UserServiceImpl(SecureRandom secureRandom, Base64.Encoder base64Encoder, PasswordEncoder passwordEncoder, UserDao userDao) {
+        this.secureRandom = secureRandom;
+        this.base64Encoder = base64Encoder;
+        this.passwordEncoder = passwordEncoder;
+        this.userDao = userDao;
+        this.deviceService = this.buildRetrofitObject(deviceUrl, DeviceService.class);
+        this.notifService = this.buildRetrofitObject(notifUrl, NotifService.class);
+        this.mediaService = this.buildRetrofitObject(mediaUrl, MediaService.class);
+    }
 
-    @Autowired
-    private UserDao userDao;
-
+    private void userCreatedNewFamilyAccount(String accountId) {
+        try {
+            notifService.createNewConsumerGroup(accountId).execute();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     // User Signs up
     @Override
@@ -43,7 +68,8 @@ public class UserServiceImpl implements UserService {
             // Only user in his family account
             user.setAccountId(UUID.randomUUID());
             user.setRole(UserRole.Admin);
-
+            // to kafka to create new consumer group
+            userCreatedNewFamilyAccount(user.getAccountId().toString());
         }
 
         user.setTokens(Collections.singletonList(userToken));
@@ -68,6 +94,14 @@ public class UserServiceImpl implements UserService {
     @Override
     public boolean deleteUser(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
+        User userInfo = userDao.findById(user.getEmail()).get();
+        String famAcc = userInfo.getAccountId().toString();
+
+        if (userInfo.getRole().equals(UserRole.Admin) && userDao.numberOfAdminsInFamilyAccount(UUID.fromString(famAcc)) == 1) {
+            deviceService.familyAccountDeleted(famAcc);
+            notifService.deleteConsumerGroup(famAcc);
+            mediaService.deleteAllForFamilyAccount(famAcc);
+        }
         userDao.deleteById(user.getEmail());
         return true;
     }
@@ -156,5 +190,11 @@ public class UserServiceImpl implements UserService {
 
     public String testToken() {
         return generateNewToken();
+    }
+
+    private <T> T buildRetrofitObject(String url, Class<T> retroClass) {
+        if (url == null || url.isBlank() || url.isEmpty()) return null;
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        return retrofit.create(retroClass);
     }
 }
