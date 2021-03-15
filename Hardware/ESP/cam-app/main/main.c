@@ -16,6 +16,8 @@
 #include "freertos/task.h"
 #include "freertos/queue.h"
 
+#include "lwip/sockets.h"
+
 #include "stfd_peripherals.h"
 
 #if (CONFIG_IMAGE_TO_SDCARD || CONFIG_IMAGE_TO_BOTH_PROT)
@@ -42,6 +44,7 @@ static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
 
+static httpd_handle_t stream_httpd = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
@@ -50,13 +53,16 @@ mcu_content_t _mcu_c = {
 .cam_server_init    = false,
 .save_to_sdcard     = false,
 .upload_content     = false,
-.trig_signal        = SIGNAL_LOW,
+.trig_signal        = SIGNAL_IGNORED,
 .content_type       = STANDBY,
+.netif              = NULL,
 .ap_info            = NULL,
 .device_ip          = "",
 .pic_counter        = 0
 };
 static mcu_content_t* mcu_c = &_mcu_c;
+
+static int sock;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
@@ -81,7 +87,7 @@ static void gpio_trig_action(void* arg)
 {
     uint32_t io_num;
     for(;;) {
-        if(xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
             get_io_type(io_num, mcu_c);
             mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
@@ -96,6 +102,43 @@ static void gpio_trig_action(void* arg)
             }   
         }
     }
+}
+
+static void tcp_client_task(void *pvParameters)
+{
+    uint8_t* jpg_buf = NULL;
+    size_t   jpg_buf_len = 0;
+
+    int64_t  last_frame = 0;
+    int64_t  fr_end;
+    int64_t  frame_time = 0;
+
+    while (1) {
+        if (tcp_setup_sock(&sock, mcu_c->netif) != ESP_OK)
+            break;
+        while (1) {
+            if(!last_frame) {
+                last_frame = esp_timer_get_time();
+            }
+            if (stfd_get_frame(&jpg_buf, &jpg_buf_len, frame_time) != ESP_OK)
+                break;
+
+            fr_end = esp_timer_get_time();
+            frame_time = fr_end - last_frame;
+            last_frame = fr_end;
+            frame_time /= 1000;
+            if (tcp_send_buf(&sock, jpg_buf, jpg_buf_len) != ESP_OK)
+                break;
+        }
+
+        if (sock != -1) {
+            ESP_LOGE(TAG, "Shutting down socket and restarting...");
+            shutdown(sock, 0);
+            close(sock);
+        }
+    }
+    last_frame = 0;
+    vTaskDelete(NULL);
 }
 
 /**
@@ -130,19 +173,19 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 
             if (!(mcu_c->cam_server_init)) {
                 init_camera(mcu_c, STREAM);
-                startStreamServer(mcu_c->device_ip);
+                stream_httpd = startStreamServer(mcu_c->device_ip);
                 mcu_c->cam_server_init = true;
             }
 
-            else {
-                stopStreamServer();
-                mcu_c->cam_server_init = false;
+            // else {
+            //     stopStreamServer(&stream_httpd);
+            //     mcu_c->cam_server_init = false;
 
-                if (esp_camera_deinit() != ESP_OK)
-                    ESP_LOGE(TAG, "Camera De-Init Failed");
-                else
-                    mcu_c->cam_initiated = false;
-            }
+            //     if (esp_camera_deinit() != ESP_OK)
+            //         ESP_LOGE(TAG, "Camera De-Init Failed");
+            //     else
+            //         mcu_c->cam_initiated = false;
+            // }
             break;
 
         case (mcu_content_type_t) DRBELL:
@@ -161,26 +204,17 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
     }
 }
 
-// static void http_client_task(void *pvParameters)
-// {
-//     /**
-//      * NOTE: We only need rest_with_url();
-//      */
-
-//     http_rest_with_url(/*insert JPEG*/);
-
-//     ESP_LOGI(TAG, "Finish http client task");
-// }
-
 void app_main(void) {
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     //start gpio task
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
+    xTaskCreate(&tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
 
-    gpio_init_setup(gpio_isr_handler);
     if (INIT_SDCARD)
         init_sdcard(mcu_c);
+
+    gpio_init_setup(gpio_isr_handler);
 
     wifi_scan(mcu_c);
 }

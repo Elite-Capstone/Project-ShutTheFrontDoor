@@ -4,7 +4,7 @@ menu "Project ShutTheFrontDoor Configuration"
         prompt "Which MCU will this firmware be installed on?"
         default MAIN_MCU
         help
-            The selected MCU type will have different functionalities installed
+            The selected MCU type will have different functionalities installed.
         
         config MAIN_MCU
             bool "Main MCU"
@@ -20,7 +20,7 @@ menu "Project ShutTheFrontDoor Configuration"
                 prompt "Boot button"
                 default GPIO_INPUT_0_BOOT
                 help
-                    The selected GPIO will be pulled down when the button is pressed
+                    The selected GPIO will be pulled down when the button is pressed.
 
                 config GPIO_INPUT_0_BOOT
                     bool "GPIO 0"
@@ -86,9 +86,9 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_MS
                 prompt "Motion Sensor"
-                default GPIO_INPUT_12_MS
+                default GPIO_INPUT_16_MS
                 help
-                    The selected GPIO will be pulled down and the motion sensor will pull the line high
+                    The selected GPIO will be pulled down and the motion sensor will pull the line high.
 
                 config GPIO_INPUT_0_MS
                     bool "GPIO 0"
@@ -154,9 +154,9 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_PIC
                 prompt "Picture Button"
-                default GPIO_INPUT_2_PIC
+                default GPIO_INPUT_14_PIC
                 help
-                    The selected GPIO will be pulled up and the button will pull the gpio down to trigger the picture taking
+                    The selected GPIO will be pulled up and the button will pull the gpio down to trigger the picture taking.
 
                 config GPIO_INPUT_0_PIC
                     bool "GPIO 0"
@@ -224,7 +224,7 @@ menu "Project ShutTheFrontDoor Configuration"
                 prompt "GPIO to send notification on doorbell push"
                 default GPIO_INPUT_13_DRBELL_NOTIF
                 help 
-                    The selected GPIO will be pulled high and must be pulled down to signal the doorbell has been pressed
+                    The selected GPIO will be pulled high and must be pulled down to signal the doorbell has been pressed.
 
                 config GPIO_INPUT_0_DRBELL_NOTIF
                     bool "GPIO 0"
@@ -292,7 +292,7 @@ menu "Project ShutTheFrontDoor Configuration"
                 prompt "GPIO to signal when door has been open/closed"
                 default GPIO_INPUT_15_REEDSW_STATUS
                 help 
-                    The selected GPIO will be pulled high and must be pulled down to toggle the door open/close status
+                    The selected GPIO will be pulled high and must be pulled down to toggle the door open/close status.
 
                 config GPIO_INPUT_0_REEDSW_STATUS
                     bool "GPIO 0"
@@ -364,7 +364,7 @@ menu "Project ShutTheFrontDoor Configuration"
                 prompt "GPIO confirm output signal"
                 default GPIO_OUTPUT_CONFIRM_UPLOAD_14
                 help 
-                    The selected GPIO toggle its output in the goal of blinking an LED
+                    The selected GPIO toggle its output in the goal of blinking an LED.
 
                 config GPIO_OUTPUT_CONFIRM_UPLOAD_0
                     bool "GPIO 0"
@@ -510,7 +510,7 @@ menu "Project ShutTheFrontDoor Configuration"
             prompt "Image format output size"
             default IMAGE_FORMAT_QVGA
             help
-                Select the captured picture's format size. Do not use sizes above QVGA when not JPEG (Listed in ascending order)
+                Select the captured picture's format size. Do not use sizes above QVGA when not JPEG (Listed in ascending order).
             
             config IMAGE_FORMAT_QVGA
                 bool "QVGA"
@@ -532,7 +532,7 @@ menu "Project ShutTheFrontDoor Configuration"
             prompt "Image pixel output format"
             default IMAGE_PIXEL_JPEG
             help
-                Select the captured picture's pixel format
+                Select the captured picture's pixel format.
             
             config IMAGE_PIXEL_JPEG
                 bool "JPEG"
@@ -557,13 +557,50 @@ menu "Project ShutTheFrontDoor Configuration"
             config IMAGE_TO_BOTH_PROT
                 bool "Save to SD card and upload too"
         endchoice
+    
+    endmenu
 
-        config CAM_STREAM_PORT
+    menu "Streaming Configuration"
+
+        choice IP_MODE
+            prompt "IP Version"
+            help
+                Client can use either IPV4 or IPV6.
+
+            config IPV4
+                bool "IPV4"
+            config IPV6
+                bool "IPV6"
+    
+        endchoice
+    
+        config IPV4_ADDR
+            string "IPV4 Address"
+            default "192.168.1.165"
+            depends on IPV4
+            help
+                The MCU's TCP client will connect to this IPV4 address.
+    
+        config IPV6_ADDR
+            string "IPV6 Address"
+            default "FE80::30AD:E57B:C212:68AD"
+            depends on IPV6
+            help
+                The MCU's TCP client will connect to this IPV6 address.
+    
+        config TCP_HOST_PORT
+            int "Host Port"
+            range 0 65535
+            default 5555
+            help
+                The remote port to which the client will connect to.
+
+        config LOCAL_STREAM_PORT
             int "Streaming Port"
-            range 0 9999
+            range 0 65535
             default 80
             help
-                Port on which the camera will stream its video feed
+                Port on which the camera will stream its video feed locally.
 
     endmenu
 
@@ -573,7 +610,7 @@ menu "Project ShutTheFrontDoor Configuration"
             prompt "scan method"
             default WIFI_FAST_SCAN
             help
-                scan method for the esp32 to use. Fast connects you - All gives the choice of network to connect to
+                Scan method for the esp32 to use. Fast connects you - All gives the choice of network to connect to.
 
             config WIFI_FAST_SCAN
                 bool "fast - scans and connects to the first that matches SSID and Password"
@@ -606,7 +643,7 @@ menu "Project ShutTheFrontDoor Configuration"
             prompt "sort method"
             default WIFI_CONNECT_AP_BY_SIGNAL
             help
-                sort method for the esp32 to use
+                The sort method for the esp32 to use.
 
             config WIFI_CONNECT_AP_BY_SIGNAL
                 bool "rssi"
@@ -614,7 +651,15 @@ menu "Project ShutTheFrontDoor Configuration"
                 bool "authmode"
         endchoice
 
+
         menu "Fast Scan Extra Configs"
+
+            config WIFI_RETRY_LIMIT
+                int "Retry Limit"
+                range 0 99
+                default 10
+                help
+                    The number of times the module can retry to connect to the given wifi AP before returning an error.
             
             config FAST_SCAN_THRESHOLD
                 bool "fast scan threshold"
@@ -628,7 +673,7 @@ menu "Project ShutTheFrontDoor Configuration"
                 range -127 0
                 default -127
                 help
-                    rssi is use to measure the signal
+                    rssi is used to measure the signal strength
 
             choice FAST_SCAN_WEAKEST_AUTHMODE
                 prompt "fast scan weakest authmode"

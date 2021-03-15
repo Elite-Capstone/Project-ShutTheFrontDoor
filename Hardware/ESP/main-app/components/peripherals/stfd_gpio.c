@@ -16,7 +16,23 @@
 
 #define ESP_INTR_FLAG_DEFAULT 0
 
+#define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
+#define NO_OF_SAMPLES   64          //Multisampling
+
 static const char* TAG = "stfd_gpio";
+
+static const adc_bits_width_t battery_adc_width     = ADC_WIDTH_BIT_12;
+static const adc_atten_t      battery_adc_atten     = ADC_ATTEN_DB_11;
+
+static const adc_unit_t       bat_monitor_unit      = BATTERY_ADC_UNIT;
+static const adc_channel_t    bat_monitor_channel   = BATTERY_ADC_CH;
+static esp_adc_cal_characteristics_t* bat_monitor_chars = NULL;
+
+// Forward Declaration of local functions
+static void check_efuse(void);
+static void print_char_val_type(esp_adc_cal_value_t val_type);
+
+// ===== Peripherals functions =====
 
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
     return gpio_get_level(io_num) == sg_level;
@@ -30,10 +46,6 @@ bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
 
 void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
     switch(io_num) {
-        // case GPIO_INPUT_BOOT:     
-        //    mcu_content->content_type = BOOT;
-        //    mcu_content->trig_signal  = SIGNAL_LOW;
-        //    break;
         case GPIO_INPUT_MS:
             mcu_content->content_type = MS;
             mcu_content->trig_signal  = SIGNAL_HIGH;
@@ -56,9 +68,11 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             break;
         case GPIO_OUTPUT_MOTOR_IN1:
         case GPIO_OUTPUT_MOTOR_IN2:
-        // BOOT used for motor control temporarily
-        case GPIO_INPUT_BOOT:
             mcu_content->content_type = MTR_CTRL;
+            mcu_content->trig_signal  = SIGNAL_LOW;
+            break;
+        case GPIO_INPUT_BOOT:
+            mcu_content->content_type = STANDBY;
             mcu_content->trig_signal  = SIGNAL_LOW;
             break;
         default:
@@ -89,6 +103,32 @@ void exec_toggle_motor(void) {
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
     vTaskDelay(1000 / portTICK_RATE_MS);
+}
+
+uint32_t get_battery_level(void) {
+    return get_adc_reading(bat_monitor_unit, bat_monitor_channel);
+}
+
+uint32_t get_adc_reading(adc_unit_t unit, adc_channel_t channel) {
+
+    uint32_t adc_reading = 0;
+
+    //Multisampling
+    for (int i = 0; i < NO_OF_SAMPLES; i++) {
+        if (unit == ADC_UNIT_1) {
+            adc_reading += adc1_get_raw((adc1_channel_t)channel);
+        } else {
+            int raw;
+            adc2_get_raw((adc2_channel_t)channel, battery_adc_width, &raw);
+            adc_reading += raw;
+        }
+    }
+    adc_reading /= NO_OF_SAMPLES;
+
+    //Convert adc_reading to voltage in mV
+    uint32_t voltage = esp_adc_cal_raw_to_voltage(adc_reading, bat_monitor_chars);
+    ESP_LOGI(TAG, "Raw: %d\tVoltage: %dmV\n", adc_reading, voltage);
+    return voltage;
 }
 
 esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_t gpio_mode, gpio_pulldown_t pull_down, gpio_pullup_t pull_up) {
@@ -184,18 +224,6 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MOTOR_FAULT);
     }
 
-    // Setup ADC
-    /*if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
-        GPIO_INPUT_BATTERY_PIN_SEL, 
-        GPIO_MODE_INPUT, 
-        GPIO_PULLDOWN_DISABLE, 
-        GPIO_PULLUP_ENABLE
-        ) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_BATTERY);
-    }
-    */
 #elif CONFIG_ESP32_CAM_MCU
     // PIC
     if( stfd_gpio_config(
@@ -224,6 +252,44 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MOTOR_FAULT, isr_handler, (void*) GPIO_INPUT_MOTOR_FAULT));
 #elif CONFIG_ESP32_CAM_MCU
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, isr_handler, (void*) GPIO_INPUT_PIC));
+#endif
+}
+
+void gpio_setup_adc(void) {
+#if CONFIG_MAIN_MCU
+
+    //Check if Two Point or Vref are burned into eFuse
+    check_efuse();
+
+    //Configure ADC
+    if (bat_monitor_unit == ADC_UNIT_1) {
+        adc1_config_width(battery_adc_width);
+        adc1_config_channel_atten(bat_monitor_channel, battery_adc_atten);
+    } else {
+        adc2_config_channel_atten((adc2_channel_t)bat_monitor_channel, battery_adc_atten);
+    }
+
+    //Characterize ADC
+    bat_monitor_chars = calloc(1, sizeof(esp_adc_cal_characteristics_t));
+    esp_adc_cal_value_t val_type = esp_adc_cal_characterize(bat_monitor_unit, 
+                                                            battery_adc_atten, 
+                                                            battery_adc_width, 
+                                                            adc2_vref_to_gpio(GPIO_INPUT_BATTERY), 
+                                                            bat_monitor_chars
+                                                            );
+    print_char_val_type(val_type);
+
+    // if( stfd_gpio_config(
+    //     GPIO_PIN_INTR_POSEDGE, 
+    //     GPIO_INPUT_BATTERY_PIN_SEL, 
+    //     GPIO_MODE_INPUT, 
+    //     GPIO_PULLDOWN_DISABLE, 
+    //     GPIO_PULLUP_ENABLE
+    //     ) != ESP_OK)
+    // {
+    //     ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_BATTERY);
+    // }
+    
 #endif
 }
 
@@ -270,8 +336,46 @@ void gpio_setup_output(void) {
 }
 
 void gpio_init_setup(gpio_isr_t isr_handler) {
-    gpio_assign_check(TAG);
+    gpio_overlap_check(TAG);
     ESP_LOGI(TAG, "GPIO setup...");
     gpio_setup_input(isr_handler);
+    gpio_setup_adc();
     gpio_setup_output();
+}
+
+static void check_efuse(void)
+{
+#if CONFIG_IDF_TARGET_ESP32
+    //Check if TP is burned into eFuse
+    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+        printf("eFuse Two Point: Supported\n");
+    } else {
+        printf("eFuse Two Point: NOT supported\n");
+    }
+    //Check Vref is burned into eFuse
+    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_VREF) == ESP_OK) {
+        printf("eFuse Vref: Supported\n");
+    } else {
+        printf("eFuse Vref: NOT supported\n");
+    }
+#elif CONFIG_IDF_TARGET_ESP32S2
+    if (esp_adc_cal_check_efuse(ESP_ADC_CAL_VAL_EFUSE_TP) == ESP_OK) {
+        printf("eFuse Two Point: Supported\n");
+    } else {
+        printf("Cannot retrieve eFuse Two Point calibration values. Default calibration values will be used.\n");
+    }
+#else
+#error "This example is configured for ESP32/ESP32S2."
+#endif
+}
+
+static void print_char_val_type(esp_adc_cal_value_t val_type)
+{
+    if (val_type == ESP_ADC_CAL_VAL_EFUSE_TP) {
+        printf("Characterized using Two Point Value\n");
+    } else if (val_type == ESP_ADC_CAL_VAL_EFUSE_VREF) {
+        printf("Characterized using eFuse Vref\n");
+    } else {
+        printf("Characterized using Default Vref\n");
+    }
 }

@@ -227,3 +227,7 @@ Back End/notifications/target/
 
 Back End/file-storage-service/target/
 Hardware/ESP/arduino-esp32-master/
+
+Hardware/ESP/nabto-esp32cam/
+
+Hardware/ESP/esp32-opencv-master/

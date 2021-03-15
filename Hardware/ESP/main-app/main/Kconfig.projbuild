@@ -300,20 +300,6 @@ menu "Project ShutTheFrontDoor Configuration"
                     bool "GPIO 2"
                 config GPIO_INPUT_4_BATTERY
                     bool "GPIO 4"
-                config GPIO_INPUT_5_BATTERY
-                    bool "GPIO 5"
-                config GPIO_INPUT_6_BATTERY
-                    bool "GPIO 6"
-                config GPIO_INPUT_7_BATTERY
-                    bool "GPIO 7"
-                config GPIO_INPUT_8_BATTERY
-                    bool "GPIO 8"
-                config GPIO_INPUT_9_BATTERY
-                    bool "GPIO 9"
-                config GPIO_INPUT_10_BATTERY
-                    bool "GPIO 10"
-                config GPIO_INPUT_11_BATTERY
-                    bool "GPIO 11"
                 config GPIO_INPUT_12_BATTERY
                     bool "GPIO 12"
                 config GPIO_INPUT_13_BATTERY
@@ -322,20 +308,6 @@ menu "Project ShutTheFrontDoor Configuration"
                     bool "GPIO 14"
                 config GPIO_INPUT_15_BATTERY
                     bool "GPIO 15"
-                config GPIO_INPUT_16_BATTERY
-                    bool "GPIO 16"
-                config GPIO_INPUT_17_BATTERY
-                    bool "GPIO 17"
-                config GPIO_INPUT_18_BATTERY
-                    bool "GPIO 18"
-                config GPIO_INPUT_19_BATTERY
-                    bool "GPIO 19"
-                config GPIO_INPUT_21_BATTERY
-                    bool "GPIO 21"
-                config GPIO_INPUT_22_BATTERY
-                    bool "GPIO 22"
-                config GPIO_INPUT_23_BATTERY
-                    bool "GPIO 23"
                 config GPIO_INPUT_25_BATTERY
                     bool "GPIO 25"
                 config GPIO_INPUT_26_BATTERY
@@ -747,6 +719,13 @@ menu "Project ShutTheFrontDoor Configuration"
         endchoice
 
         menu "Fast Scan Extra Configs"
+
+            config WIFI_RETRY_LIMIT
+                int "Retry Limit"
+                range 0 99
+                default 10
+                help
+                    The number of times the module can retry to connect to the given wifi AP before returning an error.
             
             config FAST_SCAN_THRESHOLD
                 bool "fast scan threshold"

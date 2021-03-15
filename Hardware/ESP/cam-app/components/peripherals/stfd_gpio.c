@@ -18,6 +18,8 @@
 
 static const char* TAG = "stfd_gpio";
 
+// ===== Peripherals functions =====
+
 bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
     return gpio_get_level(io_num) == sg_level;
 }
@@ -55,7 +57,7 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             break;
 #if CONFIG_ESP32_CAM_MCU
         case GPIO_INPUT_PIC:
-            mcu_content->content_type = STREAM;
+            mcu_content->content_type = PICTURE;
             mcu_content->trig_signal  = SIGNAL_LOW;
             break;
 #endif
@@ -158,18 +160,6 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MOTOR_FAULT);
     }
 
-    // Setup ADC
-    /*if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
-        GPIO_INPUT_BATTERY_PIN_SEL, 
-        GPIO_MODE_INPUT, 
-        GPIO_PULLDOWN_DISABLE, 
-        GPIO_PULLUP_ENABLE
-        ) != ESP_OK)
-    {
-        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_BATTERY);
-    }
-    */
 #elif CONFIG_ESP32_CAM_MCU
     // PIC
     if( stfd_gpio_config(

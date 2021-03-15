@@ -52,6 +52,7 @@ typedef struct {
     bool upload_content;
     bool trig_signal;
     mcu_content_type_t content_type;
+    esp_netif_t *netif;
     wifi_ap_record_t* ap_info;
     char* device_ip;
     uint64_t pic_counter;
@@ -78,7 +79,7 @@ esp_err_t init_sdcard(mcu_content_t* cam_c);
  * @param len     Size of the image buffer
  * @param pic_cnt Current picture counter
  */
-bool save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt);
+esp_err_t save_image_to_sdcard(uint8_t* buf, size_t len, long long int pic_cnt);
 
 /**
  * @brief Executes the picture taking routine and returns the picture framebuffer
@@ -95,6 +96,17 @@ camera_fb_t* camera_take_picture(mcu_content_t* cam_c);
  * @param jpeg_buf_len  JPEG Buffer length
  */
 esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_len);
+
+/**
+ * @brief Gets the next frame from the camera frame buffer and outputs the JPEG converted image
+ *        in the JPEG buffer
+ * @note  The pixel format can only be JPEG for this function
+ * 
+ * @param jpg_buf       JPEG pointer reference where the pointer to the image buffer is stored
+ * @param jpg_buf_len   JPEG buffer length reference.
+ * @param frame_time    Time at which the frame is taken
+ */
+esp_err_t stfd_get_frame(uint8_t** jpg_buf, size_t* jpg_buf_len, int64_t frame_time);
 
 //========== GPIO ==========
 
@@ -205,7 +217,24 @@ httpd_handle_t startStreamServer(char* device_ip);
 /**
  * @brief Function stop camera server from streaming and deallocates the memory
  */
-void stopStreamServer(void);
+void stopStreamServer(httpd_handle_t* httpd_handle);
+
+//========== TCP Client ==========
+/**
+ * @brief Sets up the TCP client socket and connects it to the server port
+ * 
+ * @param sock  Pointer to socket to be initialized
+ */
+esp_err_t tcp_setup_sock(int* sock, esp_netif_t* esp_netif);
+
+/**
+ * @brief Send the jpeg format image buffer to the TCP server
+ * 
+ * @param sock          Socket used to send the image
+ * @param jpg_buf       JPEG converted image buffer
+ * @param jpg_buf_len   JPEG converted buffer length
+ */
+esp_err_t tcp_send_buf (int* sock, uint8_t* jpg_buf, size_t jpg_buf_len);
 
 //========== WiFi Scan ==========
 

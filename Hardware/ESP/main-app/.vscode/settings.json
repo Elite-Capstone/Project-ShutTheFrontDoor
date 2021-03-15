@@ -64,6 +64,7 @@
     "xlocmon": "c",
     "xlocnum": "c",
     "xloctime": "c",
-    "stdio.h": "c"
+    "stdio.h": "c",
+    "esp_adc_cal.h": "c"
   }
 }

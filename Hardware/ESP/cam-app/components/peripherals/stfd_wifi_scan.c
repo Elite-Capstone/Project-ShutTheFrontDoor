@@ -65,10 +65,12 @@
 #define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
 #endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
+#define WIFI_RETRY_LIMIT CONFIG_WIFI_RETRY_LIMIT
+
+static const char *TAG = "stfd_wifi_scan";
 #define IP_ADDR_BUF_LEN 12
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
 
-static const char *TAG = "stfd_wifi_scan";
                 
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
@@ -79,10 +81,35 @@ wifi_scan_method_t getDefaultScanMethod(void) {
 }
 
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    uint16_t retry = 1;
+    esp_err_t err = ESP_OK;
+    
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
+        do {
+            ESP_LOGI(TAG, "Connection attempt: %i", retry);
+            err = esp_wifi_connect();
+        } while (retry++ < WIFI_RETRY_LIMIT && err != ESP_OK);
+
+        if (retry >= WIFI_RETRY_LIMIT && err != ESP_OK)
+            ESP_LOGW(TAG, "Went over retry limit (%i)", retry);
+            if (err == ESP_ERR_WIFI_SSID)
+                ESP_LOGW(TAG, "Wrong SSID given.");
+            else if (err == ESP_ERR_WIFI_CONN)
+                ESP_LOGW(TAG, "Internal Error");
+
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        esp_wifi_connect();
+        do {
+            ESP_LOGI(TAG, "Connection attempt: %i", retry);
+            err = esp_wifi_connect();
+        } while (retry++ < WIFI_RETRY_LIMIT && err != ESP_OK);
+
+        if (retry >= WIFI_RETRY_LIMIT && err != ESP_OK)
+            ESP_LOGW(TAG, "Went over retry limit (%i)", retry);
+            if (err == ESP_ERR_WIFI_SSID)
+                ESP_LOGW(TAG, "Wrong SSID given.");
+            else if (err == ESP_ERR_WIFI_CONN)
+                ESP_LOGW(TAG, "Internal Error");
+
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
@@ -258,8 +285,8 @@ void wifi_scan(mcu_content_t* mcu_c) {
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     // Initialize default station as network interface instance (esp-netif)
-    esp_netif_t *sta_netif = esp_netif_create_default_wifi_sta();
-    assert(sta_netif);
+    mcu_c->netif = esp_netif_create_default_wifi_sta();
+    assert(mcu_c->netif);
 
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));

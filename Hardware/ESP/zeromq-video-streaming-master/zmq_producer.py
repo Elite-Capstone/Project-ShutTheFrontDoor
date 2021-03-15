@@ -1,14 +1,11 @@
 """
-export SERVER_IP=45.121.60.164
-export SERVER_IP=127.0.0.1
-
-export SERVER_IP=45.121.60.164
-export SERVER_PORT=5555
+export SERVER_IP=192.168.1.19
+export SERVER_PORT=80
 export HOST_NAME=register
 export VIDEO_SRC=0
 python zmq_producer.py 
 
-export VIDEO_SRC=http://192.168.2.34:8080/video?.mjpeg
+export VIDEO_SRC=http://192.168.1.19/stream.mjpeg
 
 
 """

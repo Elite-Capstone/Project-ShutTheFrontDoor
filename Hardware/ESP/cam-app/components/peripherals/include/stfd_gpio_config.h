@@ -413,68 +413,103 @@
     #define GPIO_INPUT_NSW 26
     #endif /* CONFIG_GPIO_INPUT_NSW */
 
+    // Commented GPIOs don't have ADCs
     #if CONFIG_GPIO_INPUT_0_BATTERY
     #define GPIO_INPUT_BATTERY 0
+    #define BATTERY_ADC_CH 1
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_2_BATTERY
     #define GPIO_INPUT_BATTERY 2
+    #define BATTERY_ADC_CH 2
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_4_BATTERY
     #define GPIO_INPUT_BATTERY 4
-    #elif CONFIG_GPIO_INPUT_5_BATTERY
-    #define GPIO_INPUT_BATTERY 5
-    #elif CONFIG_GPIO_INPUT_6_BATTERY
-    #define GPIO_INPUT_BATTERY 6
-    #elif CONFIG_GPIO_INPUT_7_BATTERY
-    #define GPIO_INPUT_BATTERY 7
-    #elif CONFIG_GPIO_INPUT_8_BATTERY
-    #define GPIO_INPUT_BATTERY 8
-    #elif CONFIG_GPIO_INPUT_9_BATTERY
-    #define GPIO_INPUT_BATTERY 9
-    #elif CONFIG_GPIO_INPUT_10_BATTERY
-    #define GPIO_INPUT_BATTERY 10
-    #elif CONFIG_GPIO_INPUT_11_BATTERY
-    #define GPIO_INPUT_BATTERY 11
+    #define BATTERY_ADC_CH 0
+    #define BATTERY_ADC_UNIT 2
+    // #elif CONFIG_GPIO_INPUT_5_BATTERY
+    // #define GPIO_INPUT_BATTERY 5
+    // #elif CONFIG_GPIO_INPUT_6_BATTERY
+    // #define GPIO_INPUT_BATTERY 6
+    // #elif CONFIG_GPIO_INPUT_7_BATTERY
+    // #define GPIO_INPUT_BATTERY 7
+    // #elif CONFIG_GPIO_INPUT_8_BATTERY
+    // #define GPIO_INPUT_BATTERY 8
+    // #elif CONFIG_GPIO_INPUT_9_BATTERY
+    // #define GPIO_INPUT_BATTERY 9
+    // #elif CONFIG_GPIO_INPUT_10_BATTERY
+    // #define GPIO_INPUT_BATTERY 10
+    // #elif CONFIG_GPIO_INPUT_11_BATTERY
+    // #define GPIO_INPUT_BATTERY 11
     #elif CONFIG_GPIO_INPUT_12_BATTERY
     #define GPIO_INPUT_BATTERY 12
+    #define BATTERY_ADC_CH 5
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_13_BATTERY
     #define GPIO_INPUT_BATTERY 13
+    #define BATTERY_ADC_CH 4
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_14_BATTERY
     #define GPIO_INPUT_BATTERY 14
+    #define BATTERY_ADC_CH 6
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_15_BATTERY
     #define GPIO_INPUT_BATTERY 15
-    #elif CONFIG_GPIO_INPUT_16_BATTERY
-    #define GPIO_INPUT_BATTERY 16
-    #elif CONFIG_GPIO_INPUT_17_BATTERY
-    #define GPIO_INPUT_BATTERY 17
-    #elif CONFIG_GPIO_INPUT_18_BATTERY
-    #define GPIO_INPUT_BATTERY 18
-    #elif CONFIG_GPIO_INPUT_19_BATTERY
-    #define GPIO_INPUT_BATTERY 19
-    #elif CONFIG_GPIO_INPUT_21_BATTERY
-    #define GPIO_INPUT_BATTERY 21
-    #elif CONFIG_GPIO_INPUT_22_BATTERY
-    #define GPIO_INPUT_BATTERY 22
-    #elif CONFIG_GPIO_INPUT_23_BATTERY
-    #define GPIO_INPUT_BATTERY 23
+    #define BATTERY_ADC_CH 3
+    #define BATTERY_ADC_UNIT 2
+    // #elif CONFIG_GPIO_INPUT_16_BATTERY
+    // #define GPIO_INPUT_BATTERY 16
+    // #elif CONFIG_GPIO_INPUT_17_BATTERY
+    // #define GPIO_INPUT_BATTERY 17
+    // #elif CONFIG_GPIO_INPUT_18_BATTERY
+    // #define GPIO_INPUT_BATTERY 18
+    // #elif CONFIG_GPIO_INPUT_19_BATTERY
+    // #define GPIO_INPUT_BATTERY 19
+    // #elif CONFIG_GPIO_INPUT_21_BATTERY
+    // #define GPIO_INPUT_BATTERY 21
+    // #elif CONFIG_GPIO_INPUT_22_BATTERY
+    // #define GPIO_INPUT_BATTERY 22
+    // #elif CONFIG_GPIO_INPUT_23_BATTERY
+    // #define GPIO_INPUT_BATTERY 23
     #elif CONFIG_GPIO_INPUT_25_BATTERY
     #define GPIO_INPUT_BATTERY 25
+    #define BATTERY_ADC_CH 8
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_26_BATTERY
     #define GPIO_INPUT_BATTERY 26
+    #define BATTERY_ADC_CH 9
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_27_BATTERY
     #define GPIO_INPUT_BATTERY 27
+    #define BATTERY_ADC_CH 7
+    #define BATTERY_ADC_UNIT 2
     #elif CONFIG_GPIO_INPUT_32_BATTERY
     #define GPIO_INPUT_BATTERY 32
+    #define BATTERY_ADC_CH 4
+    #define BATTERY_ADC_UNIT 1
     #elif CONFIG_GPIO_INPUT_33_BATTERY
     #define GPIO_INPUT_BATTERY 33
+    #define BATTERY_ADC_CH 5
+    #define BATTERY_ADC_UNIT 1
     #elif CONFIG_GPIO_INPUT_34_BATTERY
     #define GPIO_INPUT_BATTERY 34
+    #define BATTERY_ADC_CH 7
+    #define BATTERY_ADC_UNIT 1
     #elif CONFIG_GPIO_INPUT_35_BATTERY
     #define GPIO_INPUT_BATTERY 35
+    #define BATTERY_ADC_CH 7
+    #define BATTERY_ADC_UNIT 1
     #elif CONFIG_GPIO_INPUT_36_BATTERY
     #define GPIO_INPUT_BATTERY 36
+    #define BATTERY_ADC_CH 0
+    #define BATTERY_ADC_UNIT 1
     #elif CONFIG_GPIO_INPUT_39_BATTERY
     #define GPIO_INPUT_BATTERY 39
+    #define BATTERY_ADC_CH 3
+    #define BATTERY_ADC_UNIT 1
     #else
     #define GPIO_INPUT_BATTERY 27
+    #define BATTERY_ADC_CH 7
+    #define BATTERY_ADC_UNIT 2
     #endif /* CONFIG_GPIO_INPUT_BATTERY */
 
 #endif /* MAIN_MCU specific GPIOs */
@@ -502,44 +537,46 @@
     #define GPIO_INPUT_BOOT 0
     #endif /* CONFIG_GPIO_INPUT_BOOT */
 
+    // Commented out GPIOs are used for SD card comms.
     #if CONFIG_GPIO_INPUT_0_MS
     #define GPIO_INPUT_MS 0
-    #elif CONFIG_GPIO_INPUT_2_MS
-    #define GPIO_INPUT_BOOT 2
-    #elif CONFIG_GPIO_INPUT_4_MS
-    #define GPIO_INPUT_MS 4
-    #elif CONFIG_GPIO_INPUT_12_MS
-    #define GPIO_INPUT_MS 12
-    #elif CONFIG_GPIO_INPUT_13_MS
-    #define GPIO_INPUT_MS 13
+    // #elif CONFIG_GPIO_INPUT_2_MS
+    // #define GPIO_INPUT_BOOT 2
+    // #elif CONFIG_GPIO_INPUT_4_MS
+    // #define GPIO_INPUT_MS 4
+    // #elif CONFIG_GPIO_INPUT_12_MS
+    // #define GPIO_INPUT_MS 12
+    // #elif CONFIG_GPIO_INPUT_13_MS
+    // #define GPIO_INPUT_MS 13
     #elif CONFIG_GPIO_INPUT_14_MS
     #define GPIO_INPUT_MS 14
-    #elif CONFIG_GPIO_INPUT_15_MS
-    #define GPIO_INPUT_MS 15
+    // #elif CONFIG_GPIO_INPUT_15_MS
+    // #define GPIO_INPUT_MS 15
     #elif CONFIG_GPIO_INPUT_16_MS
     #define GPIO_INPUT_MS 16
     #else
-    #define GPIO_INPUT_MS 12
+    #define GPIO_INPUT_MS 16
     #endif /* CONFIG_GPIO_INPUT_MS */
 
+    // Commented out GPIOs are used for SD card comms.
     #if CONFIG_GPIO_INPUT_0_PIC
     #define GPIO_INPUT_PIC 0
-    #elif CONFIG_GPIO_INPUT_2_PIC
-    #define GPIO_INPUT_PIC 2
-    #elif CONFIG_GPIO_INPUT_4_PIC
-    #define GPIO_INPUT_PIC 4
-    #elif CONFIG_GPIO_INPUT_12_PIC
-    #define GPIO_INPUT_PIC 12
-    #elif CONFIG_GPIO_INPUT_13_PIC
-    #define GPIO_INPUT_PIC 13
+    // #elif CONFIG_GPIO_INPUT_2_PIC
+    // #define GPIO_INPUT_PIC 2
+    // #elif CONFIG_GPIO_INPUT_4_PIC
+    // #define GPIO_INPUT_PIC 4
+    // #elif CONFIG_GPIO_INPUT_12_PIC
+    // #define GPIO_INPUT_PIC 12
+    // #elif CONFIG_GPIO_INPUT_13_PIC
+    // #define GPIO_INPUT_PIC 13
     #elif CONFIG_GPIO_INPUT_14_PIC
     #define GPIO_INPUT_PIC 14
-    #elif CONFIG_GPIO_INPUT_15_PIC
-    #define GPIO_INPUT_PIC 15
+    // #elif CONFIG_GPIO_INPUT_15_PIC
+    // #define GPIO_INPUT_PIC 15
     #elif CONFIG_GPIO_INPUT_16_PIC
     #define GPIO_INPUT_PIC 16
     #else
-    #define GPIO_INPUT_PIC 2
+    #define GPIO_INPUT_PIC 14
     #endif /* CONFIG_GPIO_INPUT_PIC */
 
     #if  CONFIG_GPIO_INPUT_0_DRBELL_NOTIF

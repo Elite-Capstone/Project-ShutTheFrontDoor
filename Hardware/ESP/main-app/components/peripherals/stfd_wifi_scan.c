@@ -65,8 +65,11 @@
 #define DEFAULT_AUTHMODE WIFI_AUTH_OPEN
 #endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
+#define WIFI_RETRY_LIMIT CONFIG_WIFI_RETRY_LIMIT
+
 static const char *TAG = "stfd_wifi_scan";
-static char* esp_ip_addr = "";
+#define IP_ADDR_BUF_LEN 12
+static char esp_ip_addr[IP_ADDR_BUF_LEN];
                 
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
@@ -77,13 +80,38 @@ wifi_scan_method_t getDefaultScanMethod(void) {
 }
 
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
+    uint16_t retry = 1;
+    esp_err_t err = ESP_OK;
+    
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        esp_wifi_connect();
+        do {
+            ESP_LOGI(TAG, "Connection attempt: %i", retry);
+            err = esp_wifi_connect();
+        } while (retry++ < WIFI_RETRY_LIMIT && err != ESP_OK);
+
+        if (retry >= WIFI_RETRY_LIMIT && err != ESP_OK)
+            ESP_LOGW(TAG, "Went over retry limit (%i)", retry);
+            if (err == ESP_ERR_WIFI_SSID)
+                ESP_LOGW(TAG, "Wrong SSID given.");
+            else if (err == ESP_ERR_WIFI_CONN)
+                ESP_LOGW(TAG, "Internal Error");
+
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        esp_wifi_connect();
+        do {
+            ESP_LOGI(TAG, "Connection attempt: %i", retry);
+            err = esp_wifi_connect();
+        } while (retry++ < WIFI_RETRY_LIMIT && err != ESP_OK);
+
+        if (retry >= WIFI_RETRY_LIMIT && err != ESP_OK)
+            ESP_LOGW(TAG, "Went over retry limit (%i)", retry);
+            if (err == ESP_ERR_WIFI_SSID)
+                ESP_LOGW(TAG, "Wrong SSID given.");
+            else if (err == ESP_ERR_WIFI_CONN)
+                ESP_LOGW(TAG, "Internal Error");
+
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        //sprintf(esp_ip_addr, IPSTR, IP2STR(&event->ip_info.ip));
+        esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
         ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
     }
 }
@@ -264,11 +292,14 @@ void wifi_scan(mcu_content_t* mcu_c) {
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
 
     if (getDefaultScanMethod() == WIFI_FAST_SCAN) {
+        ESP_LOGI(TAG, "Begin Fast Scan");
         fast_scan(mcu_c->ap_info);
     }
     else { //WIFI_ALL_CHANNEL_SCAN:
+        ESP_LOGI(TAG, "Begin All Channel Scan");
         wifi_all_ch_scan(mcu_c->ap_info);
         // TODO: Send list to BlueTooth connected user
         // Set the default wifi to the returned selection from the user
     }
+    mcu_c->device_ip = esp_ip_addr;
 }
