@@ -12,6 +12,7 @@ from imutils.video import FPS
 
 ### run with python openCD.py pub --192.168.1.19/stream --pubport=80
 
+
 def pubVideo(config):
     context = zmq.Context()
     footage_socket = context.socket(zmq.PUB)
@@ -21,8 +22,7 @@ def pubVideo(config):
     target_address = "tcp://{}:{}".format(ip, port)
     print("Publish Video to ", target_address)
     footage_socket.connect(target_address)
-    impath = 0  # For the first USB camera attached
-    camera = cv2.VideoCapture(impath)  # init the camera
+    camera = cv2.VideoCapture('http://192.168.1.19:80/stream')
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     print("Start Time: ", datetime.datetime.now())
