@@ -17,23 +17,28 @@ def pubVideo(config):
     context = zmq.Context()
     footage_socket = context.socket(zmq.PUB)
     # 'tcp://localhost:5555'
-    ip = "192.168.1.19/stream"
-    port = 80
+    ip = "192.168.1.19"
+    port = 5555
     target_address = "tcp://{}:{}".format(ip, port)
     print("Publish Video to ", target_address)
     footage_socket.connect(target_address)
+<<<<<<< Updated upstream
     camera = cv2.VideoCapture('http://192.168.1.19:80/stream')
+=======
+    camera = cv2.VideoCapture('http://192.168.1.19/stream:80')  
+>>>>>>> Stashed changes
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     print("Start Time: ", datetime.datetime.now())
     fps = FPS().start()
     while True:
         try:
-            buffer = capture(config, camera)
+            (grabbed, frame) = camera.read()
+            frame = cv2.resize(frame, (640, 480)) 
             if not isinstance(buffer, (list, tuple, np.ndarray)):
                 break
-            buffer_encoded = base64.b64encode(buffer)
-            footage_socket.send_string(buffer_encoded.decode('ascii'))
+            encoded, buffer = cv2.imencode('.jpg', frame)
+            footage_socket.send_string(buffer_encoded.encode(buffer))
             # Update the FPS counter
             fps.update()
             cv2.waitKey(1)
@@ -55,10 +60,10 @@ def subVideo(config):
     context = zmq.Context()
     footage_socket = context.socket(zmq.SUB)
     port = 5555
-    bind_address = "tcp://*:{}".format(port)  # 'tcp://*:5555'
+    bind_address = "tcp://192.168.1.19:{}".format(port)  # 'tcp://*:5555'
     print("Subscribe Video at ", bind_address)
     footage_socket.bind(bind_address)
-    footage_socket.setsockopt_string(zmq.SUBSCRIBE, str(''))
+    footage_socket.setsockopt_string(zmq.SUBSCRIBE, unicode(''))
     while True:
         try:
             frame = footage_socket.recv_string()
