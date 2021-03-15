@@ -228,3 +228,24 @@ esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_
     }
     return res;
 }
+
+esp_err_t stfd_get_frame(uint8_t** jpg_buf, size_t* jpg_buf_len, int64_t frame_time) {
+    camera_fb_t * fb = NULL;
+    fb = esp_camera_fb_get();
+    if (!fb) {
+        ESP_LOGE(TAG, "Camera capture failed");
+        return ESP_FAIL;
+    }
+    if (convert_to_jpeg(fb, jpg_buf, jpg_buf_len) != ESP_OK) {
+        ESP_LOGE(TAG, "Conversion to jpeg failed");
+        return ESP_FAIL;
+    }
+    if(fb->format != PIXFORMAT_JPEG){
+        free(jpg_buf);
+    }
+    esp_camera_fb_return(fb);
+    ESP_LOGI(TAG, "MJPG: %uKB %ums (%.1ffps)",
+        (uint32_t)(*jpg_buf_len/1024),
+        (uint32_t)frame_time, 1000.0 / (uint32_t)frame_time);
+    return ESP_OK;
+}

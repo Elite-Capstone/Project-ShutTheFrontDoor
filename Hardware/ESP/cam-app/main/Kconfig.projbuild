@@ -557,13 +557,50 @@ menu "Project ShutTheFrontDoor Configuration"
             config IMAGE_TO_BOTH_PROT
                 bool "Save to SD card and upload too"
         endchoice
+    
+    endmenu
 
-        config CAM_STREAM_PORT
+    menu "Streaming Configuration"
+
+        choice IP_MODE
+            prompt "IP Version"
+            help
+                Client can use either IPV4 or IPV6.
+
+            config IPV4
+                bool "IPV4"
+            config IPV6
+                bool "IPV6"
+    
+        endchoice
+    
+        config IPV4_ADDR
+            string "IPV4 Address"
+            default "192.168.1.165"
+            depends on IPV4
+            help
+                The MCU's TCP client will connect to this IPV4 address.
+    
+        config IPV6_ADDR
+            string "IPV6 Address"
+            default "FE80::30AD:E57B:C212:68AD"
+            depends on IPV6
+            help
+                The MCU's TCP client will connect to this IPV6 address.
+    
+        config TCP_HOST_PORT
+            int "Host Port"
+            range 0 65535
+            default 5555
+            help
+                The remote port to which the client will connect to.
+
+        config LOCAL_STREAM_PORT
             int "Streaming Port"
-            range 0 9999
+            range 0 65535
             default 80
             help
-                Port on which the camera will stream its video feed.
+                Port on which the camera will stream its video feed locally.
 
     endmenu
 

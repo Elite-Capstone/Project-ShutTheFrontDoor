@@ -23,7 +23,7 @@
 #define DEFAULT_HTTP_URL   "http://34.117.160.50/"
 #define DEFAULT_DOOR_UUID  "00b288a8-3db1-40b5-b30f-532af4e12f4b"
 #define DEFAULT_STREAM_URI "/stream"
-#define DEFAULT_CAM_STREAM_PORT 80
+#define DEFAULT_STREAM_PORT CONFIG_LOCAL_STREAM_PORT
 
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
@@ -32,19 +32,6 @@ static const char* MEDIA_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char* MEDIA_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
 static const char *TAG = "stfd_http_client";
-
-/* Root cert for howsmyssl.com, taken from howsmyssl_com_root_cert.pem
-
-   The PEM file was extracted from the output of this command:
-   openssl s_client -showcerts -connect www.howsmyssl.com:443 </dev/null
-
-   The CA root cert is the last cert given in the chain of certs.
-
-   To embed it in the app binary, the PEM file is named
-   in the component.mk COMPONENT_EMBED_TXTFILES variable.
-*/
-extern const char howsmyssl_com_root_cert_pem_start[] asm("_binary_howsmyssl_com_root_cert_pem_start");
-extern const char howsmyssl_com_root_cert_pem_end[]   asm("_binary_howsmyssl_com_root_cert_pem_end");
 
 esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
     static char *output_buffer;  // Buffer to store response of http request from event handler
@@ -267,27 +254,6 @@ esp_err_t stream_handler(httpd_req_t *req) {
         if (convert_to_jpeg(fb, &_jpg_buf, &_jpg_buf_len) != ESP_OK)
             break;
 
-        // if(res == ESP_OK){
-        //     size_t hlen = snprintf((char *)part_buf, 64, MEDIA_PART, _jpg_buf_len);
-        //     res = httpd_resp_send_chunk(req, (const char *)part_buf, hlen);
-        // }
-        // if(res == ESP_OK){
-        //     res = httpd_resp_send_chunk(req, (const char *)_jpg_buf, _jpg_buf_len);
-        // }
-        // if(res == ESP_OK){
-        //     res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
-        // }
-        // if(fb){
-        //     esp_camera_fb_return(fb);
-        //     fb = NULL;
-        //     _jpg_buf = NULL;
-        // } else if(_jpg_buf){
-        //     free(_jpg_buf);
-        //     _jpg_buf = NULL;
-        // }
-        // if(res != ESP_OK){
-        //     break;
-        // }
         if(res == ESP_OK){
             res = httpd_resp_send_chunk(req, MEDIA_BOUNDARY, strlen(MEDIA_BOUNDARY));
         }
@@ -323,7 +289,7 @@ httpd_handle_t startStreamServer(char* device_ip) {
     httpd_handle_t httpd_handle = NULL;
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
-    config.server_port = DEFAULT_CAM_STREAM_PORT;
+    config.server_port = DEFAULT_STREAM_PORT;
     config.recv_wait_timeout = 30;
     config.send_wait_timeout = 30;
 
@@ -347,5 +313,5 @@ void stopStreamServer(httpd_handle_t* httpd_handle) {
     if (httpd_stop(httpd_handle) == ESP_OK)
         ESP_LOGI(TAG,"Stopping web server");
     else
-        ESP_LOGE(TAG, "Could not successfully stop the camera server on port %d", DEFAULT_CAM_STREAM_PORT);
+        ESP_LOGE(TAG, "Could not successfully stop the camera server on port %d", DEFAULT_STREAM_PORT);
 }
