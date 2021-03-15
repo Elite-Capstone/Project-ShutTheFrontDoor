@@ -22,11 +22,7 @@ def pubVideo(config):
     target_address = "tcp://{}:{}".format(ip, port)
     print("Publish Video to ", target_address)
     footage_socket.connect(target_address)
-<<<<<<< Updated upstream
     camera = cv2.VideoCapture('http://192.168.1.19:80/stream')
-=======
-    camera = cv2.VideoCapture('http://192.168.1.19/stream:80')  
->>>>>>> Stashed changes
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
     print("Start Time: ", datetime.datetime.now())
@@ -35,10 +31,8 @@ def pubVideo(config):
         try:
             (grabbed, frame) = camera.read()
             frame = cv2.resize(frame, (640, 480)) 
-            if not isinstance(buffer, (list, tuple, np.ndarray)):
-                break
             encoded, buffer = cv2.imencode('.jpg', frame)
-            footage_socket.send_string(buffer_encoded.encode(buffer))
+            footage_socket.send_string(base64.b64encode(buffer))
             # Update the FPS counter
             fps.update()
             cv2.waitKey(1)
