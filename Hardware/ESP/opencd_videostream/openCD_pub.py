@@ -13,21 +13,21 @@ from imutils.video import FPS
 ### run with python openCD.py pub --192.168.1.19/stream --pubport=80
 
 
-def pubVideo(config):
-    context = zmq.Context()
-    footage_socket = context.socket(zmq.PUB)
-    # 'tcp://localhost:5555'
-    ip = "192.168.1.19"
-    port = 5555
-    target_address = "tcp://{}:{}".format(ip, port)
-    print("Publish Video to ", target_address)
-    footage_socket.connect(target_address)
-    camera = cv2.VideoCapture('http://192.168.1.19:80/stream')
-    camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
-    camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-    print("Start Time: ", datetime.datetime.now())
-    fps = FPS().start()
-    while True:
+
+context = zmq.Context()
+footage_socket = context.socket(zmq.PUB)
+# 'tcp://localhost:5555'
+ip = "192.168.1.19"
+port = 5555
+target_address = "tcp://{}:{}".format(ip, port)
+print("Publish Video to ", target_address)
+footage_socket.connect(target_address)
+camera = cv2.VideoCapture('http://192.168.1.19:80/stream')
+camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+print("Start Time: ", datetime.datetime.now())
+fps = FPS().start()
+while True:
         try:
             (grabbed, frame) = camera.read()
             frame = cv2.resize(frame, (640, 480)) 
@@ -45,6 +45,6 @@ def pubVideo(config):
             cv2.destroyAllWindows()
             print("\n\nBye bye\n")
             break
-    print("End Time: ", datetime.datetime.now())
+print("End Time: ", datetime.datetime.now())
 
 
