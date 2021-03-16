@@ -128,4 +128,10 @@ public class CustomDaoImpl implements CustomDao {
         query.addCriteria(Criteria.where("email").is(email));
         mongoOperations.findAndRemove(query, User.class);
     }
+
+    @Override
+    public void deleteFamilyAccount(UUID account) {
+        Query query = new Query().addCriteria(Criteria.where("accountId").is(account));
+        mongoOperations.findAndRemove(query, Account.class);
+    }
 }

@@ -102,6 +102,7 @@ public class UserServiceImpl implements UserService {
                 deviceService.familyAccountDeleted(famAcc).execute();
                 notifService.deleteConsumerGroup(famAcc).execute();
                 mediaService.deleteAllForFamilyAccount(famAcc).execute();
+                userDao.deleteFamilyAccount(userInfo.getAccountId());
             } catch (IOException | NullPointerException e) {
                 System.out.println(e.getMessage());
             }

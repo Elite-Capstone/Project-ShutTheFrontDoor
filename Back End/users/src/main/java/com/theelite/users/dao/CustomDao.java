@@ -16,6 +16,7 @@ public interface CustomDao {
     void updateUserRole(String user, UserRole userRole);
     void testDatabaseConnection();
     void saveNewFamilyAccount(Account account);
+    void deleteFamilyAccount(UUID account);
     long numberOfAdminsInFamilyAccount(UUID accountId);
     void saveNewInvitation(Invitation invitation);
     void cancelInvitation(String invitation);
