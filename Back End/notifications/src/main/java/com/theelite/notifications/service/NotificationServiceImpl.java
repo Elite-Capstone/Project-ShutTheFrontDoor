@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.stereotype.Service;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -161,7 +162,7 @@ public class NotificationServiceImpl implements NotificationService {
             return null;
         }
 
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
         return retrofit.create(retrofitClass);
     }
 
