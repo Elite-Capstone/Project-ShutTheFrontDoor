@@ -18,8 +18,8 @@ public class StorageController {
     private StorageService service;
 
     @GetMapping("/")
-    public String pong() {
-        return "App is running!";
+    public ResponseEntity<String> pong() {
+        return service.getHealth();
     }
 
     @PostMapping("/upload/{id}")
