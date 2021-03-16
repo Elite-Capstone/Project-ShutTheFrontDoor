@@ -108,7 +108,8 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public void deleteTopics(List<String> accId) {
-        kafkaAdmin.deleteTopics(accId);
+        DeleteTopicsResult result = kafkaAdmin.deleteTopics(accId);
+        while (!result.all().isDone());
     }
 
 
