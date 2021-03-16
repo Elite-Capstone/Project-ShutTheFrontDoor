@@ -6,10 +6,10 @@ import retrofit2.http.Path;
 
 public interface NotifService {
 
-    @GET("/newConsumerGroup/{acc}")
+    @GET("newConsumerGroup/{acc}")
     Call<Boolean> createNewConsumerGroup(@Path("acc") String acc);
 
-    @GET("/deleteConsumerGroup/{acc}")
+    @GET("deleteConsumerGroup/{acc}")
     Call<Boolean> deleteConsumerGroup(@Path("acc") String acc);
 
 }

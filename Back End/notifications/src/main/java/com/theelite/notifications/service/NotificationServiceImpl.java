@@ -6,6 +6,7 @@ import com.theelite.notifications.configuration.NotificationConfigurations;
 import com.theelite.notifications.model.Notification;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupListing;
+import org.apache.kafka.clients.admin.DeleteTopicsResult;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -67,7 +68,7 @@ public class NotificationServiceImpl implements NotificationService {
         if (accountId != null && topics != null && topics.size() > 0) {
 
             List<Notification> notifications = new ArrayList<>();
-            KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, accountId, bootStrapServer));
+            KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, email, bootStrapServer));
 
             consumer.subscribe(topics);
             ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));

@@ -5,13 +5,13 @@ import com.theelite.users.communication.MediaService;
 import com.theelite.users.communication.NotifService;
 import com.theelite.users.dao.UserDao;
 import com.theelite.users.model.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -63,8 +63,11 @@ public class UserServiceImpl implements UserService {
             user.setRole(UserRole.Regular);
         } else {
             // Only user in his family account
-            user.setAccountId(UUID.randomUUID());
             user.setRole(UserRole.Admin);
+            Account newFamAcc = new Account();
+            //Saves the new Family Account
+            userDao.saveNewFamilyAccount(newFamAcc);
+            user.setAccountId(newFamAcc.getAccountId());
             // to kafka to create new consumer group
             userCreatedNewFamilyAccount(user.getAccountId().toString());
         }
@@ -204,7 +207,7 @@ public class UserServiceImpl implements UserService {
             System.out.println("Could not create Retrofit object as url for " + retroClass.getName() + " is null.");
             return null;
         }
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
         return retrofit.create(retroClass);
     }
 }

@@ -7,6 +7,6 @@ import retrofit2.http.Path;
 
 public interface DeviceService {
 
-    @DELETE("/familyAccountDeleted/{acc}")
+    @DELETE("familyAccountDeleted/{acc}")
     Call familyAccountDeleted(@Path("acc") String acc);
 }
