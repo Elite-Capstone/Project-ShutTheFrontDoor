@@ -100,9 +100,13 @@ public class UserServiceImpl implements UserService {
         String famAcc = userInfo.getAccountId().toString();
 
         if (userInfo.getRole().equals(UserRole.Admin) && userDao.numberOfAdminsInFamilyAccount(UUID.fromString(famAcc)) == 1) {
-            deviceService.familyAccountDeleted(famAcc);
-            notifService.deleteConsumerGroup(famAcc);
-            mediaService.deleteAllForFamilyAccount(famAcc);
+            try {
+                deviceService.familyAccountDeleted(famAcc).execute();
+                notifService.deleteConsumerGroup(famAcc).execute();
+                mediaService.deleteAllForFamilyAccount(famAcc).execute();
+            } catch (IOException | NullPointerException e) {
+                System.out.println(e.getMessage());
+            }
         }
         userDao.deleteById(user.getEmail());
         return true;
