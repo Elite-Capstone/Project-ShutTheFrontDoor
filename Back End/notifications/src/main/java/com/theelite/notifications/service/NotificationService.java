@@ -15,4 +15,6 @@ public interface NotificationService {
     boolean createConsumerGroup(String accId);
     boolean deleteConsumerGroup(String accId);
     List<String> getKafkaTopics();
+
+    void deleteTopics(List<String> topics);
 }

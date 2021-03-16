@@ -20,7 +20,4 @@ public class Device {
     private String deviceName;
     private DeviceType type;
 
-    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    //private UUID accountId;
-
 }

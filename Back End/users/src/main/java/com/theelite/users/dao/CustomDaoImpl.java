@@ -114,6 +114,13 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
+    public long numberOfAdminsInFamilyAccount(UUID accountId) {
+        Query query = new Query().addCriteria(Criteria.where("accountId").is(accountId).and("role").is(UserRole.Admin));
+
+        return mongoOperations.count(query, User.class);
+    }
+
+    @Override
     public void deleteUserAccount(String email) {
         Query query = new Query();
         query.addCriteria(Criteria.where("email").is(email));
