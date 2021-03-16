@@ -6,6 +6,6 @@ import retrofit2.http.Path;
 
 public interface DeviceService {
 
-    @GET("/getFamilyAccountForDevice/{id}")
+    @GET("getFamilyAccountForDevice/{id}")
     Call<String> getFamilyAccountForDeviceWithId(@Path("id") String id);
 }

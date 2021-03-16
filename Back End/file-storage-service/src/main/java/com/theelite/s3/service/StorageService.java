@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -140,7 +141,7 @@ public class StorageService {
             System.out.println("Url for " + service.getName() + " is null.");
             return null;
         }
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
         return retrofit.create(service);
     }
 
