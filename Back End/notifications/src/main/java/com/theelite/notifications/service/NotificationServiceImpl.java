@@ -12,6 +12,7 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.config.TopicBuilder;
@@ -29,22 +30,16 @@ public class NotificationServiceImpl implements NotificationService {
 
     private final AdminClient kafkaAdmin;
 
-    @Value("${user.ms.url}")
-    private String userMsUrl;
-
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootStrapServer;
-
-    @Value("${devices.url}")
-    private String devicesUrl;
 
     private UserService userService = null;
     private DeviceService deviceService = null;
 
-    public NotificationServiceImpl(AdminClient kafkaAdmin) {
+    public NotificationServiceImpl(AdminClient kafkaAdmin, Environment environment) {
         this.kafkaAdmin = kafkaAdmin;
-        this.userService = this.buildRetrofitObject(userMsUrl, UserService.class);
-        this.deviceService = this.buildRetrofitObject(devicesUrl, DeviceService.class);
+        this.userService = this.buildRetrofitObject(environment.getProperty("user.url"), UserService.class);
+        this.deviceService = this.buildRetrofitObject(environment.getProperty("device.url"), DeviceService.class);
     }
 
 
@@ -52,6 +47,12 @@ public class NotificationServiceImpl implements NotificationService {
     public ResponseEntity<String> getHealth() {
         try {
             kafkaAdmin.listTopics();
+
+            if (userService == null)
+                return new ResponseEntity<>("userService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (deviceService == null)
+                return new ResponseEntity<>("deviceService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+
         } catch (Exception e) {
             return new ResponseEntity<>("Error with Kafka or something", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -153,7 +154,11 @@ public class NotificationServiceImpl implements NotificationService {
     }
 
     private <T> T buildRetrofitObject(String url, Class<T> retrofitClass) {
-        if (url == null || url.isBlank()) return null;
+        if (url == null || url.isBlank()) {
+            System.out.println("The url for " + retrofitClass.getName() + " is null.");
+            return null;
+        }
+
         Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
         return retrofit.create(retrofitClass);
     }
@@ -176,7 +181,7 @@ public class NotificationServiceImpl implements NotificationService {
         List<String> deviceIds = null;
         try {
             deviceIds = deviceService.getDeviceIdsForAccount(accountId).execute().body();
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) {
             System.out.println(e.getMessage());
         }
         return deviceIds;
@@ -186,8 +191,8 @@ public class NotificationServiceImpl implements NotificationService {
         String accountId = null;
         try {
             accountId = userService.getFamilyAccount(email).execute().body();
-        } catch (NullPointerException | IOException nullPointerException) {
-            System.out.println(nullPointerException.getMessage());
+        } catch (NullPointerException | IOException exception) {
+            System.out.println(exception.getMessage());
         }
 
         return accountId;
