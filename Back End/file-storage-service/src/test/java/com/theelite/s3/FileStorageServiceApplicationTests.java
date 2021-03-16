@@ -12,13 +12,13 @@ class FileStorageServiceApplicationTests {
 
     @Value("${media.directory.url}")
     private String mediaDirectoryUrl;
-    @Value("${users.url}")
+    @Value("${user.url}")
     private String usersUrl;
 
     @Test
     public void whenFilePropertyProvided_thenProperlyInjected() {
-        assert mediaDirectoryUrl.equals("test@test.com");
-        assert usersUrl.equals("test");
+        assert mediaDirectoryUrl.equals("http://test/");
+        assert usersUrl.equals("http://test/");
     }
 
     @Test
