@@ -48,6 +48,8 @@ public class UserServiceImpl implements UserService {
             notifService.createNewConsumerGroup(accountId).execute();
         } catch (IOException e) {
             System.out.println(e.getMessage());
+        } catch (NullPointerException e) {
+            System.out.println("notifService is null; " + e.getMessage());
         }
     }
 
@@ -170,6 +172,12 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<String> getHealth() {
         try {
             userDao.testDatabaseConnection();
+            if (notifService == null)
+                return new ResponseEntity<>("notifService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (deviceService == null)
+                return new ResponseEntity<>("deviceService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (mediaService == null)
+                return new ResponseEntity<>("mediaService is null", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             return new ResponseEntity<>("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -193,7 +201,10 @@ public class UserServiceImpl implements UserService {
     }
 
     private <T> T buildRetrofitObject(String url, Class<T> retroClass) {
-        if (url == null || url.isBlank() || url.isEmpty()) return null;
+        if (url == null || url.isBlank() || url.isEmpty()) {
+            System.out.println("Could not create Retrofit object as url for " + retroClass.getName() + " is null.");
+            return null;
+        }
         Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
         return retrofit.create(retroClass);
     }
