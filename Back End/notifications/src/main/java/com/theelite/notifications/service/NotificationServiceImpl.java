@@ -33,8 +33,8 @@ public class NotificationServiceImpl implements NotificationService {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootStrapServer;
 
-    private UserService userService = null;
-    private DeviceService deviceService = null;
+    private final UserService userService;
+    private final DeviceService deviceService;
 
     public NotificationServiceImpl(AdminClient kafkaAdmin, Environment environment) {
         this.kafkaAdmin = kafkaAdmin;
