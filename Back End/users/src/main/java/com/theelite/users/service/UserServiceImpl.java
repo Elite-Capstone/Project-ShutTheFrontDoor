@@ -6,6 +6,7 @@ import com.theelite.users.communication.NotifService;
 import com.theelite.users.dao.UserDao;
 import com.theelite.users.model.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -23,24 +24,18 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserDao userDao;
 
-    @Value("${device.url}")
-    private String deviceUrl;
-    @Value("${notif.url}")
-    private String notifUrl;
-    @Value("${media.url}")
-    private String mediaUrl;
     private DeviceService deviceService;
     private NotifService notifService;
     private MediaService mediaService;
 
-    public UserServiceImpl(SecureRandom secureRandom, Base64.Encoder base64Encoder, PasswordEncoder passwordEncoder, UserDao userDao) {
+    public UserServiceImpl(SecureRandom secureRandom, Base64.Encoder base64Encoder, PasswordEncoder passwordEncoder, UserDao userDao, Environment environment) {
         this.secureRandom = secureRandom;
         this.base64Encoder = base64Encoder;
         this.passwordEncoder = passwordEncoder;
         this.userDao = userDao;
-        this.deviceService = this.buildRetrofitObject(deviceUrl, DeviceService.class);
-        this.notifService = this.buildRetrofitObject(notifUrl, NotifService.class);
-        this.mediaService = this.buildRetrofitObject(mediaUrl, MediaService.class);
+        this.deviceService = this.buildRetrofitObject(environment.getProperty("device.url"), DeviceService.class);
+        this.notifService = this.buildRetrofitObject(environment.getProperty("notif.url"), NotifService.class);
+        this.mediaService = this.buildRetrofitObject(environment.getProperty("media.url"), MediaService.class);
     }
 
     private void userCreatedNewFamilyAccount(String accountId) {
