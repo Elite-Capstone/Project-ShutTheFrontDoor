@@ -45,7 +45,7 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             break;
         case GPIO_INPUT_MS:
             mcu_content->content_type = STREAM;
-            mcu_content->trig_signal  = SIGNAL_HIGH;
+            mcu_content->trig_signal  = SIGNAL_LOW;
             break;
         case GPIO_INPUT_DRBELL_NOTIF:
             mcu_content->content_type = DRBELL;
@@ -108,8 +108,8 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
         GPIO_PIN_INTR_POSEDGE, 
         GPIO_INPUT_MS_PIN_SEL, 
         GPIO_MODE_INPUT, 
-        GPIO_PULLDOWN_ENABLE, 
-        GPIO_PULLUP_DISABLE
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_ENABLE
         ) != ESP_OK) 
     {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_INPUT_MS);

@@ -209,7 +209,7 @@ void app_main(void) {
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
     //start gpio task
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
-    xTaskCreate(&tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
+    // xTaskCreate(&tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
 
     if (INIT_SDCARD)
         init_sdcard(mcu_c);
