@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService {
     public boolean deleteUser(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
         User userInfo = userDao.findById(user.getEmail()).get();
-        if (userInfo.getPassword().equals(user.getPassword())) return false;
+        if (!passwordEncoder.matches(user.getPassword(), userInfo.getPassword())) return false;
         String famAcc = userInfo.getAccountId().toString();
 
         if (userInfo.getRole().equals(UserRole.Admin) && userDao.numberOfAdminsInFamilyAccount(UUID.fromString(famAcc)) == 1) {
