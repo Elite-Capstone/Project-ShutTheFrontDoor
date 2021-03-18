@@ -1,5 +1,7 @@
 package com.theelite.users.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.theelite.users.communication.DeviceService;
 import com.theelite.users.communication.MediaService;
 import com.theelite.users.communication.NotifService;
@@ -208,7 +210,10 @@ public class UserServiceImpl implements UserService {
             System.out.println("Could not create Retrofit object as url for " + retroClass.getName() + " is null.");
             return null;
         }
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
         return retrofit.create(retroClass);
     }
 }

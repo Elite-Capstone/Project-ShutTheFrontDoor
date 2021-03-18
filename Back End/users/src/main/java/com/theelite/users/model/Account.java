@@ -17,10 +17,10 @@ import java.util.UUID;
 public class Account {
     @Id
     private UUID accountId;
-    private List<UUID> doorIds;
+    private String[] deviceIds;
 
     public Account() {
         this.accountId = UUID.randomUUID();
-        this.doorIds = new ArrayList<>();
+        this.deviceIds = new String[0]; // New Empty Array
     }
 }
