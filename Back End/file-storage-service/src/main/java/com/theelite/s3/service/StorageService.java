@@ -5,6 +5,8 @@ import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectInputStream;
 import com.amazonaws.util.IOUtils;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.theelite.s3.communication.DeviceService;
 import com.theelite.s3.communication.MediaDirectoryService;
 import com.theelite.s3.communication.UsersService;
@@ -141,7 +143,10 @@ public class StorageService {
             System.out.println("Url for " + service.getName() + " is null.");
             return null;
         }
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
         return retrofit.create(service);
     }
 
