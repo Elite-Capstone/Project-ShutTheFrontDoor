@@ -1,5 +1,7 @@
 package com.theelite.devices.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.theelite.devices.communication.NotifService;
 import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.DeviceDao;
@@ -130,7 +132,10 @@ public class DeviceServiceImpl implements DeviceService {
             System.out.println("Url for " + tClass.getName() + " is null.");
             return null;
         }
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
         return retrofit.create(tClass);
     }
 }
