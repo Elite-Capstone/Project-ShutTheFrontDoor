@@ -61,4 +61,9 @@ public class DeviceController {
         return deviceService.getHealth();
     }
 
+    @GetMapping("/{email}/{token}")
+    public List<Device> getDevices(@PathVariable("email") String email, @PathVariable("token") String token){
+        return deviceService.getDevices(email, token);
+    }
+
 }

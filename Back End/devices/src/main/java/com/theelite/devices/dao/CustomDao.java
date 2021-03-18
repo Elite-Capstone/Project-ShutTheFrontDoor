@@ -21,4 +21,6 @@ public interface CustomDao {
     List<String> familyAccountDeleted(String acc);
 
     String getFamilyAccountForDevice(String device);
+
+    List<Device> getDevicesWithId(List<String> deviceIdsForAccount);
 }

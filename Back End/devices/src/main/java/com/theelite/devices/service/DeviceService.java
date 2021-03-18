@@ -24,4 +24,6 @@ public interface DeviceService {
     void familyAccountDeleted(String acc);
 
     String getFamilyAccountForDevice(String device);
+
+    List<Device> getDevices(String email, String token);
 }

@@ -118,6 +118,20 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     @Override
+    public List<Device> getDevices(String email, String token) {
+        List<Device> devices = null;
+        try {
+            String familyAccount = getFamilyAccount(email, token);
+            if (familyAccount == null || familyAccount.isBlank() || familyAccount.isEmpty()) return null;
+            devices = deviceDao.getDevicesWithId(getDeviceIdsForAccount(familyAccount));
+
+        } catch (IOException | NullPointerException e) {
+            e.printStackTrace();
+        }
+        return devices;
+    }
+
+    @Override
     public void familyAccountDeleted(String acc) {
         List<String> deviceIds = deviceDao.familyAccountDeleted(acc);
         try {
