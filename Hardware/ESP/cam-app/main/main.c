@@ -62,8 +62,6 @@ mcu_content_t _mcu_c = {
 };
 static mcu_content_t* mcu_c = &_mcu_c;
 
-static int sock;
-
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
 static void gpio_trig_action(void* arg);
@@ -104,8 +102,15 @@ static void gpio_trig_action(void* arg)
     }
 }
 
-static void tcp_client_task(void *pvParameters)
+static void udp_client_task(void *pvParameters)
 {
+    int sock;
+#if defined(CONFIG_IPV4)
+    struct sockaddr_in dest_addr;
+#elif defined(CONFIG_IPV6)
+    struct sockaddr_in6 dest_addr = { 0 };
+#endif
+
     uint8_t* jpg_buf = NULL;
     size_t   jpg_buf_len = 0;
 
@@ -113,8 +118,22 @@ static void tcp_client_task(void *pvParameters)
     int64_t  fr_end;
     int64_t  frame_time = 0;
 
+    if (!(mcu_c->cam_server_init)) {
+        if (init_camera(mcu_c, STREAM) != ESP_OK) {
+            ESP_LOGE(TAG, "Could not initialize during UPD initialization");
+            mcu_c->cam_initiated   = false;
+            mcu_c->cam_server_init = false;
+            return;
+        }
+        mcu_c->cam_initiated   = true;
+        mcu_c->cam_server_init = true;
+    }
+    else {
+        ESP_LOGI(TAG, "Cam already init");
+    }
+
     while (1) {
-        if (tcp_setup_sock(&sock, mcu_c->netif) != ESP_OK)
+        if (udp_setup_sock(&sock, &dest_addr, mcu_c->netif) != ESP_OK)
             break;
         while (1) {
             if(!last_frame) {
@@ -127,7 +146,7 @@ static void tcp_client_task(void *pvParameters)
             frame_time = fr_end - last_frame;
             last_frame = fr_end;
             frame_time /= 1000;
-            if (tcp_send_buf(&sock, jpg_buf, jpg_buf_len) != ESP_OK)
+            if (udp_send_buf(&sock, (struct sockaddr*) &dest_addr, jpg_buf, jpg_buf_len) != ESP_OK)
                 break;
         }
 
@@ -207,14 +226,15 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 void app_main(void) {
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    //start gpio task
-    xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
-    // xTaskCreate(&tcp_client_task, "tcp_client", 4096, NULL, 5, NULL);
 
     if (INIT_SDCARD)
         init_sdcard(mcu_c);
 
     gpio_init_setup(gpio_isr_handler);
-
+    init_camera(mcu_c, STREAM);
     wifi_scan(mcu_c);
+
+    //start gpio task
+    xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
+    xTaskCreate(&udp_client_task, "udp_client", 4096, NULL, 5, NULL);
 }

@@ -24,6 +24,7 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 
+#include "lwip/sockets.h"
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
 
@@ -219,13 +220,14 @@ httpd_handle_t startStreamServer(char* device_ip);
  */
 void stopStreamServer(httpd_handle_t* httpd_handle);
 
-//========== TCP Client ==========
+//========== UDP Client ==========
 /**
  * @brief Sets up the TCP client socket and connects it to the server port
  * 
  * @param sock  Pointer to socket to be initialized
  */
-esp_err_t tcp_setup_sock(int* sock, esp_netif_t* esp_netif);
+esp_err_t udp_setup_sock(int* sock, void* dest_addr, esp_netif_t* esp_netif);
+
 
 /**
  * @brief Send the jpeg format image buffer to the TCP server
@@ -234,7 +236,7 @@ esp_err_t tcp_setup_sock(int* sock, esp_netif_t* esp_netif);
  * @param jpg_buf       JPEG converted image buffer
  * @param jpg_buf_len   JPEG converted buffer length
  */
-esp_err_t tcp_send_buf (int* sock, uint8_t* jpg_buf, size_t jpg_buf_len);
+esp_err_t udp_send_buf (int* sock, struct sockaddr* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len);
 
 //========== WiFi Scan ==========
 
