@@ -1,5 +1,7 @@
 package com.theelite.notifications.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.theelite.notifications.communication.DeviceService;
 import com.theelite.notifications.communication.UserService;
 import com.theelite.notifications.configuration.NotificationConfigurations;
@@ -111,7 +113,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public void deleteTopics(List<String> accId) {
         DeleteTopicsResult result = kafkaAdmin.deleteTopics(accId);
-        while (!result.all().isDone());
+        while (!result.all().isDone()) ;
     }
 
 
@@ -161,8 +163,10 @@ public class NotificationServiceImpl implements NotificationService {
             System.out.println("The url for " + retrofitClass.getName() + " is null.");
             return null;
         }
-
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create()).build();
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
         return retrofit.create(retrofitClass);
     }
 
