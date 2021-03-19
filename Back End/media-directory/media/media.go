@@ -61,8 +61,7 @@ func DeleteMedias(f *fiber.Ctx)  {
 }
 
 func GetAppHealth(f *fiber.Ctx)  {
-	db := dao.Db
-	var err = db.Error
+	err := dao.Db.DB().Ping()
 	if err != nil {
 		 f.SendStatus(http.StatusInternalServerError)
 	}
@@ -70,7 +69,7 @@ func GetAppHealth(f *fiber.Ctx)  {
 }
 
 func NameExists(f *fiber.Ctx)  {
-	 f.JSON(ExistsWithName(f.Params("name")))
+	_ = f.JSON(ExistsWithName(f.Params("name")))
 }
 
 func ExistsWithName(name string) bool {
