@@ -233,3 +233,5 @@ Hardware/ESP/esp32-cam/.vscode/
 Back End/devices/target/
 
 Back End/file-storage-service/src/main/resources/META-INF/
+
+*.paw
