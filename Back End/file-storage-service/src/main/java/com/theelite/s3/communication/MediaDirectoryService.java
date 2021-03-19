@@ -21,7 +21,7 @@ public interface MediaDirectoryService {
     Call<Boolean> saveFilesnameForAccount(@Path("accountId") String accountId, @Path("file") String file);
 
     @GET("nameExists/{accountId}")
-    Call<Boolean> checkFileNameExists(@Path("accountId") String accountId);
+    Call<Boolean> checkFileNameExists(@Path("accountId") String fileName);
 
 
 }

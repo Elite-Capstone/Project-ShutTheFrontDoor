@@ -57,21 +57,26 @@ public class StorageService {
 
 
     public byte[] downloadFile(String fileName) {
-        S3Object s3Object = s3Client.getObject(bucketName, fileName);
-        S3ObjectInputStream inputStream = s3Object.getObjectContent();
-        try {
-            return IOUtils.toByteArray(inputStream);
-        } catch (IOException e) {
-            e.printStackTrace();
+        if (fileNameExists(fileName)) {
+            S3Object s3Object = s3Client.getObject(bucketName, fileName);
+            S3ObjectInputStream inputStream = s3Object.getObjectContent();
+            try {
+                return IOUtils.toByteArray(inputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
         return null;
     }
 
 
     public String deleteFile(String fileName) {
-        s3Client.deleteObject(bucketName, fileName);
-        mediaDirectoryService.deleteFilename(fileName);
-        return fileName + " removed ...";
+        if (fileNameExists(fileName)) {
+            s3Client.deleteObject(bucketName, fileName);
+            mediaDirectoryService.deleteFilename(fileName);
+            return fileName + " removed ...";
+        }
+        return "Did not remove";
     }
 
 
@@ -103,7 +108,7 @@ public class StorageService {
         try {
             List<String> fileNames = mediaDirectoryService.getFilesnamesForAccount(accountId).execute().body();
             mediaDirectoryService.deleteFilesnamesForAccount(accountId).execute();
-            if (fileNames == null && fileNames.size() == 0) return;
+            if (fileNames == null || fileNames.size() == 0) return;
             if (fileNames.size() > 10)
                 fileNames.parallelStream().forEach(fileName -> s3Client.deleteObject(bucketName, fileName));
             else fileNames.forEach(fileName -> s3Client.deleteObject(bucketName, fileName));
@@ -164,4 +169,17 @@ public class StorageService {
         }
         return new ResponseEntity<>("Everything seems to be fine", HttpStatus.OK);
     }
+
+    private boolean fileNameExists(String fileName) {
+        Boolean exists;
+        try {
+            exists = mediaDirectoryService.checkFileNameExists(fileName).execute().body();
+            if (exists == null) return false;
+        } catch (IOException | NullPointerException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
+        return exists;
+    }
+
 }
