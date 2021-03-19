@@ -8,10 +8,10 @@ import java.util.List;
 
 public interface DeviceService {
 
-    @GET("device/getDeviceIdsForUser/{email}/{token}")
+    @GET("getDeviceIdsForUser/{email}/{token}")
     Call<List<String>> getDeviceIdsForUser(@Path("email") String email, @Path("token") String token);
 
-    @GET("device/getDeviceIdsForAccount/{acc}")
+    @GET("getDeviceIdsForAccount/{acc}")
     Call<List<String>> getDeviceIdsForAccount(@Path("acc") String acc);
 
 }

@@ -88,11 +88,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     public boolean publishNotification(Notification notification) {
-        KafkaProducer<String, Notification> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
-        notification.setDate(new Date());
-        producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification));
-        producer.close();
-        return true;
+        if (kafkaTopicExist(notification.getDoorId().toString())) {
+            KafkaProducer<String, Notification> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
+            notification.setDate(new Date());
+            producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification));
+            producer.close();
+            return true;
+        } else return false;
     }
 
     @Override
