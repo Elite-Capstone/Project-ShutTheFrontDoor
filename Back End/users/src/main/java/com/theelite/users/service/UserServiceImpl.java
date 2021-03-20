@@ -1,16 +1,19 @@
 package com.theelite.users.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.theelite.users.communication.DeviceService;
 import com.theelite.users.communication.MediaService;
 import com.theelite.users.communication.NotifService;
 import com.theelite.users.dao.UserDao;
 import com.theelite.users.model.*;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import java.io.IOException;
 import java.security.SecureRandom;
@@ -23,24 +26,18 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final UserDao userDao;
 
-    @Value("${device.url}")
-    private String deviceUrl;
-    @Value("${notif.url}")
-    private String notifUrl;
-    @Value("${media.url}")
-    private String mediaUrl;
     private DeviceService deviceService;
     private NotifService notifService;
     private MediaService mediaService;
 
-    public UserServiceImpl(SecureRandom secureRandom, Base64.Encoder base64Encoder, PasswordEncoder passwordEncoder, UserDao userDao) {
+    public UserServiceImpl(SecureRandom secureRandom, Base64.Encoder base64Encoder, PasswordEncoder passwordEncoder, UserDao userDao, Environment environment) {
         this.secureRandom = secureRandom;
         this.base64Encoder = base64Encoder;
         this.passwordEncoder = passwordEncoder;
         this.userDao = userDao;
-        this.deviceService = this.buildRetrofitObject(deviceUrl, DeviceService.class);
-        this.notifService = this.buildRetrofitObject(notifUrl, NotifService.class);
-        this.mediaService = this.buildRetrofitObject(mediaUrl, MediaService.class);
+        this.deviceService = this.buildRetrofitObject(environment.getProperty("device.url"), DeviceService.class);
+        this.notifService = this.buildRetrofitObject(environment.getProperty("notif.url"), NotifService.class);
+        this.mediaService = this.buildRetrofitObject(environment.getProperty("media.url"), MediaService.class);
     }
 
     private void userCreatedNewFamilyAccount(String accountId) {
@@ -48,6 +45,8 @@ public class UserServiceImpl implements UserService {
             notifService.createNewConsumerGroup(accountId).execute();
         } catch (IOException e) {
             System.out.println(e.getMessage());
+        } catch (NullPointerException e) {
+            System.out.println("notifService is null; " + e.getMessage());
         }
     }
 
@@ -66,8 +65,11 @@ public class UserServiceImpl implements UserService {
             user.setRole(UserRole.Regular);
         } else {
             // Only user in his family account
-            user.setAccountId(UUID.randomUUID());
             user.setRole(UserRole.Admin);
+            Account newFamAcc = new Account();
+            //Saves the new Family Account
+            userDao.saveNewFamilyAccount(newFamAcc);
+            user.setAccountId(newFamAcc.getAccountId());
             // to kafka to create new consumer group
             userCreatedNewFamilyAccount(user.getAccountId().toString());
         }
@@ -95,12 +97,18 @@ public class UserServiceImpl implements UserService {
     public boolean deleteUser(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
         User userInfo = userDao.findById(user.getEmail()).get();
+        if (!passwordEncoder.matches(user.getPassword(), userInfo.getPassword())) return false;
         String famAcc = userInfo.getAccountId().toString();
 
         if (userInfo.getRole().equals(UserRole.Admin) && userDao.numberOfAdminsInFamilyAccount(UUID.fromString(famAcc)) == 1) {
-            deviceService.familyAccountDeleted(famAcc);
-            notifService.deleteConsumerGroup(famAcc);
-            mediaService.deleteAllForFamilyAccount(famAcc);
+            try {
+                deviceService.familyAccountDeleted(famAcc).execute();
+                notifService.deleteConsumerGroup(famAcc).execute();
+                mediaService.deleteAllForFamilyAccount(famAcc).execute();
+                userDao.deleteFamilyAccount(userInfo.getAccountId());
+            } catch (IOException | NullPointerException e) {
+                System.out.println(e.getMessage());
+            }
         }
         userDao.deleteById(user.getEmail());
         return true;
@@ -170,6 +178,12 @@ public class UserServiceImpl implements UserService {
     public ResponseEntity<String> getHealth() {
         try {
             userDao.testDatabaseConnection();
+            if (notifService == null)
+                return new ResponseEntity<>("notifService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (deviceService == null)
+                return new ResponseEntity<>("deviceService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (mediaService == null)
+                return new ResponseEntity<>("mediaService is null", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
             return new ResponseEntity<>("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
@@ -193,8 +207,14 @@ public class UserServiceImpl implements UserService {
     }
 
     private <T> T buildRetrofitObject(String url, Class<T> retroClass) {
-        if (url == null || url.isBlank() || url.isEmpty()) return null;
-        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).build();
+        if (url == null || url.isBlank() || url.isEmpty()) {
+            System.out.println("Could not create Retrofit object as url for " + retroClass.getName() + " is null.");
+            return null;
+        }
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
         return retrofit.create(retroClass);
     }
 }

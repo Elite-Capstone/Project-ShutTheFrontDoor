@@ -8,20 +8,20 @@ import java.util.List;
 
 public interface MediaDirectoryService {
 
-    @GET("/getMedias/{accountId}")
+    @GET("getMedias/{accountId}")
     Call<List<String>> getFilesnamesForAccount(@Path("accountId") String accountId);
 
-    @GET("/deleteMedia/{accountId}")
+    @GET("deleteMedia/{accountId}")
     Call<Boolean> deleteFilename(@Path("accountId") String accountId);
 
-    @GET("/deleteMedias/{accountId}")
+    @GET("deleteMedias/{accountId}")
     Call<Boolean> deleteFilesnamesForAccount(@Path("accountId") String accountId);
 
-    @GET("/insertMedia/{accountId}/{file}")
+    @GET("insertMedia/{accountId}/{file}")
     Call<Boolean> saveFilesnameForAccount(@Path("accountId") String accountId, @Path("file") String file);
 
-    @GET("/nameExists/{accountId}")
-    Call<Boolean> checkFileNameExists(@Path("accountId") String accountId);
+    @GET("nameExists/{accountId}")
+    Call<Boolean> checkFileNameExists(@Path("accountId") String fileName);
 
 
 }

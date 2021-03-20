@@ -1,9 +1,6 @@
 package com.theelite.users.dao;
 
-import com.theelite.users.model.Invitation;
-import com.theelite.users.model.User;
-import com.theelite.users.model.UserRole;
-import com.theelite.users.model.UserToken;
+import com.theelite.users.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -121,9 +118,20 @@ public class CustomDaoImpl implements CustomDao {
     }
 
     @Override
+    public void saveNewFamilyAccount(Account account) {
+        mongoOperations.save(account);
+    }
+
+    @Override
     public void deleteUserAccount(String email) {
         Query query = new Query();
         query.addCriteria(Criteria.where("email").is(email));
         mongoOperations.findAndRemove(query, User.class);
+    }
+
+    @Override
+    public void deleteFamilyAccount(UUID account) {
+        Query query = new Query().addCriteria(Criteria.where("accountId").is(account));
+        mongoOperations.findAndRemove(query, Account.class);
     }
 }

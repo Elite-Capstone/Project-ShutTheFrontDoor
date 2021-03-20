@@ -34,7 +34,7 @@ public class NotificationController {
         return service.deleteDoorIdAsTopic(doorId);
     }
 
-    @GetMapping("deleteTopics")
+    @DeleteMapping("deleteTopics")
     public void deleteTopics(@RequestBody List<String> topics){
         service.deleteTopics(topics);
     }

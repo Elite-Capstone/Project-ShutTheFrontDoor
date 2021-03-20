@@ -9,12 +9,12 @@ import java.util.List;
 
 public interface NotifService {
 
-    @GET("/newTopic/{doorId}")
+    @GET("newTopic/{doorId}")
     Call<Boolean> newDeviceAdded(@Path("doorId") String doorId);
 
-    @GET("/deleteTopic/{doorId}")
+    @GET("deleteTopic/{doorId}")
     Call<Boolean> deviceDeleted(@Path("doorId") String doorId);
 
-    @GET("/deleteTopics/")
+    @GET("deleteTopics/")
     Call<Boolean> deviceDeleted(@Body List<String> doorIds);
 }
