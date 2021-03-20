@@ -41,7 +41,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-
+        loadState()
         root = inflater.inflate(R.layout.fragment_notifications, container, false)
         setUpRecyclerView()
         setUpRefreshLayout()
@@ -73,6 +73,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         val retrofit = RetroFit.get(getString(R.string.url))
         val notifService: NotificationService = retrofit.create(NotificationService::class.java)
 
+        println("$email and $token")
         val call = notifService.getRecentNotifications(
             "$email",
                 "$token"
