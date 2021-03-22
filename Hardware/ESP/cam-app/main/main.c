@@ -19,6 +19,7 @@
 #include "lwip/sockets.h"
 
 #include "stfd_peripherals.h"
+#include "stfd_comms.h"
 
 #if (CONFIG_IMAGE_TO_SDCARD || CONFIG_IMAGE_TO_BOTH_PROT)
 #define IMAGE_TO_SDCARD 1
@@ -48,9 +49,6 @@ static httpd_handle_t stream_httpd = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
-.cam_initiated      = false,
-.sdcard_initiated   = false,
-.cam_server_init    = false,
 .save_to_sdcard     = false,
 .upload_content     = false,
 .trig_signal        = SIGNAL_IGNORED,
@@ -58,9 +56,17 @@ mcu_content_t _mcu_c = {
 .netif              = NULL,
 .ap_info            = NULL,
 .device_ip          = "",
+.pub_device_ip      = "",
 .pic_counter        = 0
 };
 static mcu_content_t* mcu_c = &_mcu_c;
+
+mcu_status_t _mcu_s = {
+.cam_initiated      = false,
+.sdcard_initiated   = false,
+.cam_server_init    = false
+};
+static mcu_status_t* mcu_s = &_mcu_s;
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
@@ -118,15 +124,15 @@ static void udp_client_task(void *pvParameters)
     int64_t  fr_end;
     int64_t  frame_time = 0;
 
-    if (!(mcu_c->cam_server_init)) {
-        if (init_camera(mcu_c, STREAM) != ESP_OK) {
+    if (!(mcu_s->cam_server_init)) {
+        if (init_camera(mcu_c, mcu_s, STREAM) != ESP_OK) {
             ESP_LOGE(TAG, "Could not initialize during UPD initialization");
-            mcu_c->cam_initiated   = false;
-            mcu_c->cam_server_init = false;
+            mcu_s->cam_initiated   = false;
+            mcu_s->cam_server_init = false;
             return;
         }
-        mcu_c->cam_initiated   = true;
-        mcu_c->cam_server_init = true;
+        mcu_s->cam_initiated   = true;
+        mcu_s->cam_server_init = true;
     }
     else {
         ESP_LOGI(TAG, "Cam already init");
@@ -172,12 +178,12 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 
     switch (mcu_c->content_type) {
         case (mcu_content_type_t) PICTURE:
-            init_camera(mcu_c, PICTURE);
+            init_camera(mcu_c, mcu_s, PICTURE);
 
             camera_pic = camera_take_picture(mcu_c);
             convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
 
-            if (mcu_c->save_to_sdcard && mcu_c->sdcard_initiated)
+            if (mcu_c->save_to_sdcard && mcu_s->sdcard_initiated)
                 save_image_to_sdcard(jpeg_buf, jpeg_buf_len, mcu_c->pic_counter);
 
             if (mcu_c->upload_content) {   
@@ -190,10 +196,10 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 
         case (mcu_content_type_t) STREAM:
 
-            if (!(mcu_c->cam_server_init)) {
-                init_camera(mcu_c, STREAM);
+            if (!(mcu_s->cam_server_init)) {
+                init_camera(mcu_c, mcu_s, STREAM);
                 stream_httpd = startStreamServer(mcu_c->device_ip);
-                mcu_c->cam_server_init = true;
+                mcu_s->cam_server_init = true;
             }
 
             // else {
@@ -228,13 +234,15 @@ void app_main(void) {
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
     if (INIT_SDCARD)
-        init_sdcard(mcu_c);
+        init_sdcard(mcu_s);
 
     gpio_init_setup(gpio_isr_handler);
-    init_camera(mcu_c, STREAM);
+    init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c);
 
     //start gpio task
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
-    xTaskCreate(&udp_client_task, "udp_client", 4096, NULL, 5, NULL);
+    
+    // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
+    // xTaskCreate(&udp_client_task, "udp_client", 4096, NULL, 5, NULL);
 }

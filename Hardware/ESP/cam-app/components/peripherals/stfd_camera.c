@@ -105,10 +105,10 @@ static camera_config_t camera_config = {
     .fb_count     = 2   //if more than one, i2s runs in continuous mode. Use only with JPEG
 };
 
-esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
+esp_err_t init_camera(mcu_content_t* mcu_c, mcu_status_t* mcu_s, mcu_content_type_t type) {
     esp_err_t err = ESP_OK;
 
-    if (!(mcu_c->cam_initiated)) {
+    if (!(mcu_s->cam_initiated)) {
         if (type == PICTURE) {
             camera_config.jpeg_quality = DEFAULT_PIC_JPEG_QUALITY;
             camera_config.fb_count = 1;
@@ -128,7 +128,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
             ESP_LOGE(TAG, "Camera Init Failed");
             return err;
         }
-        mcu_c->cam_initiated = true;
+        mcu_s->cam_initiated = true;
         mcu_c->content_type = type;
     }
 
@@ -149,7 +149,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
                 ESP_LOGE(TAG, "Camera Init Failed");
                 return err;
             }
-            mcu_c->cam_initiated = true;
+            mcu_s->cam_initiated = true;
             mcu_c->content_type = PICTURE;
         }
         else
@@ -175,7 +175,7 @@ esp_err_t init_camera(mcu_content_t* mcu_c, mcu_content_type_t type) {
                 ESP_LOGE(TAG, "Camera Init Failed");
                 return err;
             }
-            mcu_c->cam_initiated = true;
+            mcu_s->cam_initiated = true;
             mcu_c->content_type = STREAM;
         }
         else

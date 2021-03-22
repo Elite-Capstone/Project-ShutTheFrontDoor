@@ -64,7 +64,8 @@
     "xlocmon": "c",
     "xlocnum": "c",
     "xloctime": "c",
-    "sdmmc_cmd.h": "c"
+    "sdmmc_cmd.h": "c",
+    "jsmn.h": "c"
   },
   "idf.portWin": "COM3",
   "git.ignoreLimitWarning": true

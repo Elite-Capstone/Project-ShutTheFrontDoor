@@ -14,9 +14,6 @@
 #include <esp_system.h>
 #include <esp_event.h>
 #include <esp_wifi.h>
-#include <esp_http_server.h>
-#include "http_server.h"
-#include <esp_http_client.h>
 #include "esp_camera.h"
 
 #include "freertos/FreeRTOS.h"
@@ -24,9 +21,9 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 
-#include "lwip/sockets.h"
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
+
 
 typedef enum {
     SIGNAL_IGNORED = -1,
@@ -46,9 +43,6 @@ typedef enum {
 } mcu_content_type_t;
 
 typedef struct {
-    bool cam_initiated;
-    bool sdcard_initiated;
-    bool cam_server_init;
     bool save_to_sdcard;
     bool upload_content;
     bool trig_signal;
@@ -56,8 +50,15 @@ typedef struct {
     esp_netif_t *netif;
     wifi_ap_record_t* ap_info;
     char* device_ip;
+    char* pub_device_ip;
     uint64_t pic_counter;
 } mcu_content_t;
+
+typedef struct {
+    bool cam_initiated;
+    bool sdcard_initiated;
+    bool cam_server_init;
+} mcu_status_t;
 
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
@@ -66,12 +67,12 @@ wifi_scan_method_t getDefaultScanMethod(void);
 /**
  * @brief Initilize the camera
  */
-esp_err_t init_camera(mcu_content_t* cam_c, mcu_content_type_t type);
+esp_err_t init_camera(mcu_content_t* mcu_c, mcu_status_t* mcu_s, mcu_content_type_t type);
 
 /**
  * @brief Initilize the SD card
  */
-esp_err_t init_sdcard(mcu_content_t* cam_c);
+esp_err_t init_sdcard(mcu_status_t* mcu_s);
 
 /**
  * @brief Saves the image to the SD card locally is the SD card has been initialized
@@ -174,69 +175,6 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
 void gpio_init_setup(gpio_isr_t isr_handler);
 void gpio_setup_input(gpio_isr_t isr_handler);
 void gpio_setup_output(void);
-
-//========== HTTP client ==========
-
-/**
- * @brief Interrupt handler for an HTTP event
- * 
- * @param evt   ...
- * @return      Returns an error code. The desired output is ESP_OK to indicate normal operations
- */
-esp_err_t _http_event_handler(esp_http_client_event_t *evt);
-
-/**
- * @brief Begins the HTTP transaction to the set URL
- * 
- * @param buf Transfer file content buffer
- * @param len Transfer file content length
- */
-void http_rest_with_url_upload_picture(uint8_t* buf, size_t len);
-
-/**
- * @brief Uploads the attached message as a notification to the backend
- * 
- * @param message The message to attach to the notification
- */
-void http_rest_with_url_notification(const char* _message);
-
-/**
- * @brief HTTP event handler for streaming
- * 
- * @param req HTTP request
- * @return    Returns an error code. The desired output is ESP_OK to indicate normal operations
- */
-esp_err_t stream_handler(httpd_req_t *req);
-
-/**
- * @brief Function begins camera server for streaming
- * 
- * @param device_ip ESP camera's IP address on which it is streaming on
- */
-httpd_handle_t startStreamServer(char* device_ip);
-
-/**
- * @brief Function stop camera server from streaming and deallocates the memory
- */
-void stopStreamServer(httpd_handle_t* httpd_handle);
-
-//========== UDP Client ==========
-/**
- * @brief Sets up the TCP client socket and connects it to the server port
- * 
- * @param sock  Pointer to socket to be initialized
- */
-esp_err_t udp_setup_sock(int* sock, void* dest_addr, esp_netif_t* esp_netif);
-
-
-/**
- * @brief Send the jpeg format image buffer to the TCP server
- * 
- * @param sock          Socket used to send the image
- * @param jpg_buf       JPEG converted image buffer
- * @param jpg_buf_len   JPEG converted buffer length
- */
-esp_err_t udp_send_buf (int* sock, struct sockaddr* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len);
 
 //========== WiFi Scan ==========
 

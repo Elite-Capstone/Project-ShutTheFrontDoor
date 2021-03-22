@@ -16,13 +16,10 @@
 #include "esp_tls.h"
 
 #include "stfd_peripherals.h"
+#include "stfd_comms.h"
 
 #define MAX_HTTP_RECV_BUFFER   512
 #define MAX_HTTP_OUTPUT_BUFFER 2048
-
-#define DEFAULT_HTTP_URL   "http://34.117.160.50/"
-#define DEFAULT_DOOR_UUID  "00b288a8-3db1-40b5-b30f-532af4e12f4b"
-#define DEFAULT_STREAM_URI "/stream"
 #define DEFAULT_STREAM_PORT CONFIG_LOCAL_STREAM_PORT
 
 #define PART_BOUNDARY "123456789000000000000987654321"
@@ -71,6 +68,8 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
                     memcpy(output_buffer + output_len, evt->data, evt->data_len);
                 }
                 output_len += evt->data_len;
+
+                
             }
 
             break;
@@ -100,6 +99,39 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
             break;
     }
     return ESP_OK;
+}
+
+//Get Public IP Address
+void http_rest_with_url_get_device_ip(char* addr) {
+    char local_response_buffer[MAX_HTTP_OUTPUT_BUFFER] = {0};
+    uint32_t local_buf_len = 0;
+    esp_err_t err = ESP_OK;
+    
+    esp_http_client_config_t config = {
+        .url = DEFAULT_HTTP_URL,
+        .path = "/device",
+        .query = "esp",
+        .event_handler = _http_event_handler,
+        .user_data = local_response_buffer,    // Pass address of local buffer to get response
+    };
+    esp_http_client_handle_t client = esp_http_client_init(&config);
+
+    //GET
+    esp_http_client_set_url(client, DEFAULT_HTTP_URL "device/" DEFAULT_DOOR_UUID);
+    err = esp_http_client_perform(client);
+    if (err == ESP_OK) {
+        local_buf_len = esp_http_client_get_content_length(client);
+        ESP_LOGI(TAG, "HTTP GET Status = %d, content_length = %d",
+                 esp_http_client_get_status_code(client),
+                 local_buf_len);
+    } else {
+        ESP_LOGE(TAG, "HTTP GET request failed: %s", esp_err_to_name(err));
+    }
+    //esp_http_client_read(client, buf, len);
+    //esp_http_client_read_response(client,buf,len);
+    ESP_LOGW(TAG, "Device IP address: %s", local_response_buffer);
+    memcpy(addr, local_response_buffer, local_buf_len*sizeof(char));
+    esp_http_client_cleanup(client);
 }
 
 //Change file calling method to add 

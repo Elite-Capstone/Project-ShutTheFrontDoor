@@ -19,6 +19,7 @@
 #include "freertos/event_groups.h"
 
 #include "stfd_peripherals.h"
+#include "stfd_comms.h"
 
 /* Set the SSID and Password via project configuration, or can set directly here */
 #define DEFAULT_SCAN_LIST_SIZE CONFIG_SCAN_LIST_SIZE
@@ -68,8 +69,9 @@
 #define WIFI_RETRY_LIMIT CONFIG_WIFI_RETRY_LIMIT
 
 static const char *TAG = "stfd_wifi_scan";
-#define IP_ADDR_BUF_LEN 12
+#define IP_ADDR_BUF_LEN 15
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
+static char esp_public_ip_addr[IP_ADDR_BUF_LEN];
 
                 
 uint32_t getDefaultScanListSize(void) {
@@ -112,8 +114,12 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
+        // Get Local IP
         esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
-        ESP_LOGI(TAG, "got ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        // Get Public IP
+        http_rest_with_url_get_device_ip(esp_public_ip_addr);
+        ESP_LOGI(TAG, "got local ip:" IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(TAG, "got public ip: %s", esp_public_ip_addr);
     }
 }
 
@@ -304,5 +310,6 @@ void wifi_scan(mcu_content_t* mcu_c) {
         // Set the default wifi to the returned selection from the user
     }
     // Pass device IP
-    mcu_c->device_ip = esp_ip_addr;
+    memcpy(mcu_c->device_ip, esp_ip_addr, IP_ADDR_BUF_LEN);
+    memcpy(mcu_c->pub_device_ip, esp_public_ip_addr, IP_ADDR_BUF_LEN);
 }

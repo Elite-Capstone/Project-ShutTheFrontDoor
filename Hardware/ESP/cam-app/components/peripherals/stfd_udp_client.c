@@ -33,14 +33,15 @@
 // #elif defined(CONFIG_IPV6)
 // #define HOST_IP_ADDR CONFIG_IPV6_ADDR
 // #else
-#define HOST_IP_ADDR "192.168.0.165"
+#define HOST_IP_ADDR "255.255.255.255"
 // #endif
 
-#define PORT CONFIG_TCP_HOST_PORT
+#define PORT 80//CONFIG_TCP_HOST_PORT
 
 static const char* TAG = "stfd_udp_client";
 
-esp_err_t udp_setup_sock(int* sock, void* addr, esp_netif_t* esp_netif) {
+//esp_err_t udp_setup_sock(int* sock, void* addr, esp_netif_t* esp_netif) {
+esp_err_t udp_setup_sock(int* sock, struct sockaddr_in* addr, esp_netif_t* esp_netif) {
     //char rx_buffer[128];
     char host_ip[] = HOST_IP_ADDR;
     int addr_family = 0;
@@ -53,6 +54,10 @@ esp_err_t udp_setup_sock(int* sock, void* addr, esp_netif_t* esp_netif) {
     dest_addr->sin_port = htons(PORT);
     addr_family = AF_INET;
     ip_protocol = IPPROTO_IP;
+    char* esp_ip_addr;
+    esp_ip_addr = inet_ntoa(dest_addr->sin_addr.s_addr);
+    ESP_LOGW(TAG, "Host IP: %s", esp_ip_addr);
+    ESP_LOGW(TAG, "Host Port: %i", dest_addr->sin_port);
 
 #elif defined(CONFIG_IPV6)
     struct sockaddr_in6* dest_addr = addr;

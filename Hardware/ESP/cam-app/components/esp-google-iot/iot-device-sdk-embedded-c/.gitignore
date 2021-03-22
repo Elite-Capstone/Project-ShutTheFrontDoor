@@ -1,0 +1,5 @@
+bin/
+obj/
+test_coverage/
+.vscode/
+.DS_Store

@@ -63,7 +63,7 @@ static sdmmc_card_t* card;
 #define PIN_NUM_CS   13
 #endif //USE_SPI_MODE
 
-esp_err_t init_sdcard(mcu_content_t* mcu_c) {
+esp_err_t init_sdcard(mcu_status_t* mcu_s) {
     // esp_err_t ret = ESP_FAIL;
 
     // if (!(mcu_c->sdcard_initiated)) {
