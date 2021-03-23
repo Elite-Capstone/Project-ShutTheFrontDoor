@@ -18,7 +18,7 @@ public class NotificationController {
     private NotificationServiceImpl service;
 
     @GetMapping("/")
-    public ResponseEntity getMicroServiceHealth() {
+    public ResponseEntity<String> getMicroServiceHealth() {
         return service.getHealth();
     }
 
@@ -32,6 +32,11 @@ public class NotificationController {
     public boolean deleteDoorIdAsTopic(@PathVariable String doorId) {
         System.out.println("Received Request to delete topic " + doorId);
         return service.deleteDoorIdAsTopic(doorId);
+    }
+
+    @DeleteMapping("deleteTopics")
+    public void deleteTopics(@RequestBody List<String> topics){
+        service.deleteTopics(topics);
     }
 
     @GetMapping("newConsumerGroup/{consuGroup}")
@@ -51,14 +56,14 @@ public class NotificationController {
         return service.getKafkaTopics();
     }
 
-    @GetMapping("/getRecent/{accId}/{userId}")
-    public List<Notification> getRecentNotifications(@PathVariable String accId, @PathVariable String userId) {
-        return service.getRecentNotifications(accId, userId);
+    @GetMapping("/getRecent/{email}/{token}")
+    public List<Notification> getRecentNotifications(@PathVariable String email, @PathVariable String token) {
+        return service.getRecentNotifications(email, token);
     }
 
     @PutMapping("/newNotif")
-    public void publishNotification(@RequestBody Notification notification) {
-        service.publishNotification(notification);
+    public boolean publishNotification(@RequestBody Notification notification) {
+       return service.publishNotification(notification);
     }
 
     @PutMapping("/newNotif/{doorId}/{event}")

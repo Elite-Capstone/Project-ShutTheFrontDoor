@@ -42,5 +42,6 @@
     <string name="notifications_title">Notifications</string>
     <string name="firstname_hint">First Name</string>
     <string name="lastname_hint">Last Name</string>
+    <string name="remember_me">Remember Me</string>
 
 </resources>

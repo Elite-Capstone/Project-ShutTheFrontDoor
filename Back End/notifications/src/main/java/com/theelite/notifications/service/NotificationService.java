@@ -7,7 +7,7 @@ import java.util.List;
 
 //@Service
 public interface NotificationService {
-    ResponseEntity getHealth();
+    ResponseEntity<String> getHealth();
     List<Notification> getRecentNotifications(String accountId, String userId);
     boolean publishNotification(Notification notification);
     boolean addNewDoorIdAsTopic(String doorId);
@@ -15,4 +15,6 @@ public interface NotificationService {
     boolean createConsumerGroup(String accId);
     boolean deleteConsumerGroup(String accId);
     List<String> getKafkaTopics();
+
+    void deleteTopics(List<String> topics);
 }

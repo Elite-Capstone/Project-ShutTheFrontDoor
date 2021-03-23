@@ -9,10 +9,10 @@ import retrofit2.http.PUT
 interface UserService {
 
     @POST("user/auth")
-    fun authenthicateUser(@Body user: User): Call<Boolean>
+    fun authenthicateUser(@Body user: User): Call<String>
 
     @PUT("user/new")
-    fun newUser(@Body user: User): Call<Boolean>
+    fun newUser(@Body user: User): Call<String>
 
     @POST("user/get")
     fun getUserInfo(@Body user: User): Call<User>

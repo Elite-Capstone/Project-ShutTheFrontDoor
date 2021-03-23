@@ -6,11 +6,13 @@ import org.springframework.http.ResponseEntity;
 
 public interface UserService {
 
-    boolean addUser(User user);
+    String addUser(User user);
 
-    boolean authenticateUser(User user);
+    String authenticateUser(User user);
 
     boolean updateUserInfo(User user);
+
+    boolean validateUser(String email, String token);
 
     boolean deleteUser(User user);
 
@@ -24,6 +26,8 @@ public interface UserService {
 
     boolean removeUserFromAccount(String user);
 
-    ResponseEntity getHealth();
+    String getFamilyAccountForUser(String email);
+
+    ResponseEntity<String> getHealth();
 
 }

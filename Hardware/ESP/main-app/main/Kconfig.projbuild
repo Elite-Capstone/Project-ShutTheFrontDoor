@@ -1,0 +1,344 @@
+menu "Project ShutTheFrontDoor Configuration"
+
+    menu "GPIO Configuration"
+
+        choice GPIO_INPUT_TAKE_PIC
+            prompt "Take Picture GPIO"
+            default GPIO_INPUT_16_PIC
+            help 
+                The selected GPIO will be pulled high and must be pulled down to take a picture
+
+            config GPIO_INPUT_0_PIC
+                bool "GPIO 0"
+            config GPIO_INPUT_2_PIC
+                bool "GPIO 2"
+            config GPIO_INPUT_4_PIC
+                bool "GPIO 4"
+            config GPIO_INPUT_12_PIC
+                bool "GPIO 12"
+            config GPIO_INPUT_13_PIC
+                bool "GPIO 13"
+            config GPIO_INPUT_14_PIC
+                bool "GPIO 14"
+            config GPIO_INPUT_15_PIC
+                bool "GPIO 15"
+            config GPIO_INPUT_16_PIC
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_TOGGLE_STREAM
+            prompt "GPIO to toggle start/end stream"
+            default GPIO_INPUT_12_STREAM
+            help 
+                The selected GPIO will be pulled high and must be pulled down to toggle the video stream
+
+            config GPIO_INPUT_0_STREAM
+                bool "GPIO 0"
+            config GPIO_INPUT_2_STREAM
+                bool "GPIO 2"
+            config GPIO_INPUT_4_STREAM
+                bool "GPIO 4"
+            config GPIO_INPUT_12_STREAM
+                bool "GPIO 12"
+            config GPIO_INPUT_13_STREAM
+                bool "GPIO 13"
+            config GPIO_INPUT_14_STREAM
+                bool "GPIO 14"
+            config GPIO_INPUT_15_STREAM
+                bool "GPIO 15"
+            config GPIO_INPUT_16_STREAM
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_DOORBELL_NOTIF
+            prompt "GPIO to send notification on doorbell push"
+            default GPIO_INPUT_13_DRBELL_NOTIF
+            help 
+                The selected GPIO will be pulled high and must be pulled down to signal the doorbell has been pressed
+
+            config GPIO_INPUT_0_DRBELL_NOTIF
+                bool "GPIO 0"
+            config GPIO_INPUT_2_DRBELL_NOTIF
+                bool "GPIO 2"
+            config GPIO_INPUT_4_DRBELL_NOTIF
+                bool "GPIO 4"
+            config GPIO_INPUT_12_DRBELL_NOTIF
+                bool "GPIO 12"
+            config GPIO_INPUT_13_DRBELL_NOTIF
+                bool "GPIO 13"
+            config GPIO_INPUT_14_DRBELL_NOTIF
+                bool "GPIO 14"
+            config GPIO_INPUT_15_DRBELL_NOTIF
+                bool "GPIO 15"
+            config GPIO_INPUT_16_DRBELL_NOTIF
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_INPUT_DOOR_REEDSW_STATUS
+            prompt "GPIO to signal when door has been open/closed"
+            default GPIO_INPUT_15_REEDSW_STATUS
+            help 
+                The selected GPIO will be pulled high and must be pulled down to toggle the door open/close status
+
+            config GPIO_INPUT_0_REEDSW_STATUS
+                bool "GPIO 0"
+            config GPIO_INPUT_2_REEDSW_STATUS
+                bool "GPIO 2"
+            config GPIO_INPUT_4_REEDSW_STATUS
+                bool "GPIO 4"
+            config GPIO_INPUT_12_REEDSW_STATUS
+                bool "GPIO 12"
+            config GPIO_INPUT_13_REEDSW_STATUS
+                bool "GPIO 13"
+            config GPIO_INPUT_14_REEDSW_STATUS
+                bool "GPIO 14"
+            config GPIO_INPUT_15_REEDSW_STATUS
+                bool "GPIO 15"
+            config GPIO_INPUT_16_REEDSW_STATUS
+                bool "GPIO 16"
+        endchoice
+
+        choice GPIO_OUTPUT_CONFIRM
+            prompt "Output confirm GPIO"
+            default GPIO_OUTPUT_4_CONFIRM
+            help 
+                The selected GPIO will pulse when the picture is uploaded or stream has toggled
+
+            config GPIO_OUTPUT_0_CONFIRM
+                bool "GPIO 0"
+            config GPIO_OUTPUT_2_CONFIRM
+                bool "GPIO 2"
+            config GPIO_OUTPUT_4_CONFIRM
+                bool "GPIO 4"
+            config GPIO_OUTPUT_12_CONFIRM
+                bool "GPIO 12"
+            config GPIO_OUTPUT_13_CONFIRM
+                bool "GPIO 13"
+            config GPIO_OUTPUT_14_CONFIRM
+                bool "GPIO 14"
+            config GPIO_OUTPUT_15_CONFIRM
+                bool "GPIO 15"
+            config GPIO_OUTPUT_16_CONFIRM
+                bool "GPIO 16"
+        endchoice
+    
+    endmenu
+
+    menu "Camera configuration"
+
+        config OV7670_SUPPORT
+            bool "Support OV7670 VGA"
+            default y
+            help
+                Enable this option if you want to use the OV7670.
+                Disable this option to safe memory.
+    
+        config OV7725_SUPPORT
+            bool "Support OV7725 SVGA"
+            default n
+            help
+                Enable this option if you want to use the OV7725.
+                Disable this option to save memory.
+    
+        config NT99141_SUPPORT
+            bool "Support NT99141 HD"
+            default y
+            help
+                Enable this option if you want to use the NT99141.
+                Disable this option to save memory.
+    
+        config OV2640_SUPPORT
+            bool "Support OV2640 2MP"
+            default y
+            help
+                Enable this option if you want to use the OV2640.
+                Disable this option to save memory.
+    
+        config OV3660_SUPPORT
+            bool "Support OV3660 3MP"
+            default y
+            help
+                Enable this option if you want to use the OV3360.
+                Disable this option to save memory.
+    
+        config OV5640_SUPPORT
+            bool "Support OV5640 5MP"
+            default y
+            help
+                Enable this option if you want to use the OV5640.
+                Disable this option to save memory.
+    
+        choice SCCB_HARDWARE_I2C_PORT
+            bool "I2C peripheral to use for SCCB"
+            default SCCB_HARDWARE_I2C_PORT1
+    
+            config SCCB_HARDWARE_I2C_PORT0
+                bool "I2C0"
+            config SCCB_HARDWARE_I2C_PORT1
+                bool "I2C1"
+    
+        endchoice
+    
+        choice CAMERA_TASK_PINNED_TO_CORE
+            bool "Camera task pinned to core"
+            default CAMERA_CORE0
+            help
+                Pin the camera handle task to a certain core(0/1). It can also be done automatically choosing NO_AFFINITY.
+    
+            config CAMERA_CORE0
+                bool "CORE0"
+            config CAMERA_CORE1
+                bool "CORE1"
+            config CAMERA_NO_AFFINITY
+                bool "NO_AFFINITY"
+    
+        endchoice
+    
+    endmenu
+
+    menu "Picture Configuration"
+        
+        choice IMAGE_FORMAT_SIZE
+            prompt "Image format output size"
+            default IMAGE_FORMAT_QVGA
+            help
+                Select the captured picture's format size. Do not use sizes above QVGA when not JPEG (Listed in ascending order)
+            
+            config IMAGE_FORMAT_QVGA
+                bool "QVGA"
+            config IMAGE_FORMAT_CIF
+                bool "CIF"
+            config IMAGE_FORMAT_VGA
+                bool "VGA"
+            config IMAGE_FORMAT_SVGA
+                bool "SVGA"
+            config IMAGE_FORMAT_XGA
+                bool "XGA"
+            config IMAGE_FORMAT_SXGA
+                bool "SXGA"
+            config CAM_FRAMESIZE_UXGA
+                bool "UXGA"
+        endchoice
+
+        choice IMAGE_PIXEL_FORMAT
+            prompt "Image pixel output format"
+            default IMAGE_PIXEL_JPEG
+            help
+                Select the captured picture's pixel format
+            
+            config IMAGE_PIXEL_JPEG
+                bool "JPEG"
+            config IMAGE_PIXEL_YUV422
+                bool "YUV422"
+            config IMAGE_PIXEL_GRAYSCALE
+                bool "Grayscale"
+            config IMAGE_PIXEL_RGB565
+                bool "RBG 565"
+        endchoice
+
+        choice IMAGE_TO_SDCARD
+            prompt "Save the pictures to the SD card"
+            default IMAGE_TO_HTTP_UPLOAD
+            help
+                If the pictures are saved to the SD card, they can only be retrieved there. The HTTP request will send the picture to the database.
+            
+            config IMAGE_TO_SDCARD
+                bool "Save to SD card"
+            config IMAGE_TO_HTTP_UPLOAD
+                bool "Upload through HTTP request"
+            config IMAGE_TO_BOTH_PROT
+                bool "Save to SD card and upload too"
+        endchoice
+
+        config CAM_STREAM_PORT
+            int "Streaming Port"
+            range 0 9999
+            default 80
+            help
+                Port on which the camera will stream its video feed
+
+    endmenu
+
+    menu "Wifi Configuration"
+
+        choice SCAN_METHOD
+            prompt "scan method"
+            default WIFI_FAST_SCAN
+            help
+                scan method for the esp32 to use. Fast connects you - All gives the choice of network to connect to
+
+            config WIFI_FAST_SCAN
+                bool "fast - scans and connects to the first that matches SSID and Password"
+            config WIFI_ALL_CHANNEL_SCAN_CONNECT
+                bool "all - connect automatically"
+            config WIFI_ALL_CHANNEL_SCAN_SHOW
+                bool "all - show user"
+        endchoice
+
+        config WIFI_SSID
+            string "WiFi SSID"
+            default "Enter Fast-scan SSID"
+            help
+                SSID (network name) for the example to connect to.
+
+        config WIFI_PASSWORD
+            string "WiFi Password"
+            default "Enter Fast-scan Password"
+            help
+                WiFi password (WPA or WPA2) for the example to use.
+
+        config SCAN_LIST_SIZE
+            int "Max size of scan list"
+            range 0 20
+            default 10
+            help
+                The size of array that will be used to retrieve the list of access points.
+
+        choice SORT_METHOD
+            prompt "sort method"
+            default WIFI_CONNECT_AP_BY_SIGNAL
+            help
+                sort method for the esp32 to use
+
+            config WIFI_CONNECT_AP_BY_SIGNAL
+                bool "rssi"
+            config WIFI_CONNECT_AP_BY_SECURITY
+                bool "authmode"
+        endchoice
+
+        menu "Fast Scan Extra Configs"
+            
+            config FAST_SCAN_THRESHOLD
+                bool "fast scan threshold"
+                default y
+                help
+                    wifi fast scan threshold
+
+            config FAST_SCAN_MINIMUM_SIGNAL
+                int "fast scan minimum rssi"
+                depends on FAST_SCAN_THRESHOLD
+                range -127 0
+                default -127
+                help
+                    rssi is use to measure the signal
+
+            choice FAST_SCAN_WEAKEST_AUTHMODE
+                prompt "fast scan weakest authmode"
+                depends on FAST_SCAN_THRESHOLD
+                default FAST_SCAN_WEAKEST_AUTHMODE_OPEN
+
+                config FAST_SCAN_WEAKEST_AUTHMODE_OPEN
+                    bool "open"
+                config FAST_SCAN_WEAKEST_AUTHMODE_WEP
+                    bool "wep"
+                config FAST_SCAN_WEAKEST_AUTHMODE_WPA
+                    bool "wpa"
+                config FAST_SCAN_WEAKEST_AUTHMODE_WPA2
+                    bool "wpa2"
+            endchoice
+
+        endmenu
+
+    endmenu
+
+endmenu

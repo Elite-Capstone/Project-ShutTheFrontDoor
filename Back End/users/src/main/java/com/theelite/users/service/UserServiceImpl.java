@@ -1,34 +1,63 @@
 package com.theelite.users.service;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.theelite.users.communication.DeviceService;
+import com.theelite.users.communication.MediaService;
+import com.theelite.users.communication.NotifService;
 import com.theelite.users.dao.UserDao;
-import com.theelite.users.model.Invitation;
-import com.theelite.users.model.User;
-import com.theelite.users.model.UserRole;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.theelite.users.model.*;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
-import java.util.ArrayList;
-import java.util.UUID;
+import java.io.IOException;
+import java.security.SecureRandom;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
-    //    private ArrayList<Invitation> invitations = new ArrayList<>();
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final SecureRandom secureRandom;
+    private final Base64.Encoder base64Encoder;
+    private final PasswordEncoder passwordEncoder;
+    private final UserDao userDao;
 
-    @Autowired
-    private UserDao userDao;
+    private DeviceService deviceService;
+    private NotifService notifService;
+    private MediaService mediaService;
 
+    public UserServiceImpl(SecureRandom secureRandom, Base64.Encoder base64Encoder, PasswordEncoder passwordEncoder, UserDao userDao, Environment environment) {
+        this.secureRandom = secureRandom;
+        this.base64Encoder = base64Encoder;
+        this.passwordEncoder = passwordEncoder;
+        this.userDao = userDao;
+        this.deviceService = this.buildRetrofitObject(environment.getProperty("device.url"), DeviceService.class);
+        this.notifService = this.buildRetrofitObject(environment.getProperty("notif.url"), NotifService.class);
+        this.mediaService = this.buildRetrofitObject(environment.getProperty("media.url"), MediaService.class);
+    }
 
+    private void userCreatedNewFamilyAccount(String accountId) {
+        try {
+            notifService.createNewConsumerGroup(accountId).execute();
+        } catch (IOException e) {
+            System.out.println(e.getMessage());
+        } catch (NullPointerException e) {
+            System.out.println("notifService is null; " + e.getMessage());
+        }
+    }
+
+    // User Signs up
     @Override
-    public boolean addUser(User user) {
-        if (userDao.userExistsWithEmail(user.getEmail())) return false;
+    public String addUser(User user) {
+        if (userDao.userExistsWithEmail(user.getEmail())) return ApiResponses.unsuccessful;
 
         Invitation userInvitation = userDao.getInvitation(user.getEmail());
-
+        String token = generateNewToken();
+        UserToken userToken = new UserToken(token, new Date());
         if (userInvitation != null) {
             user.setAccountId(userInvitation.getAccountId());
             userDao.cancelInvitation(user.getEmail());
@@ -36,26 +65,51 @@ public class UserServiceImpl implements UserService {
             user.setRole(UserRole.Regular);
         } else {
             // Only user in his family account
-            user.setAccountId(UUID.randomUUID());
             user.setRole(UserRole.Admin);
+            Account newFamAcc = new Account();
+            //Saves the new Family Account
+            userDao.saveNewFamilyAccount(newFamAcc);
+            user.setAccountId(newFamAcc.getAccountId());
+            // to kafka to create new consumer group
+            userCreatedNewFamilyAccount(user.getAccountId().toString());
         }
 
+        user.setTokens(Collections.singletonList(userToken));
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userDao.save(user);
 
-        return true;
+        return token;
     }
 
+    // User Logs in
     @Override
-    public boolean authenticateUser(User user) {
-        if (!userDao.userExistsWithEmail(user.getEmail())) return false;
+    public String authenticateUser(User user) {
+        if (!userDao.userExistsWithEmail(user.getEmail())) return ApiResponses.unsuccessful;
         User savedUserInfo = userDao.findById(user.getEmail()).get();
-        return passwordEncoder.matches(user.getPassword(), savedUserInfo.getPassword());
+        if (passwordEncoder.matches(user.getPassword(), savedUserInfo.getPassword())) {
+            UserToken userToken = new UserToken(generateNewToken(), new Date());
+            userDao.addNewTokenToUser(user.getEmail(), userToken);
+            return userToken.getToken();
+        } else return ApiResponses.unsuccessful;
     }
 
     @Override
     public boolean deleteUser(User user) {
         if (!userDao.userExistsWithEmail(user.getEmail())) return false;
+        User userInfo = userDao.findById(user.getEmail()).get();
+        if (!passwordEncoder.matches(user.getPassword(), userInfo.getPassword())) return false;
+        String famAcc = userInfo.getAccountId().toString();
+
+        if (userInfo.getRole().equals(UserRole.Admin) && userDao.numberOfAdminsInFamilyAccount(UUID.fromString(famAcc)) == 1) {
+            try {
+                deviceService.familyAccountDeleted(famAcc).execute();
+                notifService.deleteConsumerGroup(famAcc).execute();
+                mediaService.deleteAllForFamilyAccount(famAcc).execute();
+                userDao.deleteFamilyAccount(userInfo.getAccountId());
+            } catch (IOException | NullPointerException e) {
+                System.out.println(e.getMessage());
+            }
+        }
         userDao.deleteById(user.getEmail());
         return true;
     }
@@ -116,12 +170,51 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public ResponseEntity getHealth() {
+    public boolean validateUser(String email, String token) {
+        return userDao.validateUser(email, token);
+    }
+
+    @Override
+    public ResponseEntity<String> getHealth() {
         try {
             userDao.testDatabaseConnection();
+            if (notifService == null)
+                return new ResponseEntity<>("notifService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (deviceService == null)
+                return new ResponseEntity<>("deviceService is null", HttpStatus.INTERNAL_SERVER_ERROR);
+            else if (mediaService == null)
+                return new ResponseEntity<>("mediaService is null", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            return new ResponseEntity("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("Error with the db somehow", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity("Everything seems to be fine!", HttpStatus.OK);
+        return new ResponseEntity<>("Everything seems to be fine!", HttpStatus.OK);
+    }
+
+    @Override
+    public String getFamilyAccountForUser(String email) {
+        return getUserWithEmail(email).getAccountId().toString();
+    }
+
+    private String generateNewToken() {
+        byte[] randomBytes = new byte[24];
+        secureRandom.nextBytes(randomBytes);
+        return base64Encoder.encodeToString(randomBytes);
+
+    }
+
+    public String testToken() {
+        return generateNewToken();
+    }
+
+    private <T> T buildRetrofitObject(String url, Class<T> retroClass) {
+        if (url == null || url.isBlank() || url.isEmpty()) {
+            System.out.println("Could not create Retrofit object as url for " + retroClass.getName() + " is null.");
+            return null;
+        }
+        Gson gson = new GsonBuilder()
+                .setLenient()
+                .create();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
+        return retrofit.create(retroClass);
     }
 }
