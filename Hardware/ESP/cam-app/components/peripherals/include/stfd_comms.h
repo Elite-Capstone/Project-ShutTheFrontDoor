@@ -10,6 +10,8 @@
 #ifndef STFD_COMMS_H_
 #define STFD_COMMS_H_
 
+// #include "stfd_peripherals.h"
+
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_event.h>
@@ -27,10 +29,26 @@
 #include "lwip/sockets.h"
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
+#include <iotc.h>
 
-#define DEFAULT_DOOR_UUID  "00b288a8-3db1-40b5-b30f-532af4e12f4b"
-#define DEFAULT_HTTP_URL   "http://34.117.160.50/"
-#define DEFAULT_STREAM_URI "/stream"
+#define DEFAULT_DOOR_UUID   "00b288a8-3db1-40b5-b30f-532af4e12f4b"
+#define DEFAULT_HTTP_URL    "http://34.117.160.50/"
+#define DEFAULT_STREAM_URI  "/stream"
+
+// JSON Format
+#define COMMAND_NAME        "Door_Command_Request"
+#define COMMAND_TIME        "TimeOfRequest"
+#define COMMAND_TIME_YEAR   "Year"
+#define COMMAND_TIME_MONTH  "Month"
+#define COMMAND_TIME_DAY    "Day"
+#define COMMAND_TIME_HOUR   "Hour"
+#define COMMAND_TIME_MIN    "Minute"
+#define COMMAND_TIME_SEC    "Second"
+#define COMMAND_TIME_MS     "Millisecond"
+#define COMMAND_TARGET      "Target_Device"
+#define COMMAND_REQUEST     "Command_Request"
+#define COMMAND_FLAG        "Request_Flag"
+#define COMMAND_DELAY       "Command_Delay_ms"
 
 //========== HTTP client ==========
 
@@ -98,5 +116,18 @@ esp_err_t udp_setup_sock(int* sock, void* dest_addr, esp_netif_t* esp_netif);
  * @param jpg_buf_len   JPEG converted buffer length
  */
 esp_err_t udp_send_buf (int* sock, struct sockaddr* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len);
+
+//========== Google IoT Client ==========
+esp_err_t stfd_iotc_init(/*mcu_status_t* mcu_s,*/ char* device_path, char* jwt);
+
+void stfd_publish_scheduled_events(iotc_context_handle_t context_handle, iotc_timed_task_handle_t timed_task, void *user_data);
+
+void stfd_publish_action_event(iotc_context_handle_t context_handle, iotc_timed_task_handle_t timed_task, void *user_data);
+
+void publish_telemetry_event(iotc_context_handle_t context_handle, iotc_timed_task_handle_t timed_task, void *user_data);
+
+void stfd_mqtt_subscribe_to_commands(iotc_context_handle_t in_context_handle);
+
+void mqtt_task(/*mcu_status_t* mcu_s,*/ void* pvParameters);
 
 #endif /* STFD_COMMS_H_ */

@@ -58,6 +58,7 @@ typedef struct {
     bool cam_initiated;
     bool sdcard_initiated;
     bool cam_server_init;
+    bool iotc_server_online;
 } mcu_status_t;
 
 uint32_t getDefaultScanListSize(void);

@@ -73,6 +73,8 @@ static const char *TAG = "stfd_wifi_scan";
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
 static char esp_public_ip_addr[IP_ADDR_BUF_LEN];
 
+static EventGroupHandle_t wifi_event_group;
+const static int CONNECTED_BIT = BIT0;
                 
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
@@ -111,8 +113,11 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
                 ESP_LOGW(TAG, "Wrong SSID given.");
             else if (err == ESP_ERR_WIFI_CONN)
                 ESP_LOGW(TAG, "Internal Error");
+        else
+            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         // Get Local IP
         esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
@@ -288,6 +293,7 @@ void wifi_scan(mcu_content_t* mcu_c) {
     }
     ESP_ERROR_CHECK( ret );
     ESP_ERROR_CHECK(esp_netif_init());
+    wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     // Initialize default station as network interface instance (esp-netif)
@@ -309,6 +315,10 @@ void wifi_scan(mcu_content_t* mcu_c) {
         // TODO: Send list to BlueTooth connected user
         // Set the default wifi to the returned selection from the user
     }
+
+    ESP_LOGI(TAG, "Waiting for wifi");
+    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+
     // Pass device IP
     memcpy(mcu_c->device_ip, esp_ip_addr, IP_ADDR_BUF_LEN);
     memcpy(mcu_c->pub_device_ip, esp_public_ip_addr, IP_ADDR_BUF_LEN);

@@ -242,6 +242,8 @@ void app_main(void) {
 
     //start gpio task
     xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
+
+    mqtt_task(NULL);
     
     // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
     // xTaskCreate(&udp_client_task, "udp_client", 4096, NULL, 5, NULL);

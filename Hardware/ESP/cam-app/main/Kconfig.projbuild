@@ -468,7 +468,7 @@ menu "Project ShutTheFrontDoor Configuration"
     endmenu  
 
     menu "Camera configuration"
-    visible if  ESP32_CAM_MCU
+        visible if ESP32_CAM_MCU
 
         config OV7670_SUPPORT
             bool "Support OV7670 VGA"

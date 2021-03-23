@@ -17,3 +17,61 @@ GPIO List of the ESP32-CAM in ascending order
 14: 
 15: 
 16:
+
+Command Format JSON:
+{
+  "type": "record",
+  "name": "Door_Command_Request",
+  "fields": [
+    {
+      "name": "TimeOfRequest",
+      "type": "record",
+      "fields": [
+        {
+        "name": "Year",
+        "type": "int"
+        },
+        {
+        "name": "Month",
+        "type": "int"
+        },
+        {
+        "name": "Day",
+        "type": "int"
+        },
+        {
+        "name": "Hour",
+        "type": "int"
+        },
+        {
+        "name": "Minute",
+        "type": "int"
+        },
+        {
+        "name": "Second",
+        "type": "int"
+        },
+        {
+        "name": "Millisecond",
+        "type": "int"
+        }
+      ]
+    },
+    {
+      "name": "Target_Device",
+      "type": "string"
+    },
+    {
+      "name": "Command_Request",
+      "type": "string"
+    },
+    {
+      "name": "Request_Flag",
+      "type": "int"
+    },
+    {
+      "name": "Command_Delay_ms",
+      "type": "int"
+    }
+  ]
+}
