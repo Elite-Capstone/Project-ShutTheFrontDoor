@@ -36,7 +36,7 @@
 #define HOST_IP_ADDR "127.0.0.1"
 // #endif
 
-#define PORT 443//CONFIG_TCP_HOST_PORT
+#define PORT 5555//CONFIG_TCP_HOST_PORT
 
 static const char* TAG = "stfd_udp_client";
 
@@ -60,7 +60,7 @@ esp_err_t udp_setup_sock(int* sock, struct sockaddr_in* addr, esp_netif_t* esp_n
     ESP_LOGW(TAG, "Host Port: %i", dest_addr->sin_port);
 
 #elif defined(CONFIG_IPV6)
-    struct sockaddr_in6* dest_addr = addr;
+    struct sockaddr_in6* dest_addr = (struct sockaddr_in6*) addr;
     inet6_aton(host_ip, &dest_addr->sin6_addr);
     dest_addr->sin6_family = AF_INET6;
     dest_addr->sin6_port = htons(PORT);
@@ -79,27 +79,10 @@ esp_err_t udp_setup_sock(int* sock, struct sockaddr_in* addr, esp_netif_t* esp_n
 }
 
 esp_err_t udp_send_buf (int* sock, struct sockaddr_in* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len) {
-    ESP_LOGI(TAG, "Sending Buf to ...");
-    char* esp_ip_addr;
-    esp_ip_addr = inet_ntoa(dest_addr->sin_addr.s_addr);
-    ESP_LOGW(TAG, "Host IP: %s", esp_ip_addr);
-    ESP_LOGW(TAG, "Host Port: %i", dest_addr->sin_port);
-
-    struct sockaddr* ex_addr = (struct sockaddr*) dest_addr;
-    ESP_LOGI(TAG, "Length: %i", ex_addr->sa_len);
-    ESP_LOGI(TAG, "Family: %i", ex_addr->sa_family);
-    ESP_LOGI(TAG, "Data: %s", ex_addr->sa_data);
-    ESP_LOGI(TAG, "dest_addr size: %i", sizeof(*dest_addr));
-    ESP_LOGI(TAG, "sockaddr_in size: %i", sizeof(struct sockaddr_in));
-    if ((((mem_ptr_t)(dest_addr)) % 4) == 0)
-        ESP_LOGI(TAG, "Aligned");
-    else
-        ESP_LOGI(TAG, "Not Aligned");
-
     char* payload = "ESP32 Message";
-    // int err = sendto(*sock, jpg_buf, jpg_buf_len, 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
-    int err = sendto(*sock, payload, strlen(payload), 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
-    if (err != 0) {
+    int err = sendto(*sock, jpg_buf, jpg_buf_len, 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
+    //int err = sendto(*sock, payload, strlen(payload), 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
+    if (err < 0) {
         ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
         return ESP_FAIL;
     }

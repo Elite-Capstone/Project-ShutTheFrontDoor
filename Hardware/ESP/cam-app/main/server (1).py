@@ -4,11 +4,12 @@ import pickle
 import numpy as np
 
 host = "127.0.0.1"
-port = 443
-max_length = 1024
+port = 5555
+max_length = 64000
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-sock.bind((host, port))
+# sock.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF, 1)
+sock.bind(('', port))
 
 frame_info = None
 buffer = None
@@ -20,6 +21,7 @@ while True:
     data, address = sock.recvfrom(max_length)
     
     if len(data) < 100:
+        print("Got stuff")
         frame_info = pickle.loads(data)
 
         if frame_info:
@@ -47,5 +49,7 @@ while True:
                 cv2.imshow("Stream", frame)
                 if cv2.waitKey(1) == 27:
                     break
+    else:
+        print("lenght is longer than 100")
                 
 print("goodbye")

@@ -123,6 +123,10 @@ static void mqtt_task(void* pvParameters) {
     vTaskDelete(NULL);
 }
 
+/**
+ * Task to send a video buffer through UDP
+ */
+
 static void udp_client_task(void *pvParameters) {
     int sock;
 #if defined(CONFIG_IPV4)
@@ -159,7 +163,7 @@ static void udp_client_task(void *pvParameters) {
     }
 
     while (1) {
-        if (udp_setup_sock(&sock, &dest_addr, mcu_c->netif) != ESP_OK)
+        if (udp_setup_sock(&sock, (struct sockaddr*) &dest_addr, mcu_c->netif) != ESP_OK)
             break;
         while (1) {
             if(!last_frame) {
@@ -172,9 +176,16 @@ static void udp_client_task(void *pvParameters) {
             frame_time = fr_end - last_frame;
             last_frame = fr_end;
             frame_time /= 1000;
+
             if (udp_send_buf(&sock, /*(struct sockaddr*)*/ &dest_addr, jpg_buf, jpg_buf_len) != ESP_OK)
-                vTaskDelete(NULL);
+            {
+                ESP_LOGI(TAG, "udp_send_buf failed");
+                //vTaskDelete(NULL);
+                break;
+            }
         }
+
+        vTaskDelay(2000/portTICK_RATE_MS);
 
         if (sock != -1) {
             ESP_LOGE(TAG, "Shutting down socket and restarting...");
@@ -267,7 +278,6 @@ void app_main(void) {
     //start gpio task
     // xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
-    
     // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
     xTaskCreate(&udp_client_task, "udp_client_task", 4096, NULL, 5, NULL);
 }

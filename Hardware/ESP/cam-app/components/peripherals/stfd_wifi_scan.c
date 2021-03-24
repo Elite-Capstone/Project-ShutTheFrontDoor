@@ -21,6 +21,8 @@
 #include "stfd_peripherals.h"
 #include "stfd_comms.h"
 
+#include "connect.c"
+
 /* Set the SSID and Password via project configuration, or can set directly here */
 #define DEFAULT_SCAN_LIST_SIZE CONFIG_SCAN_LIST_SIZE
 
@@ -67,15 +69,22 @@
 #endif /*CONFIG_FAST_SCAN_THRESHOLD*/
 
 #define WIFI_RETRY_LIMIT CONFIG_WIFI_RETRY_LIMIT
+static int retry_num = 0;
 
-static const char *TAG = "stfd_wifi_scan";
+/* The event group allows multiple bits for each event, but we only care about two events:
+ * - we are connected to the AP with an IP
+ * - we failed to connect after the maximum amount of retries */
+#define WIFI_CONNECTED_BIT BIT0
+#define WIFI_FAIL_BIT      BIT1
+
+static EventGroupHandle_t wifi_event_group;
+
 #define IP_ADDR_BUF_LEN 15
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
 static char esp_public_ip_addr[IP_ADDR_BUF_LEN];
+            
+//static const char *TAG = "stfd_wifi_scan";
 
-//static EventGroupHandle_t wifi_event_group;
-//const static int CONNECTED_BIT = BIT0;
-                
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
 }
@@ -85,39 +94,22 @@ wifi_scan_method_t getDefaultScanMethod(void) {
 }
 
 void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, void* event_data) {
-    uint16_t retry = 1;
     esp_err_t err = ESP_OK;
     
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
-        do {
-            ESP_LOGI(TAG, "Connection attempt: %i", retry);
-            err = esp_wifi_connect();
-        } while (retry++ < WIFI_RETRY_LIMIT && err != ESP_OK);
-
-        if (retry >= WIFI_RETRY_LIMIT && err != ESP_OK)
-            ESP_LOGW(TAG, "Went over retry limit (%i)", retry);
-            if (err == ESP_ERR_WIFI_SSID)
-                ESP_LOGW(TAG, "Wrong SSID given.");
-            else if (err == ESP_ERR_WIFI_CONN)
-                ESP_LOGW(TAG, "Internal Error");
+            esp_wifi_connect();
 
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
-        do {
-            ESP_LOGI(TAG, "Connection attempt: %i", retry);
+        if (++retry_num < WIFI_RETRY_LIMIT) {
+            ESP_LOGI(TAG, "Connection attempt: %i", retry_num);
             err = esp_wifi_connect();
-        } while (retry++ < WIFI_RETRY_LIMIT && err != ESP_OK);
-
-        if (retry >= WIFI_RETRY_LIMIT && err != ESP_OK)
-            ESP_LOGW(TAG, "Went over retry limit (%i)", retry);
-            if (err == ESP_ERR_WIFI_SSID)
-                ESP_LOGW(TAG, "Wrong SSID given.");
-            else if (err == ESP_ERR_WIFI_CONN)
-                ESP_LOGW(TAG, "Internal Error");
-        // else
-            //xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
-
+            ESP_LOGW(TAG, "Connection attempt %i returned code %s", retry_num, esp_err_to_name(err));
+        }
+        else {
+            xEventGroupSetBits(wifi_event_group, WIFI_FAIL_BIT);
+            ESP_LOGE(TAG, "Connection attempt %i failed with code %s", retry_num, esp_err_to_name(err));
+        }
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        //xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         // Get Local IP
         esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
@@ -125,6 +117,10 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
         http_rest_with_url_get_device_ip(esp_public_ip_addr);
         ESP_LOGI(TAG, "got local ip:" IPSTR, IP2STR(&event->ip_info.ip));
         ESP_LOGI(TAG, "got public ip: %s", esp_public_ip_addr);
+
+        retry_num = 0;
+
+        xEventGroupSetBits(wifi_event_group, WIFI_CONNECTED_BIT);
 
         // Allow dependent clients to begin
         mcu_status_t* mcu_s = (mcu_status_t*) arg;
@@ -280,6 +276,27 @@ void fast_scan(mcu_status_t* mcu_s, wifi_ap_record_t* ap_info) {
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+
+    /* Waiting until either the connection is established (WIFI_CONNECTED_BIT) or connection failed for the maximum
+     * number of re-tries (WIFI_FAIL_BIT). The bits are set by event_handler() (see above) */
+    ESP_LOGI(TAG, "Waiting for wifi");
+    EventBits_t bits = xEventGroupWaitBits(wifi_event_group,
+            WIFI_CONNECTED_BIT | WIFI_FAIL_BIT,
+            pdFALSE,
+            pdFALSE,
+            portMAX_DELAY);
+
+    /* xEventGroupWaitBits() returns the bits before the call returned, hence we can test which event actually
+     * happened. */
+    if (bits & WIFI_CONNECTED_BIT) {
+        ESP_LOGI(TAG, "connected to ap SSID:%s password:%s",
+                 DEFAULT_SSID, DEFAULT_PWD);
+    } else if (bits & WIFI_FAIL_BIT) {
+        ESP_LOGI(TAG, "Failed to connect to SSID:%s, password:%s",
+                 DEFAULT_SSID, DEFAULT_PWD);
+    } else {
+        ESP_LOGE(TAG, "UNEXPECTED EVENT");
+    }
 }
 
 void wifi_scan(mcu_content_t* mcu_c, mcu_status_t* mcu_s) {
@@ -296,8 +313,10 @@ void wifi_scan(mcu_content_t* mcu_c, mcu_status_t* mcu_s) {
         ret = nvs_flash_init();
     }
     ESP_ERROR_CHECK( ret );
+
+    wifi_event_group = xEventGroupCreate();
+
     ESP_ERROR_CHECK(esp_netif_init());
-    //wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     // Initialize default station as network interface instance (esp-netif)
@@ -319,9 +338,6 @@ void wifi_scan(mcu_content_t* mcu_c, mcu_status_t* mcu_s) {
         // TODO: Send list to BlueTooth connected user
         // Set the default wifi to the returned selection from the user
     }
-
-    ESP_LOGI(TAG, "Waiting for wifi");
-    //xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
 
     // Pass device IP
     asprintf(&mcu_c->device_ip, esp_ip_addr);
