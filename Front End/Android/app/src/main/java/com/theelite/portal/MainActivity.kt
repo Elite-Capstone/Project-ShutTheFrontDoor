@@ -1,24 +1,13 @@
 package com.theelite.portal
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.view.View
-import android.widget.ImageView
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.google.gson.GsonBuilder
 import com.theelite.portal.ui.home.HomeViewModel
-import com.theelite.portal.ui.media.mediaInt
-import kotlinx.android.synthetic.main.fragment_home.*
-import okhttp3.ResponseBody
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
 
 
 class MainActivity : AppCompatActivity() {
@@ -55,7 +44,7 @@ class MainActivity : AppCompatActivity() {
         homeViewModel.setGreeting(intent.extras?.get("Home_Greeting").toString())
     }
 
-    fun sendGet(view: View) {
+    /*fun sendGet(view: View) {
        // val retrofit = RetroFit.get(getString(R.string.url))
 
         val gson = GsonBuilder()
@@ -88,7 +77,7 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-    }
+    }*/
 
 
 }
