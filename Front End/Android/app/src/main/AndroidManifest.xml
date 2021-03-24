@@ -3,6 +3,7 @@
     package="com.theelite.portal">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/doorhub_logo"
@@ -11,6 +12,7 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
+
 
         <!--Login Activity -->
         <activity
@@ -62,3 +64,4 @@
     </application>
 
 </manifest>
+
