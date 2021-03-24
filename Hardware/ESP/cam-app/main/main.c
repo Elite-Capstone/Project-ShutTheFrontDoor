@@ -180,7 +180,7 @@ static void udp_client_task(void *pvParameters) {
             if (udp_send_buf(&sock, /*(struct sockaddr*)*/ &dest_addr, jpg_buf, jpg_buf_len) != ESP_OK)
             {
                 ESP_LOGI(TAG, "udp_send_buf failed");
-                //vTaskDelete(NULL);
+                vTaskDelete(NULL);
                 break;
             }
         }

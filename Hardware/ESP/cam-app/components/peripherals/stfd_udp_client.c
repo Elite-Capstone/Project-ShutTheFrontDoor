@@ -33,12 +33,13 @@
 // #elif defined(CONFIG_IPV6)
 // #define HOST_IP_ADDR CONFIG_IPV6_ADDR
 // #else
-#define HOST_IP_ADDR "127.0.0.1"
+#define HOST_IP_ADDR "192.168.1.17"
 // #endif
 
 #define PORT 5555//CONFIG_TCP_HOST_PORT
 
 static const char* TAG = "stfd_udp_client";
+static const char* payload = "ESP32 Message";
 
 //esp_err_t udp_setup_sock(int* sock, void* addr, esp_netif_t* esp_netif) {
 esp_err_t udp_setup_sock(int* sock, struct sockaddr_in* addr, esp_netif_t* esp_netif) {
@@ -79,9 +80,8 @@ esp_err_t udp_setup_sock(int* sock, struct sockaddr_in* addr, esp_netif_t* esp_n
 }
 
 esp_err_t udp_send_buf (int* sock, struct sockaddr_in* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len) {
-    char* payload = "ESP32 Message";
     int err = sendto(*sock, jpg_buf, jpg_buf_len, 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
-    //int err = sendto(*sock, payload, strlen(payload), 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
+    // int err = sendto(*sock, payload, strlen(payload), 0, (struct sockaddr*) dest_addr, sizeof(*dest_addr));
     if (err < 0) {
         ESP_LOGE(TAG, "Error occurred during sending: errno %d", errno);
         return ESP_FAIL;
