@@ -14,7 +14,9 @@ public interface IpAddressesDao extends CrudRepository<DeviceIp, String> {
     @Query("select case when count (ip.deviceId) > 0 then true else false end from DeviceIp ip where ip.deviceId = :id")
     boolean deviceIdSaved(@Value("id") String id);
 
-    @Query(value = "update DeviceIp dip set dip.ipAddress = :ip where dip.deviceId = :id")
+    @Transactional
+    @Modifying
+    @Query(value = "update DeviceIp d set d.ipAddress = :ip where d.deviceId = :id")
     void updateDeviceIpAddress(@Value("id") String id, @Value("ip") String ip);
 
     @Transactional
