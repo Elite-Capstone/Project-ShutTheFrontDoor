@@ -43,5 +43,8 @@
     <string name="firstname_hint">First Name</string>
     <string name="lastname_hint">Last Name</string>
     <string name="remember_me">Remember Me</string>
+    <string name="mediaTitle">Media Access</string>
+    <string name="videoName">TextView</string>
+    <string name="downloadVideo">Download</string>
 
 </resources>
