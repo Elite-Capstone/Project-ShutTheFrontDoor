@@ -6,27 +6,37 @@ import com.theelite.devices.communication.NotifService;
 import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.DeviceDao;
 
+import com.theelite.devices.dao.IpAddressesDao;
 import com.theelite.devices.model.Device;
+import com.theelite.devices.model.DeviceIp;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.Arrays;
 import java.util.List;
 
 @Service
 public class DeviceServiceImpl implements DeviceService {
 
     private final DeviceDao deviceDao;
+    private final IpAddressesDao ipDao;
     private final UsersService usersService;
     private final NotifService notifService;
 
-    public DeviceServiceImpl(DeviceDao deviceDao, Environment environment) {
+    public DeviceServiceImpl(DeviceDao deviceDao, IpAddressesDao ipDao, Environment environment) {
         this.deviceDao = deviceDao;
+        this.ipDao = ipDao;
         this.usersService = this.buildRetrofit(environment.getProperty("user.url"), UsersService.class);
         this.notifService = this.buildRetrofit(environment.getProperty("notif.url"), NotifService.class);
     }
@@ -136,9 +146,23 @@ public class DeviceServiceImpl implements DeviceService {
         List<String> deviceIds = deviceDao.familyAccountDeleted(acc);
         try {
             notifService.deviceDeleted(deviceIds).execute();
+            ipDao.deleteDevices(deviceIds);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
+    }
+
+    @Override
+    public String saveIpAddress(String deviceId, HttpServletRequest request) {
+        if (request == null) {
+            return "0.0.0.0";
+        }
+        if (deviceDao.deviceExistsWithId(deviceId)) {
+            // Update IP Address
+            if (ipDao.deviceIdSaved(deviceId)) ipDao.updateDeviceIpAddress(deviceId, request.getRemoteAddr());
+            else ipDao.save(new DeviceIp(deviceId, request.getRemoteAddr()));
+        }
+        return request.getRemoteAddr();
     }
 
     private <T> T buildRetrofit(String url, Class<T> tClass) {
@@ -151,5 +175,16 @@ public class DeviceServiceImpl implements DeviceService {
                 .create();
         Retrofit retrofit = new Retrofit.Builder().baseUrl(url).addConverterFactory(GsonConverterFactory.create(gson)).build();
         return retrofit.create(tClass);
+    }
+
+    public String getIpAddressForDevice(String deviceId, String email, String token) {
+        try {
+            String familyAccount = getFamilyAccount(email, token);
+            if (familyAccount == null || familyAccount.isEmpty() || familyAccount.isBlank()) return null;
+            if (ipDao.deviceIdSaved(deviceId)) return ipDao.findById(deviceId).get().getIpAddress();
+        } catch (IOException | NullPointerException e) {
+            System.out.println(e.getMessage());
+        }
+        return null;
     }
 }

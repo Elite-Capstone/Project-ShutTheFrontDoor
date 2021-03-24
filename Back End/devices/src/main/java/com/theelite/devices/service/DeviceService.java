@@ -3,6 +3,7 @@ package com.theelite.devices.service;
 import com.theelite.devices.model.Device;
 import org.springframework.http.ResponseEntity;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface DeviceService {
@@ -26,4 +27,6 @@ public interface DeviceService {
     String getFamilyAccountForDevice(String device);
 
     List<Device> getDevices(String email, String token);
+
+    String saveIpAddress(String deviceId, HttpServletRequest request);
 }
