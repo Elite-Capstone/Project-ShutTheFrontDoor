@@ -111,6 +111,7 @@ public class DeviceServiceImpl implements DeviceService {
     public ResponseEntity<String> getHealth() {
         try {
             deviceDao.testDBConnection();
+            ipDao.deviceIdSaved("");
             if (usersService == null)
                 return new ResponseEntity<>("userService is null.", HttpStatus.INTERNAL_SERVER_ERROR);
             else if (notifService == null)
