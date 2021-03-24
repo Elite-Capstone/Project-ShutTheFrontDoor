@@ -57,14 +57,19 @@ mcu_content_t _mcu_c = {
 .ap_info            = NULL,
 .device_ip          = "",
 .pub_device_ip      = "",
+.device_path        = "",
+.jwt                = "",
 .pic_counter        = 0
 };
 static mcu_content_t* mcu_c = &_mcu_c;
 
 mcu_status_t _mcu_s = {
+.got_wifi_ip        = false,
 .cam_initiated      = false,
 .sdcard_initiated   = false,
-.cam_server_init    = false
+.cam_server_init    = false,
+.iotc_core_init     = false,
+.iotc_server_online = false
 };
 static mcu_status_t* mcu_s = &_mcu_s;
 
@@ -108,8 +113,17 @@ static void gpio_trig_action(void* arg)
     }
 }
 
-static void udp_client_task(void *pvParameters)
-{
+static void mqtt_task(void* pvParameters) {
+    for(;;) {
+        if (stfd_mqtt_task(mcu_c->device_path, mcu_c->jwt) != ESP_OK)
+            break;
+    }
+
+    ESP_LOGI(TAG, "Deleting task");
+    vTaskDelete(NULL);
+}
+
+static void udp_client_task(void *pvParameters) {
     int sock;
 #if defined(CONFIG_IPV4)
     struct sockaddr_in dest_addr;
@@ -138,6 +152,12 @@ static void udp_client_task(void *pvParameters)
         ESP_LOGI(TAG, "Cam already init");
     }
 
+    while(!mcu_s->got_wifi_ip) {
+        // Loop until condition is met
+        ESP_LOGI(TAG, "Waiting for condition IP_EVENT_STA_GOT_IP");
+        vTaskDelay(1000/portTICK_RATE_MS);
+    }
+
     while (1) {
         if (udp_setup_sock(&sock, &dest_addr, mcu_c->netif) != ESP_OK)
             break;
@@ -152,8 +172,8 @@ static void udp_client_task(void *pvParameters)
             frame_time = fr_end - last_frame;
             last_frame = fr_end;
             frame_time /= 1000;
-            if (udp_send_buf(&sock, (struct sockaddr*) &dest_addr, jpg_buf, jpg_buf_len) != ESP_OK)
-                break;
+            if (udp_send_buf(&sock, /*(struct sockaddr*)*/ &dest_addr, jpg_buf, jpg_buf_len) != ESP_OK)
+                vTaskDelete(NULL);
         }
 
         if (sock != -1) {
@@ -238,13 +258,16 @@ void app_main(void) {
 
     gpio_init_setup(gpio_isr_handler);
     init_camera(mcu_c, mcu_s, STREAM);
-    wifi_scan(mcu_c);
+    wifi_scan(mcu_c, mcu_s);
+    // if (iotc_init(mcu_c->device_path) == ESP_OK) {
+    //     mcu_s->iotc_core_init = true;
+    //     xTaskCreate(&mqtt_task, "mqtt_task", 8192, NULL, 5, NULL);
+    // }
 
     //start gpio task
-    xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
+    // xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
 
-    mqtt_task(NULL);
     
     // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
-    // xTaskCreate(&udp_client_task, "udp_client", 4096, NULL, 5, NULL);
+    xTaskCreate(&udp_client_task, "udp_client_task", 4096, NULL, 5, NULL);
 }

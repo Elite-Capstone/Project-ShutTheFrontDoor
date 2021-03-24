@@ -30,8 +30,8 @@
 #define PUBLISH_TOPIC_EVENT "/devices/%s/events"
 #define PUBLISH_TOPIC_STATE "/devices/%s/state"
 
-extern const uint8_t ec_pv_key_start[] asm("_binary_private_key_pem_start");
-extern const uint8_t ec_pv_key_end[] asm("_binary_private_key_pem_end");
+extern const uint8_t ec_pv_key_start[] asm("_binary_rsa_private_pem_start");
+extern const uint8_t ec_pv_key_end[] asm("_binary_rsa_private_pem_end");
 
 static const char *TAG = "stfd_gcp_client";
 
@@ -71,11 +71,17 @@ void obtain_time(void)
     ESP_LOGI(TAG, "Time is set...");
 }
 
-esp_err_t stfd_iotc_init(/*mcu_status_t* mcu_s,*/ char* device_path, char* jwt) {
+esp_err_t iotc_init(char* device_path) {
+    ESP_LOGI(TAG, "Setting up GCP IoT client...");
     // Initialize SNTP and obtain time
     obtain_time();
 
     asprintf(&device_path, DEVICE_PATH, CONFIG_GIOT_PROJECT_ID, CONFIG_GIOT_LOCATION, CONFIG_GIOT_REGISTRY_ID, CONFIG_GIOT_DEVICE_ID);
+
+    return ESP_OK;
+}
+
+void iotc_init_context(char* jwt) {
 
     /* Format the key type descriptors so the client understands
      which type of key is being represented. In this case, a PEM encoded
@@ -92,7 +98,6 @@ esp_err_t stfd_iotc_init(/*mcu_status_t* mcu_s,*/ char* device_path, char* jwt) 
     if (IOTC_STATE_OK != error_init) {
         ESP_LOGE(TAG, " iotc failed to initialize, error: %d", error_init);
         vTaskDelete(NULL);
-        return ESP_FAIL;
     }
 
     /*  Create a connection context. A context represents a Connection
@@ -102,7 +107,6 @@ esp_err_t stfd_iotc_init(/*mcu_status_t* mcu_s,*/ char* device_path, char* jwt) 
     if (IOTC_INVALID_CONTEXT_HANDLE >= iotc_context) {
         ESP_LOGE(TAG, " iotc failed to create context, error: %d", -iotc_context);
         vTaskDelete(NULL);
-        return ESP_FAIL;
     }
 
     /*  Queue a connection request to be completed asynchronously.
@@ -115,19 +119,19 @@ esp_err_t stfd_iotc_init(/*mcu_status_t* mcu_s,*/ char* device_path, char* jwt) 
 
     /* Generate the client authentication JWT, which will serve as the MQTT
      * token. */
-    //char jwt[IOTC_JWT_SIZE] = {0};
+    char _jwt[IOTC_JWT_SIZE] = {0};
     size_t bytes_written = 0;
     iotc_state_t state = iotc_create_iotcore_jwt(
                             CONFIG_GIOT_PROJECT_ID,/*jwt_expiration_period_sec=*/3600, 
-                            &iotc_connect_private_key_data, jwt, IOTC_JWT_SIZE, &bytes_written
+                            &iotc_connect_private_key_data, _jwt, IOTC_JWT_SIZE, &bytes_written
                             );
 
     if (IOTC_STATE_OK != state) {
         ESP_LOGE(TAG, "iotc_create_iotcore_jwt returned with error: %ul", state);
         vTaskDelete(NULL);
-        return ESP_FAIL;
     }
-    return ESP_OK;
+    else
+        asprintf(&jwt, _jwt);
 }
 
 /* Callback for changes on connection state to the Google IoT core */
@@ -142,7 +146,7 @@ static void stfd_on_connection_state_changed(iotc_context_handle_t in_context_ha
     case IOTC_CONNECTION_STATE_OPENED:
         ESP_LOGI(TAG, "connected to gcp iotc!");
         stfd_mqtt_subscribe_to_commands(in_context_handle);
-        stfd_publish_scheduled_events(in_context_handle, NULL, NULL);
+        stfd_publish_scheduled_events(in_context_handle, NULL);
         
         break;
 
@@ -207,9 +211,7 @@ static void stfd_on_connection_state_changed(iotc_context_handle_t in_context_ha
 //=====    Section - Publishing to Topics    =====
 //================================================
 
-void stfd_publish_scheduled_events(iotc_context_handle_t context_handle, iotc_timed_task_handle_t timed_task, void *user_data) {
-    IOTC_UNUSED(timed_task);
-    IOTC_UNUSED(user_data);
+void stfd_publish_scheduled_events(iotc_context_handle_t context_handle, void *user_data) {
     /* Create a timed task to publish every 10 seconds. */
     delayed_publish_task = iotc_schedule_timed_task(context_handle, publish_telemetry_event, 10, 15, user_data);
 }
@@ -313,15 +315,12 @@ void stfd_mqtt_subscribe_to_commands(iotc_context_handle_t in_context_handle) {
 //=====         Section - MQTT Task          =====
 //================================================
 
-void mqtt_task(/*mcu_status_t* mcu_s,*/ void *pvParameters)
+esp_err_t stfd_mqtt_task(char* device_path, char* jwt)
 {
-    char *device_path = NULL;
-    char jwt[IOTC_JWT_SIZE] = {0};
-
     const uint16_t connection_timeout = 0;
     const uint16_t keepalive_timeout = 20;
 
-    stfd_iotc_init(/*mcu_s,*/ device_path, jwt);
+    iotc_init_context(jwt);
 
     iotc_connect(iotc_context, NULL, jwt, device_path, connection_timeout,
                  keepalive_timeout, &stfd_on_connection_state_changed);
@@ -341,5 +340,5 @@ void mqtt_task(/*mcu_status_t* mcu_s,*/ void *pvParameters)
 
     iotc_shutdown();
 
-    vTaskDelete(NULL);
+    return ESP_OK;
 }

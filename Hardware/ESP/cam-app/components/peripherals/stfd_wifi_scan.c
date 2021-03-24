@@ -73,8 +73,8 @@ static const char *TAG = "stfd_wifi_scan";
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
 static char esp_public_ip_addr[IP_ADDR_BUF_LEN];
 
-static EventGroupHandle_t wifi_event_group;
-const static int CONNECTED_BIT = BIT0;
+//static EventGroupHandle_t wifi_event_group;
+//const static int CONNECTED_BIT = BIT0;
                 
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;
@@ -113,11 +113,11 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
                 ESP_LOGW(TAG, "Wrong SSID given.");
             else if (err == ESP_ERR_WIFI_CONN)
                 ESP_LOGW(TAG, "Internal Error");
-        else
-            xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
+        // else
+            //xEventGroupClearBits(wifi_event_group, CONNECTED_BIT);
 
     } else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-        xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
+        //xEventGroupSetBits(wifi_event_group, CONNECTED_BIT);
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         // Get Local IP
         esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
@@ -125,6 +125,10 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
         http_rest_with_url_get_device_ip(esp_public_ip_addr);
         ESP_LOGI(TAG, "got local ip:" IPSTR, IP2STR(&event->ip_info.ip));
         ESP_LOGI(TAG, "got public ip: %s", esp_public_ip_addr);
+
+        // Allow dependent clients to begin
+        mcu_status_t* mcu_s = (mcu_status_t*) arg;
+        mcu_s->got_wifi_ip = true;
     }
 }
 
@@ -244,7 +248,7 @@ void wifi_all_ch_scan(wifi_ap_record_t* pv_ap_info) {
 
 /* Initialize Wi-Fi as sta and set scan method 
    The ESP connects to the AP with matching SSID and Password */
-void fast_scan(wifi_ap_record_t* ap_info) {
+void fast_scan(mcu_status_t* mcu_s, wifi_ap_record_t* ap_info) {
 
     if (ap_info != NULL) {
         free(ap_info);
@@ -253,7 +257,7 @@ void fast_scan(wifi_ap_record_t* ap_info) {
     ap_info = malloc(sizeof(wifi_ap_record_t));
 
     ESP_ERROR_CHECK(esp_event_handler_instance_register(WIFI_EVENT, ESP_EVENT_ANY_ID, &event_handler, NULL, NULL));
-    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, NULL));
+    ESP_ERROR_CHECK(esp_event_handler_instance_register(IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, (void*) mcu_s, NULL));
 
     // Initialize and start WiFi
     wifi_config_t wifi_config = {
@@ -278,7 +282,7 @@ void fast_scan(wifi_ap_record_t* ap_info) {
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
-void wifi_scan(mcu_content_t* mcu_c) {
+void wifi_scan(mcu_content_t* mcu_c, mcu_status_t* mcu_s) {
 
     if (mcu_c->ap_info != NULL) {
         free(mcu_c->ap_info);
@@ -293,7 +297,7 @@ void wifi_scan(mcu_content_t* mcu_c) {
     }
     ESP_ERROR_CHECK( ret );
     ESP_ERROR_CHECK(esp_netif_init());
-    wifi_event_group = xEventGroupCreate();
+    //wifi_event_group = xEventGroupCreate();
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 
     // Initialize default station as network interface instance (esp-netif)
@@ -305,7 +309,7 @@ void wifi_scan(mcu_content_t* mcu_c) {
 
     if (getDefaultScanMethod() == WIFI_FAST_SCAN) {
         ESP_LOGI(TAG, "Begin Fast Scan");
-        fast_scan(mcu_c->ap_info);
+        fast_scan(mcu_s, mcu_c->ap_info);
         gpio_blink(2);
     }
     else { //WIFI_ALL_CHANNEL_SCAN:
@@ -317,9 +321,9 @@ void wifi_scan(mcu_content_t* mcu_c) {
     }
 
     ESP_LOGI(TAG, "Waiting for wifi");
-    xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
+    //xEventGroupWaitBits(wifi_event_group, CONNECTED_BIT, false, true, portMAX_DELAY);
 
     // Pass device IP
-    memcpy(mcu_c->device_ip, esp_ip_addr, IP_ADDR_BUF_LEN);
-    memcpy(mcu_c->pub_device_ip, esp_public_ip_addr, IP_ADDR_BUF_LEN);
+    asprintf(&mcu_c->device_ip, esp_ip_addr);
+    asprintf(&mcu_c->pub_device_ip, esp_public_ip_addr);
 }

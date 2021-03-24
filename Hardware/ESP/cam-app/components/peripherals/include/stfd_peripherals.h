@@ -51,13 +51,17 @@ typedef struct {
     wifi_ap_record_t* ap_info;
     char* device_ip;
     char* pub_device_ip;
+    char* device_path;
+    char* jwt;
     uint64_t pic_counter;
 } mcu_content_t;
 
 typedef struct {
+    bool got_wifi_ip;
     bool cam_initiated;
     bool sdcard_initiated;
     bool cam_server_init;
+    bool iotc_core_init;
     bool iotc_server_online;
 } mcu_status_t;
 
@@ -194,14 +198,15 @@ void wifi_all_ch_scan(wifi_ap_record_t* ap_info);
 /**
  * @brief Scans and finds the first compatible AP with the matching requirements (SSID, Password, Security level)
  */
-void fast_scan(wifi_ap_record_t* ap_info);
+void fast_scan(mcu_status_t* mcu_s, wifi_ap_record_t* ap_info);
 
 /**
  * @brief Performs the wifi scan and connects to the AP if the scan mode if fast_scan().
  *        It assigns the wifi list or AP info to the passed pointer
  * 
- * @param ap_info Pointer to which the list is assigned to
+ * @param mcu_c Pointer to the structure containing the IP address and network information
+ * @param mcu_s Pointer to the status structure of the MCU
  */
-void wifi_scan(mcu_content_t* cam_content);
+void wifi_scan(mcu_content_t* mcu_c, mcu_status_t* mcu_s);
 
 #endif /*STFD_PERIPHERALS_H_*/

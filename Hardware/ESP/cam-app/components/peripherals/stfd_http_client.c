@@ -130,7 +130,7 @@ void http_rest_with_url_get_device_ip(char* addr) {
     //esp_http_client_read(client, buf, len);
     //esp_http_client_read_response(client,buf,len);
     ESP_LOGW(TAG, "Device IP address: %s", local_response_buffer);
-    memcpy(addr, local_response_buffer, local_buf_len*sizeof(char));
+    memcpy(addr, local_response_buffer, local_buf_len*sizeof(char)/2);
     esp_http_client_cleanup(client);
 }
 

@@ -115,12 +115,14 @@ esp_err_t udp_setup_sock(int* sock, void* dest_addr, esp_netif_t* esp_netif);
  * @param jpg_buf       JPEG converted image buffer
  * @param jpg_buf_len   JPEG converted buffer length
  */
-esp_err_t udp_send_buf (int* sock, struct sockaddr* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len);
+esp_err_t udp_send_buf(int* sock, struct sockaddr_in* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len);
 
 //========== Google IoT Client ==========
-esp_err_t stfd_iotc_init(/*mcu_status_t* mcu_s,*/ char* device_path, char* jwt);
+esp_err_t iotc_init(char* device_path);
 
-void stfd_publish_scheduled_events(iotc_context_handle_t context_handle, iotc_timed_task_handle_t timed_task, void *user_data);
+void iotc_init_context(char* jwt);
+
+void stfd_publish_scheduled_events(iotc_context_handle_t context_handle, void *user_data);
 
 void stfd_publish_action_event(iotc_context_handle_t context_handle, iotc_timed_task_handle_t timed_task, void *user_data);
 
@@ -128,6 +130,6 @@ void publish_telemetry_event(iotc_context_handle_t context_handle, iotc_timed_ta
 
 void stfd_mqtt_subscribe_to_commands(iotc_context_handle_t in_context_handle);
 
-void mqtt_task(/*mcu_status_t* mcu_s,*/ void* pvParameters);
+esp_err_t stfd_mqtt_task(char* device_path, char* jwt);
 
 #endif /* STFD_COMMS_H_ */

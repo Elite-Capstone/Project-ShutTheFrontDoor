@@ -33,7 +33,7 @@ from numpy.compat import unicode
 # cv2.destroyAllWindows()
 
 # -----------  Config  ----------
-HOST = ''
+HOST = '127.0.0.1'
 PORT = 5555
 BUFSIZE = 1024  # Maximum buffer size for receiving
 ADDR = (HOST, PORT)
@@ -44,7 +44,7 @@ print(ADDR)
 # ESP_ADDR = (ESP_IP, ESP_PORT)
 
 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-client.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+client.setsockopt(socket.SOL_SOCKET,socket.SO_BROADCAST, 1)
 client.bind(ADDR)
 # -------------------------------
 
