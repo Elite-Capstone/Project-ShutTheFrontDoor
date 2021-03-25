@@ -23,7 +23,7 @@ class VideoDownloadAdapter(val videoList: List<String>, var context: MediaFragme
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bindItems(videoList[position])
         holder.downloadButton.setOnClickListener {
-            //download the file
+            context.onItemClicked("http://34.117.160.50/file/download/${videoList[position]}")
         }
     }
 
