@@ -13,6 +13,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.log4j.Logger;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
@@ -23,11 +25,20 @@ import java.util.Properties;
 
 @Component
 public class Bridge implements MqttCallback {
-    public NotificationService notificationService;
+    public final int fiveMinutes = 300000;
+    private final Logger logger;
+    private final String mqttServerUri;
+    private final String mqttClientId = "MqttKafkaBridge";
+    private final String brokerUri;
+    public static NotificationService notificationService;
+    public static MqttAsyncClient mqtt;
+    public static Producer<String, Notification> kafkaProducer;
+
 
     public Bridge(Environment environment) {
         this.brokerUri = environment.getProperty("spring.kafka.producer.bootstrap-servers");
         this.mqttServerUri = environment.getProperty("mqtt.servers");
+        this.logger = Logger.getLogger(this.getClass().getName());
         setUpRetroObject(environment.getProperty("notif.url"));
         connect();
         Thread periodicThread = new Thread(periodicallyGetKafkaTopics);
@@ -48,13 +59,14 @@ public class Bridge implements MqttCallback {
     Runnable periodicallyGetKafkaTopics = new Runnable() {
         @Override
         public void run() {
+            logger.info("Started Thread to periodically check and subscribe to kafka topics");
             while (true) {
                 try {
                     List<String> topics = notificationService.getTopics().execute().body();
                     if (topics != null && topics.size() > 0) {
                         subcribeToTopics(topics.toArray(new String[topics.size()]));
                     }
-                    Thread.sleep(30000);
+                    Thread.sleep(fiveMinutes);
                     logger.trace("Thread going to sleep");
                 } catch (Exception e) {
                     logger.error(e.getMessage());
@@ -63,13 +75,6 @@ public class Bridge implements MqttCallback {
         }
     };
 
-    private final Logger logger = Logger.getLogger(this.getClass().getName());
-    private String mqttServerUri;
-    private String mqttClientId = "MqttKafkaBridge";
-    private String brokerUri;
-
-    private MqttAsyncClient mqtt;
-    public Producer<String, Notification> kafkaProducer;
 
     public void connect() {
         try {
@@ -142,5 +147,23 @@ public class Bridge implements MqttCallback {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public static ResponseEntity<String> testForHealth() {
+        if (notificationService == null)
+            return new ResponseEntity<>("Notification Service for Retrofit is null", HttpStatus.EXPECTATION_FAILED);
+        else if (mqtt == null || kafkaProducer == null)
+            return new ResponseEntity<>("Kafka or Mqtt is null", HttpStatus.INTERNAL_SERVER_ERROR);
+        try {
+            mqtt.checkPing(null, null);
+        } catch (MqttException e) {
+            return new ResponseEntity<>("Mqtt Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        try {
+            kafkaProducer.metrics();
+        } catch (Exception e) {
+            return new ResponseEntity<>("Kafka Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>("Everything seems fine!", HttpStatus.OK);
     }
 }

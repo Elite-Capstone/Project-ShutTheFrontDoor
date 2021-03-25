@@ -8,8 +8,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class BridgeController {
-    @GetMapping("/bridge")
+    @GetMapping("/bridge/health")
     public ResponseEntity<String> getHealth() {
-        return new ResponseEntity<>("Seems to be working", HttpStatus.OK);
+        return Bridge.testForHealth();
     }
 }
