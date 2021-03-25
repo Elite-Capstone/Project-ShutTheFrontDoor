@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("device")
@@ -47,12 +47,12 @@ public class DeviceController {
     }
 
     @GetMapping("/getFamilyAccountForDevice/{device}")
-    public String getFamAccForDeviceWithId(@PathVariable String device){
+    public String getFamAccForDeviceWithId(@PathVariable String device) {
         return deviceService.getFamilyAccountForDevice(device);
     }
 
     @DeleteMapping("/familyAccountDeleted/{acc}")
-    public void familyAccountDeleted(@PathVariable String acc){
+    public void familyAccountDeleted(@PathVariable String acc) {
         deviceService.familyAccountDeleted(acc);
     }
 
@@ -62,8 +62,17 @@ public class DeviceController {
     }
 
     @GetMapping("/{email}/{token}")
-    public List<Device> getDevices(@PathVariable("email") String email, @PathVariable("token") String token){
+    public List<Device> getDevices(@PathVariable("email") String email, @PathVariable("token") String token) {
         return deviceService.getDevices(email, token);
     }
 
+    @GetMapping("/{id}")
+    public String getMyId(@PathVariable String id, HttpServletRequest request) {
+        return deviceService.saveIpAddress(id, request);
+    }
+
+    @GetMapping("/{id}/address/{email}/{token}")
+    public String getIdForDevice(@PathVariable("id")String deviceId, @PathVariable("email") String email, @PathVariable("token") String token){
+        return deviceService.getIpAddressForDevice(deviceId, email, token);
+    }
 }
