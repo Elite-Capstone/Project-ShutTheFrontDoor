@@ -20,7 +20,7 @@
 
 #define MAX_HTTP_RECV_BUFFER   512
 #define MAX_HTTP_OUTPUT_BUFFER 2048
-#define DEFAULT_STREAM_PORT CONFIG_LOCAL_STREAM_PORT
+#define DEFAULT_STREAM_PORT CONFIG_LOCAL_HTTP_STREAM_PORT
 
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
@@ -67,9 +67,7 @@ esp_err_t _http_event_handler(esp_http_client_event_t *evt) {
                     }
                     memcpy(output_buffer + output_len, evt->data, evt->data_len);
                 }
-                output_len += evt->data_len;
-
-                
+                output_len += evt->data_len;    
             }
 
             break;

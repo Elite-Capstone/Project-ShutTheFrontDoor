@@ -21,8 +21,6 @@
 #include "stfd_peripherals.h"
 #include "stfd_comms.h"
 
-#include "connect.c"
-
 /* Set the SSID and Password via project configuration, or can set directly here */
 #define DEFAULT_SCAN_LIST_SIZE CONFIG_SCAN_LIST_SIZE
 
@@ -83,7 +81,7 @@ static EventGroupHandle_t wifi_event_group;
 static char esp_ip_addr[IP_ADDR_BUF_LEN];
 static char esp_public_ip_addr[IP_ADDR_BUF_LEN];
             
-//static const char *TAG = "stfd_wifi_scan";
+static const char *TAG = "stfd_wifi_scan";
 
 uint32_t getDefaultScanListSize(void) {
     return DEFAULT_SCAN_LIST_SIZE;

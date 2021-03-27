@@ -1,7 +1,5 @@
 menu "Project ShutTheFrontDoor Configuration"
 
-    menu "GPIO Configuration"
-
         choice MCU_TYPE
             prompt "Which MCU will this firmware be installed on?"
             default MAIN_MCU
@@ -13,6 +11,41 @@ menu "Project ShutTheFrontDoor Configuration"
             config ESP32_CAM_MCU
                 bool "ESP32 CAM"
         endchoice
+
+        menu "Google IoT Core Configuration"
+
+            config GIOT_PROJECT_ID
+                string "Google Cloud Project ID"
+                default "project_id"
+                help
+                    Google Cloud project ID
+            
+            config GIOT_LOCATION
+                string "Google Cloud location"
+                default "us-central1"
+                help
+                    Google Cloud region
+            
+            config GIOT_REGISTRY_ID
+                string "Google IoT Core Registry ID"
+                default "registry_id"
+                help
+                    Google IoT Core registry id
+            
+            config GIOT_DEVICE_ID
+                string "Google IoT Core Device ID"
+                default "device_id"
+                help
+                    Google IoT Core device id
+            
+            config GIOT_DEBUG_OUTPUT
+                bool "Enable debugging"
+                help
+                    Select this option to enable debugging support
+            
+        endmenu
+    
+        menu "GPIO Configuration"
 
         menu "Input Configuration"
 
@@ -154,6 +187,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_MOTOR_FAULT
                 prompt "GPIO motor fault/stall current detection"
+                depends on MAIN_MCU
                 default GPIO_INPUT_25_MOTOR_FAULT
                 help
                     The GPIO will be pulled low when a fault current or stall current is detected by the motor controller
@@ -222,6 +256,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_NSW
                 prompt "GPIO to detect N-switch position"
+                depends on MAIN_MCU
                 default GPIO_INPUT_26_NSW
                 help
                     The GPIO will detect the position of the lock gear
@@ -290,6 +325,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_INPUT_BATTERY
                 prompt "GPIO for Battery voltage"
+                depends on MAIN_MCU
                 default GPIO_INPUT_27_BATTERY
                 help 
                     The GPIO will be an ADC which will detect the current voltage level of the battery
@@ -325,6 +361,75 @@ menu "Project ShutTheFrontDoor Configuration"
                 config GPIO_INPUT_36_BATTERY
                     bool "GPIO 36"
                 config GPIO_INPUT_39_BATTERY
+                    bool "GPIO 39"
+            endchoice
+
+            choice GPIO_INPUT_PIC
+                prompt "Picture Button"
+                depends on ESP32_CAM_MCU
+                default GPIO_INPUT_14_PIC
+                help
+                    The selected GPIO will be pulled up and the button will pull the gpio down to trigger the picture taking.
+
+                config GPIO_INPUT_0_PIC
+                    bool "GPIO 0"
+                config GPIO_INPUT_2_PIC
+                    bool "GPIO 2"
+                config GPIO_INPUT_4_PIC
+                    bool "GPIO 4"
+                config GPIO_INPUT_5_PIC
+                    bool "GPIO 5"
+                config GPIO_INPUT_6_PIC
+                    bool "GPIO 6"
+                config GPIO_INPUT_7_PIC
+                    bool "GPIO 7"
+                config GPIO_INPUT_8_PIC
+                    bool "GPIO 8"
+                config GPIO_INPUT_9_PIC
+                    bool "GPIO 9"
+                config GPIO_INPUT_10_PIC
+                    bool "GPIO 10"
+                config GPIO_INPUT_11_PIC
+                    bool "GPIO 11"
+                config GPIO_INPUT_12_PIC
+                    bool "GPIO 12"
+                config GPIO_INPUT_13_PIC
+                    bool "GPIO 13"
+                config GPIO_INPUT_14_PIC
+                    bool "GPIO 14"
+                config GPIO_INPUT_15_PIC
+                    bool "GPIO 15"
+                config GPIO_INPUT_16_PIC
+                    bool "GPIO 16"
+                config GPIO_INPUT_17_PIC
+                    bool "GPIO 17"
+                config GPIO_INPUT_18_PIC
+                    bool "GPIO 18"
+                config GPIO_INPUT_19_PIC
+                    bool "GPIO 19"
+                config GPIO_INPUT_21_PIC
+                    bool "GPIO 21"
+                config GPIO_INPUT_22_PIC
+                    bool "GPIO 22"
+                config GPIO_INPUT_23_PIC
+                    bool "GPIO 23"
+                config GPIO_INPUT_25_PIC
+                    bool "GPIO 25"
+                config GPIO_INPUT_26_PIC
+                    bool "GPIO 26"
+                config GPIO_INPUT_27_PIC
+                    bool "GPIO 27"
+                config GPIO_INPUT_32_PIC
+                    bool "GPIO 32"
+                config GPIO_INPUT_33_PIC
+                    bool "GPIO 33"
+                config GPIO_INPUT_34_PIC
+                    bool "GPIO 34"
+                config GPIO_INPUT_35_PIC
+                    bool "GPIO 35"
+                config GPIO_INPUT_36_PIC
+                    bool "GPIO 36"
+                config GPIO_INPUT_39_PIC
                     bool "GPIO 39"
             endchoice
 
@@ -470,6 +575,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
             choice GPIO_OUTPUT_MOTOR_IN1
                 prompt "GPIO Motor IN 1"
+                depends on MAIN_MCU
                 default GPIO_OUTPUT_33_MOTOR_IN1
                 help 
                     The selected GPIO will trigger the clockwise rotation of the motor
@@ -537,10 +643,11 @@ menu "Project ShutTheFrontDoor Configuration"
             endchoice
 
             choice GPIO_OUTPUT_MOTOR_IN2
-                prompt "GPIO Motor IN 1"
+                prompt "GPIO Motor IN 2"
+                depends on MAIN_MCU
                 default GPIO_OUTPUT_32_MOTOR_IN2
                 help 
-                    The selected GPIO will trigger the clockwise rotation of the motor
+                    The selected GPIO will trigger the counter-clockwise rotation of the motor
 
                 config GPIO_OUTPUT_0_MOTOR_IN2
                     bool "GPIO 0"
@@ -604,6 +711,75 @@ menu "Project ShutTheFrontDoor Configuration"
                     bool "GPIO 39"
             endchoice
 
+            choice GPIO_OUTPUT_CONFIRM_UPLOAD
+                prompt "GPIO confirm output signal"
+                depends on ESP32_CAM_MCU
+                default GPIO_OUTPUT_CONFIRM_UPLOAD_14
+                help 
+                    The selected GPIO toggle its output in the goal of blinking an LED.
+
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_0
+                    bool "GPIO 0"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_2
+                    bool "GPIO 2"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_4
+                    bool "GPIO 4"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_5
+                    bool "GPIO 5"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_6
+                    bool "GPIO 6"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_7
+                    bool "GPIO 7"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_8
+                    bool "GPIO 8"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_9
+                    bool "GPIO 9"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_10
+                    bool "GPIO 10"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_11
+                    bool "GPIO 11"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_12
+                    bool "GPIO 12"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_13
+                    bool "GPIO 13"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_14
+                    bool "GPIO 14"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_15
+                    bool "GPIO 15"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_16
+                    bool "GPIO 16"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_17
+                    bool "GPIO 17"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_18
+                    bool "GPIO 18"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_19
+                    bool "GPIO 19"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_21
+                    bool "GPIO 21"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_22
+                    bool "GPIO 22"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_23
+                    bool "GPIO 23"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_25
+                    bool "GPIO 25"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_26
+                    bool "GPIO 26"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_27
+                    bool "GPIO 27"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_32
+                    bool "GPIO 32"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_33
+                    bool "GPIO 33"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_34
+                    bool "GPIO 34"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_35
+                    bool "GPIO 35"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_36
+                    bool "GPIO 36"
+                config GPIO_OUTPUT_CONFIRM_UPLOAD_39
+                    bool "GPIO 39"
+            endchoice
+
         endmenu
 
     endmenu
@@ -650,6 +826,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
         choice IMAGE_TO_SDCARD
             prompt "Save the pictures to the SD card"
+            depends on ESP32_CAM_MCU
             default IMAGE_TO_HTTP_UPLOAD
             help
                 If the pictures are saved to the SD card, they can only be retrieved there. The HTTP request will send the picture to the database.
@@ -662,12 +839,49 @@ menu "Project ShutTheFrontDoor Configuration"
                 bool "Save to SD card and upload too"
         endchoice
 
-        config CAM_STREAM_PORT
+    endmenu
+
+    menu "Streaming Configuration"
+
+        choice IP_MODE
+            prompt "IP Version"
+            help
+                Client can use either IPV4 or IPV6.
+
+            config SERVER_IPV4
+                bool "IPV4"
+            config SERVER_IPV6
+                bool "IPV6"
+    
+        endchoice
+    
+        config IPV4_ADDR
+            string "IPV4 Address"
+            default "Enter Cloud IPV4 Address"
+            depends on SERVER_IPV4
+            help
+                The MCU's TCP client will connect to this IPV4 address.
+    
+        config IPV6_ADDR
+            string "IPV6 Address"
+            default "Enter Cloud IPV6 Address"
+            depends on SERVER_IPV6
+            help
+                The MCU's TCP client will connect to this IPV6 address.
+    
+        config UDP_HOST_PORT
+            int "Host Port"
+            range 0 65535
+            default 500
+            help
+                The remote port to which the client will connect to.
+
+        config LOCAL_HTTP_STREAM_PORT
             int "Streaming Port"
-            range 0 9999
+            range 0 65535
             default 80
             help
-                Port on which the camera will stream its video feed
+                Port on which the camera will stream its video feed locally.
 
     endmenu
 

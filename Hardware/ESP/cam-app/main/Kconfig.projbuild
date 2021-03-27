@@ -582,6 +582,7 @@ menu "Project ShutTheFrontDoor Configuration"
 
         choice IMAGE_TO_SDCARD
             prompt "Save the pictures to the SD card"
+            depends on ESP32_CAM_MCU
             default IMAGE_TO_HTTP_UPLOAD
             help
                 If the pictures are saved to the SD card, they can only be retrieved there. The HTTP request will send the picture to the database.
@@ -603,9 +604,9 @@ menu "Project ShutTheFrontDoor Configuration"
             help
                 Client can use either IPV4 or IPV6.
 
-            config IPV4
+            config SERVER_IPV4
                 bool "IPV4"
-            config IPV6
+            config SERVER_IPV6
                 bool "IPV6"
     
         endchoice
@@ -624,14 +625,14 @@ menu "Project ShutTheFrontDoor Configuration"
             help
                 The MCU's TCP client will connect to this IPV6 address.
     
-        config TCP_HOST_PORT
+        config UDP_HOST_PORT
             int "Host Port"
             range 0 65535
-            default 5555
+            default 500
             help
                 The remote port to which the client will connect to.
 
-        config LOCAL_STREAM_PORT
+        config LOCAL_HTTP_STREAM_PORT
             int "Streaming Port"
             range 0 65535
             default 80

@@ -102,20 +102,35 @@ void stopStreamServer(httpd_handle_t* httpd_handle);
 
 //========== UDP Client ==========
 /**
- * @brief Sets up the TCP client socket and connects it to the server port
+ * @brief Sets up the UDP client socket and sets the address of the server port
  * 
  * @param sock  Pointer to socket to be initialized
  */
-esp_err_t udp_setup_sock(int* sock, void* dest_addr, esp_netif_t* esp_netif);
+esp_err_t udp_setup_sock(int* sock, struct sockaddr* dest_addr, esp_netif_t* esp_netif);
+
+/**
+ * @brief Send the jpeg format image buffer to the UDP server
+ * 
+ * @param sock           Socket used to send the image
+ * @param dest_addr      Address structure that holds the IP and Port of the socket to send to
+ * @param dest_addr_size Size of the passed structure (using sizeof())
+ * @param jpg_buf        JPEG converted image buffer
+ * @param jpg_buf_len    JPEG converted buffer length
+ * 
+ * @return ESP_OK when sent correctly, ESP_FAIL if a problem occured
+ */
+esp_err_t udp_send_buf(int* sock, struct sockaddr* dest_addr, size_t dest_adrr_size, void* buf, size_t buf_len);
 
 /**
  * @brief Send the jpeg format image buffer to the TCP server
  * 
- * @param sock          Socket used to send the image
- * @param jpg_buf       JPEG converted image buffer
- * @param jpg_buf_len   JPEG converted buffer length
+ * @param sock           Socket used to send the image
+ * @param dest_addr      Address structure that holds the IP and Port of the socket to send to
+ * @param dest_addr_size Size of the passed structure (using sizeof())
+ * 
+ * @return ESP_OK when sent correctly, ESP_FAIL if a problem occured
  */
-esp_err_t udp_send_buf(int* sock, struct sockaddr_in* dest_addr, uint8_t* jpg_buf, size_t jpg_buf_len);
+esp_err_t udp_shutdown(int* sock, struct sockaddr* dest_addr, size_t dest_adrr_size);
 
 //========== Google IoT Client ==========
 esp_err_t iotc_init(char* device_path);

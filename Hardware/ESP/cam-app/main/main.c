@@ -41,9 +41,25 @@
 #define INIT_SDCARD 0
 #endif /* CONFIG INIT_SDCARD */
 
+#define GPIO_TASK 1
+#define UDP_STREAM_TASK 1
+#define MQTT_TASK 1
+
 static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
+
+static const char* payload = "ESP32 Message";
+
+// Holds the task statuses
+typedef struct {
+    bool gpio_task_init;
+    bool gpio_task_created;
+    bool stream_task_init;
+    bool stream_task_created;
+    bool mqtt_task_init;
+    bool mqtt_task_created;
+} mcu_tasklist_t;
 
 static httpd_handle_t stream_httpd = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
@@ -73,10 +89,23 @@ mcu_status_t _mcu_s = {
 };
 static mcu_status_t* mcu_s = &_mcu_s;
 
+static mcu_tasklist_t mcu_tl = {
+.gpio_task_init      = false,
+.gpio_task_created   = false,
+.stream_task_init    = false,
+.stream_task_created = false,
+.mqtt_task_init      = false,
+.mqtt_task_created   = false
+};
+
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
-static void gpio_trig_action(void* arg);
 void exec_gpio_task(mcu_content_t* mcu_c);
+
+static void task_listener(void* arg);
+static void gpio_trig_task(void* arg);
+static void mqtt_task(void* pvParameters);
+static void udp_client_task(void *pvParameters);
 
 /**
  * @brief Handler for GPIO interrupts
@@ -90,9 +119,51 @@ void IRAM_ATTR gpio_isr_handler(void* arg) {
 }
 
 /**
+ * @brief Task handler that listens to requests and creates tasks accordingly
+ * 
+ */
+static void task_listener(void* arg) {
+    for(;;) 
+    {
+#if GPIO_TASK
+        if (!mcu_tl.gpio_task_created && mcu_tl.gpio_task_init) {
+            // Start gpio task
+            ESP_LOGI(TAG, "Creating GPIO task");
+            xTaskCreate(&gpio_trig_task, "gpio_trig_task", 8192, NULL, 3, NULL);
+            mcu_tl.gpio_task_created = true;
+            mcu_tl.gpio_task_init    = false;
+        }
+#endif
+
+#if UDP_STREAM_TASK
+        if (!mcu_tl.stream_task_created && mcu_tl.stream_task_init) {
+            // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
+            ESP_LOGI(TAG, "Creating UDP Stream task");
+            xTaskCreate(&udp_client_task, "udp_client_task", 4096, NULL, 10, NULL);
+            mcu_tl.stream_task_created = true;
+        }
+#endif
+
+#if MQTT_TASK
+        if (!mcu_tl.mqtt_task_created && mcu_tl.mqtt_task_init) {
+            // Start Google IoT Cloud comms
+            ESP_LOGI(TAG, "Creating MQTT task");
+            xTaskCreate(&mqtt_task, "mqtt_task", 8192, NULL, 5, NULL);
+            mcu_tl.mqtt_task_created = true;
+            mcu_tl.mqtt_task_init    = false;
+        }
+#endif
+    }
+    mcu_tl.gpio_task_created   = false;
+    mcu_tl.stream_task_created = false;
+    mcu_tl.mqtt_task_created   = false;
+    vTaskDelete(NULL);
+}
+
+/**
  * @brief Takes a picture when the input gpio is pulled down by a switch
  */
-static void gpio_trig_action(void* arg)
+static void gpio_trig_task(void* arg)
 {
     uint32_t io_num;
     for(;;) {
@@ -113,6 +184,9 @@ static void gpio_trig_action(void* arg)
     }
 }
 
+/**
+ * @brief Task used to communicate with Google IoT Core
+ */
 static void mqtt_task(void* pvParameters) {
     for(;;) {
         if (stfd_mqtt_task(mcu_c->device_path, mcu_c->jwt) != ESP_OK)
@@ -124,14 +198,16 @@ static void mqtt_task(void* pvParameters) {
 }
 
 /**
- * Task to send a video buffer through UDP
+ * @brief Task to send a video buffer through UDP.
+ *        When the status of cam_server_init is set to false
+ *        the server is sent a shut down command through
+ *        the message buffer
  */
-
 static void udp_client_task(void *pvParameters) {
     int sock;
-#if defined(CONFIG_IPV4)
+#if defined(CONFIG_SERVER_IPV4)
     struct sockaddr_in dest_addr;
-#elif defined(CONFIG_IPV6)
+#elif defined(CONFIG_SERVER_IPV6)
     struct sockaddr_in6 dest_addr = { 0 };
 #endif
 
@@ -162,22 +238,23 @@ static void udp_client_task(void *pvParameters) {
         vTaskDelay(1000/portTICK_RATE_MS);
     }
 
-    while (1) {
+    for(;;) {
         if (udp_setup_sock(&sock, (struct sockaddr*) &dest_addr, mcu_c->netif) != ESP_OK)
             break;
-        while (1) {
+        while (mcu_tl.stream_task_init) {
             if(!last_frame) {
                 last_frame = esp_timer_get_time();
             }
-            if (stfd_get_frame(&jpg_buf, &jpg_buf_len, frame_time) != ESP_OK)
-                break;
+             if (stfd_get_frame(&jpg_buf, &jpg_buf_len, frame_time) != ESP_OK)
+                 break;
 
             fr_end = esp_timer_get_time();
             frame_time = fr_end - last_frame;
             last_frame = fr_end;
             frame_time /= 1000;
 
-            if (udp_send_buf(&sock, /*(struct sockaddr*)*/ &dest_addr, jpg_buf, jpg_buf_len) != ESP_OK)
+            // if (udp_send_buf(&sock, (struct sockaddr*) &dest_addr, sizeof(dest_addr) payload, strlen(payload)) != ESP_OK)
+            if (udp_send_buf(&sock, (struct sockaddr*) &dest_addr, sizeof(dest_addr), jpg_buf, jpg_buf_len) != ESP_OK)
             {
                 ESP_LOGI(TAG, "udp_send_buf failed");
                 vTaskDelete(NULL);
@@ -187,13 +264,22 @@ static void udp_client_task(void *pvParameters) {
 
         vTaskDelay(2000/portTICK_RATE_MS);
 
-        if (sock != -1) {
+        if (sock != -1 && mcu_tl.stream_task_init) {
             ESP_LOGE(TAG, "Shutting down socket and restarting...");
             shutdown(sock, 0);
             close(sock);
         }
+        else if (!mcu_tl.stream_task_init) {
+            // Stream was manually shut down
+            if (udp_shutdown(&sock, (struct sockaddr*) &dest_addr, sizeof(dest_addr)) != ESP_OK) 
+            {
+                ESP_LOGE(TAG, "Couldn't shut down server-side properly");
+            }
+            break;
+        }
     }
     last_frame = 0;
+    mcu_tl.stream_task_created = false;
     vTaskDelete(NULL);
 }
 
@@ -226,17 +312,25 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
             break;
 
         case (mcu_content_type_t) STREAM:
-
-            if (!(mcu_s->cam_server_init)) {
-                init_camera(mcu_c, mcu_s, STREAM);
-                stream_httpd = startStreamServer(mcu_c->device_ip);
-                mcu_s->cam_server_init = true;
+            if (!mcu_tl.stream_task_created) {
+                ESP_LOGI(TAG, "Starting Stream from GPIO");
+                mcu_tl.stream_task_init = true;
+            }
+            else {
+                ESP_LOGI(TAG, "Stopping Stream from GPIO");
+                mcu_tl.stream_task_init = false;
             }
 
+            // if (!(mcu_s->cam_server_init)) {
+            //     // init_camera(mcu_c, mcu_s, STREAM);
+            //     // stream_httpd = startStreamServer(mcu_c->device_ip);
+            //     // mcu_s->cam_server_init = true;
+            // }
+            //
             // else {
             //     stopStreamServer(&stream_httpd);
             //     mcu_c->cam_server_init = false;
-
+            //
             //     if (esp_camera_deinit() != ESP_OK)
             //         ESP_LOGE(TAG, "Camera De-Init Failed");
             //     else
@@ -264,20 +358,18 @@ void app_main(void) {
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
+    // Initialization
     if (INIT_SDCARD)
         init_sdcard(mcu_s);
-
     gpio_init_setup(gpio_isr_handler);
     init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c, mcu_s);
-    // if (iotc_init(mcu_c->device_path) == ESP_OK) {
-    //     mcu_s->iotc_core_init = true;
-    //     xTaskCreate(&mqtt_task, "mqtt_task", 8192, NULL, 5, NULL);
-    // }
+    if (iotc_init(mcu_c->device_path) == ESP_OK) {
+        mcu_s->iotc_core_init = true;
+    }
 
-    //start gpio task
-    // xTaskCreate(&gpio_trig_action, "gpio_trig_action", 8192, NULL, 10, NULL);
+    // Task listener
+    xTaskCreate(&task_listener, "task_listener", 4096, NULL, portPRIVILEGE_BIT, NULL);
 
-    // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
-    xTaskCreate(&udp_client_task, "udp_client_task", 4096, NULL, 5, NULL);
+    mcu_tl.gpio_task_init = true;
 }

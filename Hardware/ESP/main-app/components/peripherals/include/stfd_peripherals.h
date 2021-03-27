@@ -54,17 +54,22 @@ typedef struct {
     bool upload_content;
     bool trig_signal;
     mcu_content_type_t content_type;
+    esp_netif_t *netif;
     wifi_ap_record_t* ap_info;
     char* device_ip;
+    char* pub_device_ip;
+    char* device_path;
+    char* jwt;
     uint64_t pic_counter;
 } mcu_content_t;
 
 typedef struct {
+    bool got_wifi_ip;
     bool cam_initiated;
     bool sdcard_initiated;
     bool cam_server_init;
-    bool nsw_status;        // Indicates position of N-switch
-    bool door_is_closed;
+    bool iotc_core_init;
+    bool iotc_server_online;
 } mcu_status_t;
 
 uint32_t getDefaultScanListSize(void);
@@ -105,6 +110,17 @@ camera_fb_t* camera_take_picture(mcu_content_t* cam_c);
  * @param jpeg_buf_len  JPEG Buffer length
  */
 esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_len);
+
+/**
+ * @brief Gets the next frame from the camera frame buffer and outputs the JPEG converted image
+ *        in the JPEG buffer
+ * @note  The pixel format can only be JPEG for this function
+ * 
+ * @param jpg_buf       JPEG pointer reference where the pointer to the image buffer is stored
+ * @param jpg_buf_len   JPEG buffer length reference.
+ * @param frame_time    Time at which the frame is taken
+ */
+esp_err_t stfd_get_frame(uint8_t** jpg_buf, size_t* jpg_buf_len, int64_t frame_time);
 
 //========== GPIO ==========
 
@@ -178,51 +194,6 @@ void gpio_setup_input(gpio_isr_t isr_handler);
 void gpio_setup_adc(void);
 void gpio_setup_output(void);
 
-//========== HTTP client ==========
-
-/**
- * @brief Interrupt handler for an HTTP event
- * 
- * @param evt   ...
- * @return      Returns an error code. The desired output is ESP_OK to indicate normal operations
- */
-esp_err_t _http_event_handler(esp_http_client_event_t *evt);
-
-/**
- * @brief Begins the HTTP transaction to the set URL
- * 
- * @param buf Transfer file content buffer
- * @param len Transfer file content length
- */
-void http_rest_with_url_upload_picture(uint8_t* buf, size_t len);
-
-/**
- * @brief Uploads the attached message as a notification to the backend
- * 
- * @param message The message to attach to the notification
- */
-void http_rest_with_url_notification(const char* _message);
-
-/**
- * @brief HTTP event handler for streaming
- * 
- * @param req HTTP request
- * @return    Returns an error code. The desired output is ESP_OK to indicate normal operations
- */
-esp_err_t stream_handler(httpd_req_t *req);
-
-/**
- * @brief Function begins camera server for streaming
- * 
- * @param device_ip ESP camera's IP address on which it is streaming on
- */
-httpd_handle_t startStreamServer(char* device_ip);
-
-/**
- * @brief Function stop camera server from streaming and deallocates the memory
- */
-void stopStreamServer(httpd_handle_t* httpd_handle);
-
 //========== WiFi Scan ==========
 
 void event_handler(void* arg, esp_event_base_t event_base,
@@ -240,7 +211,7 @@ void wifi_all_ch_scan(wifi_ap_record_t* ap_info);
 /**
  * @brief Scans and finds the first compatible AP with the matching requirements (SSID, Password, Security level)
  */
-void fast_scan(wifi_ap_record_t* ap_info);
+void fast_scan(mcu_status_t* mcu_s, wifi_ap_record_t* ap_info);
 
 /**
  * @brief Performs the wifi scan and connects to the AP if the scan mode if fast_scan().
@@ -248,6 +219,6 @@ void fast_scan(wifi_ap_record_t* ap_info);
  * 
  * @param ap_info Pointer to which the list is assigned to
  */
-void wifi_scan(mcu_content_t* cam_content);
+void wifi_scan(mcu_content_t* mcu_content, mcu_status_t* mcu_status);
 
 #endif /*STFD_PERIPHERALS_H_*/

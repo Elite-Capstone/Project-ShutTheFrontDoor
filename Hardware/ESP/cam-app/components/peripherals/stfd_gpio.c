@@ -94,7 +94,7 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
 void gpio_setup_input(gpio_isr_t isr_handler) {
     // BOOT
     if( stfd_gpio_config(
-        GPIO_PIN_INTR_NEGEDGE, 
+        GPIO_PIN_INTR_POSEDGE, 
         GPIO_INPUT_BOOT_PIN_SEL, 
         GPIO_MODE_INPUT, 
         GPIO_PULLDOWN_DISABLE, 
@@ -105,7 +105,7 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     }
     // MS
     if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_PIN_INTR_ANYEDGE, 
         GPIO_INPUT_MS_PIN_SEL, 
         GPIO_MODE_INPUT, 
         GPIO_PULLDOWN_DISABLE, 
@@ -178,16 +178,16 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
     //hook isr handler for specific gpio pin
     //Must only be done once. But each gpio can have their own isr handler
     ESP_ERROR_CHECK(gpio_install_isr_service(ESP_INTR_FLAG_DEFAULT));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_BOOT, isr_handler, (void*) GPIO_INPUT_BOOT));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MS, isr_handler, (void*) GPIO_INPUT_MS));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_DRBELL_NOTIF, isr_handler, (void*) GPIO_INPUT_DRBELL_NOTIF));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_BOOT,          isr_handler, (void*) GPIO_INPUT_BOOT));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MS,            isr_handler, (void*) GPIO_INPUT_MS));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_DRBELL_NOTIF,  isr_handler, (void*) GPIO_INPUT_DRBELL_NOTIF));
     ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_REEDSW_STATUS, isr_handler, (void*) GPIO_INPUT_REEDSW_STATUS));
 
 #if CONFIG_MAIN_MCU
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_NSW, isr_handler, (void*) GPIO_INPUT_NSW));
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MOTOR_FAULT, isr_handler, (void*) GPIO_INPUT_MOTOR_FAULT));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_NSW,           isr_handler, (void*) GPIO_INPUT_NSW));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_MOTOR_FAULT,   isr_handler, (void*) GPIO_INPUT_MOTOR_FAULT));
 #elif CONFIG_ESP32_CAM_MCU
-    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC, isr_handler, (void*) GPIO_INPUT_PIC));
+    ESP_ERROR_CHECK(gpio_isr_handler_add(GPIO_INPUT_PIC,           isr_handler, (void*) GPIO_INPUT_PIC));
 #endif
 }
 
