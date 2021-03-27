@@ -76,11 +76,10 @@ public class NotificationConfigurations {
     }
 
     public static Properties getProducerProps(String bootstrapServer){
-        //TODO serializer for java object
+        // serializer for java object
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-//        props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerialize");
         props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerializer");
 
         return props;

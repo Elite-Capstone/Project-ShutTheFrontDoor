@@ -1,7 +1,6 @@
 package com.theelite.mqttKafkaBridge;
 
-import com.theelite.mqttKafkaBridge.model.Notification;
-
+import com.theelite.notifications.model.Notification;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
@@ -23,10 +22,8 @@ import java.util.Properties;
 @Component
 public class Bridge implements MqttCallback {
     public final int fiveMinutes = 300000;
-    public final int oneMinute = fiveMinutes / 5;
     private Logger logger;
     private final String mqttServerUri;
-    private final String mqttClientId = "MqttKafkaBridge";
     private final String brokerUri;
     public static MqttAsyncClient mqtt;
     private static AdminClient kafkaAdmin;
@@ -64,7 +61,7 @@ public class Bridge implements MqttCallback {
                         subcribeToTopics(topics);
                     }
                     logger.trace("Thread to check new Topics going to sleep");
-                    Thread.sleep(oneMinute);
+                    Thread.sleep(fiveMinutes);
                 } catch (Exception e) {
                     logger.error(e.getMessage());
                 }
@@ -113,6 +110,7 @@ public class Bridge implements MqttCallback {
             try {
                 Thread.sleep(10000);
             } catch (InterruptedException e) {
+                logger.error(e.getMessage());
             }
         }
     }
@@ -133,7 +131,7 @@ public class Bridge implements MqttCallback {
             IMqttToken token = mqtt.subscribe(topics, qos);
             token.waitForCompletion();
         } catch (MqttException e) {
-            e.printStackTrace();
+            logger.error(e.getMessage());
         }
     }
 
