@@ -49,7 +49,7 @@ static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
 
-static const char* payload = "ESP32 Message";
+static char* payload = "ESP32 Message";
 
 // Holds the task statuses
 typedef struct {
@@ -65,58 +65,65 @@ static httpd_handle_t stream_httpd = NULL;
 static xQueueHandle gpio_evt_queue = NULL;
 
 mcu_content_t _mcu_c = {
-.save_to_sdcard     = false,
-.upload_content     = false,
-.trig_signal        = SIGNAL_IGNORED,
-.content_type       = STANDBY,
-.netif              = NULL,
-.ap_info            = NULL,
-.device_ip          = "",
-.pub_device_ip      = "",
-.device_path        = "",
-.jwt                = "",
-.pic_counter        = 0
+    .save_to_sdcard     = false,
+    .upload_content     = false,
+    .trig_signal        = SIGNAL_IGNORED,
+    .content_type       = STANDBY,
+    .netif              = NULL,
+    .ap_info            = NULL,
+    .device_ip          = "",
+    .pub_device_ip      = "",
+    // .device_path        = "",
+    // .jwt                = "",
+    .pic_counter        = 0
 };
 static mcu_content_t* mcu_c = &_mcu_c;
 
 mcu_status_t _mcu_s = {
-.got_wifi_ip        = false,
-.cam_initiated      = false,
-.sdcard_initiated   = false,
-.cam_server_init    = false,
-.iotc_core_init     = false,
-.iotc_server_online = false
+    .got_wifi_ip        = false,
+    .cam_initiated      = false,
+    .sdcard_initiated   = false,
+    .cam_server_init    = false,
+    .door_is_locked     = false,
+    .door_is_closed     = false,
+    .bat_level          = 0
+    // .iotc_core_init     = false,
+    // .iotc_server_online = false
 };
 static mcu_status_t* mcu_s = &_mcu_s;
 
+mcu_mqtt_msg_t _mcu_mqtt = {
+    .client      = NULL,
+    .event       = false,
+    .msg_id      = 0,
+    .json_status = NULL,
+    .cmd_info = {
+        .timeinfo       = {0},
+        .cmd            = MCU_INVALID,
+        .flag           = 0,
+        .cmd_delay_ms   = 0,
+        .exec_cmd       = false
+    }
+};
+static mcu_mqtt_msg_t* mcu_mqtt = &_mcu_mqtt;
+
 static mcu_tasklist_t mcu_tl = {
-.gpio_task_init      = false,
-.gpio_task_created   = false,
-.stream_task_init    = false,
-.stream_task_created = false,
-.mqtt_task_init      = false,
-.mqtt_task_created   = false
+    .gpio_task_init      = false,
+    .gpio_task_created   = false,
+    .stream_task_init    = false,
+    .stream_task_created = false,
+    .mqtt_task_init      = false,
+    .mqtt_task_created   = false
 };
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
-void exec_gpio_task(mcu_content_t* mcu_c);
+static void exec_gpio_task(mcu_content_t* mcu_c);
 
 static void task_listener(void* arg);
 static void gpio_trig_task(void* arg);
 static void mqtt_task(void* pvParameters);
 static void udp_client_task(void *pvParameters);
-
-/**
- * @brief Handler for GPIO interrupts
- * 
- * @param arg Allocated memory data passed to the handler.
- *            In this case, the data is the triggered GPIO 
- */
-void IRAM_ATTR gpio_isr_handler(void* arg) {
-    uint32_t gpio_num = (uint32_t) arg;
-    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
-}
 
 /**
  * @brief Task handler that listens to requests and creates tasks accordingly
@@ -146,7 +153,6 @@ static void task_listener(void* arg) {
 
 #if MQTT_TASK
         if (!mcu_tl.mqtt_task_created && mcu_tl.mqtt_task_init) {
-            // Start Google IoT Cloud comms
             ESP_LOGI(TAG, "Creating MQTT task");
             xTaskCreate(&mqtt_task, "mqtt_task", 8192, NULL, 5, NULL);
             mcu_tl.mqtt_task_created = true;
@@ -161,38 +167,32 @@ static void task_listener(void* arg) {
 }
 
 /**
- * @brief Takes a picture when the input gpio is pulled down by a switch
- */
-static void gpio_trig_task(void* arg)
-{
-    uint32_t io_num;
-    for(;;) {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
-            printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
-            get_io_type(io_num, mcu_c);
-            mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
-            mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
-
-            if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
-                exec_gpio_task(mcu_c);
-            }
-            else {
-                ESP_LOGI(TAG, "Triggered the wrong input pin or wrong signal level");
-            }   
-        }
-    }
-}
-
-/**
  * @brief Task used to communicate with Google IoT Core
  */
 static void mqtt_task(void* pvParameters) {
-    for(;;) {
-        if (stfd_mqtt_task(mcu_c->device_path, mcu_c->jwt) != ESP_OK)
-            break;
+    stfd_mqtt_init(mcu_mqtt);
+    while(mcu_tl.mqtt_task_init) {
+        
+        if (mcu_mqtt->cmd_info.exec_cmd) {
+            switch (mcu_mqtt->cmd_info.cmd) {
+                case (mcu_cmd_type_t) MCU_GETSTATUS:
+                    break;
+                case (mcu_cmd_type_t) LOCK_DOOR:
+                    break;
+                case (mcu_cmd_type_t) UNLOCK_DOOR:
+                    break;
+                case (mcu_cmd_type_t) STREAM_CAM:
+                    mcu_tl.stream_task_init = true;
+                    break;
+                default:
+                    ESP_LOGW(TAG, "Invalid command type received from MQTT");
+                    break;
+            }
+            mcu_mqtt->cmd_info.exec_cmd = false;
+        }
     }
-
-    ESP_LOGI(TAG, "Deleting task");
+    mcu_tl.mqtt_task_created = false;
+    ESP_LOGI(TAG, "Deleting MQTT task");
     vTaskDelete(NULL);
 }
 
@@ -244,6 +244,9 @@ static void udp_client_task(void *pvParameters) {
             if(!last_frame) {
                 last_frame = esp_timer_get_time();
             }
+            /*
+                Receive buffer from ESP32-CAM instead
+            */
             // if (stfd_get_frame(&jpg_buf, &jpg_buf_len, frame_time) != ESP_OK)
             //     break;
 
@@ -279,6 +282,38 @@ static void udp_client_task(void *pvParameters) {
     }
     last_frame = 0;
     mcu_tl.stream_task_created = false;
+    ESP_LOGI(TAG, "Deleting UDP Streaming task");
+    vTaskDelete(NULL);
+}
+
+void IRAM_ATTR gpio_isr_handler(void* arg) {
+    uint32_t gpio_num = (uint32_t) arg;
+    xQueueSendFromISR(gpio_evt_queue, &gpio_num, NULL);
+}
+
+/**
+ * @brief Takes a picture when the input gpio is pulled down by a switch
+ */
+static void gpio_trig_task(void* arg)
+{
+    uint32_t io_num;
+    for(;;) {
+        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+            printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
+            get_io_type(io_num, mcu_c);
+            mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
+            mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
+
+            if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
+                exec_gpio_task(mcu_c);
+            }
+            else {
+                ESP_LOGI(TAG, "Triggered the wrong input pin or wrong signal level");
+            }   
+        }
+    }
+    mcu_tl.gpio_task_created = false;
+    ESP_LOGI(TAG, "Deleting GPIO task");
     vTaskDelete(NULL);
 }
 
@@ -287,7 +322,7 @@ static void udp_client_task(void *pvParameters) {
  * 
  * @param mcu_c Camera current status with its content
  */
-void exec_gpio_task(mcu_content_t* mcu_c) {    
+static void exec_gpio_task(mcu_content_t* mcu_c) {    
     camera_fb_t* camera_pic;
     uint8_t* jpeg_buf = NULL;
     size_t jpeg_buf_len = 0;
@@ -354,6 +389,10 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
 }
 
 void app_main(void) {
+    ESP_LOGI(TAG, "[APP] Startup..");
+    ESP_LOGI(TAG, "[APP] Free memory: %d bytes", esp_get_free_heap_size());
+    ESP_LOGI(TAG, "[APP] IDF version: %s", esp_get_idf_version());
+
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
 
@@ -363,12 +402,14 @@ void app_main(void) {
     gpio_init_setup(gpio_isr_handler);
     init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c, mcu_s);
-    if (iotc_init(mcu_c->device_path) == ESP_OK) {
-        mcu_s->iotc_core_init = true;
-    }
+    stfd_mqtt_init(mcu_mqtt);
+    // if (iotc_init(mcu_c->device_path) == ESP_OK) {
+    //     mcu_s->iotc_core_init = true;
+    // }
 
     // Task listener
     xTaskCreate(&task_listener, "task_listener", 4096, NULL, portPRIVILEGE_BIT, NULL);
-
+    // Initialize the GPIOs and MQTT by default
     mcu_tl.gpio_task_init = true;
+    mcu_tl.mqtt_task_init = true;
 }

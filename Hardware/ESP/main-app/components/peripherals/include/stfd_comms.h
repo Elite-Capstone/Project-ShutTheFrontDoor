@@ -11,6 +11,13 @@
 #define STFD_COMMS_H_
 
 // #include "stfd_peripherals.h"
+#include <stdio.h>
+#include <stdint.h>
+#include <stddef.h>
+#include <string.h>
+#include <cJSON.h> 
+
+#include <time.h>
 
 #include <esp_log.h>
 #include <esp_system.h>
@@ -26,10 +33,12 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 
+#include "lwip/apps/sntp.h"
 #include "lwip/sockets.h"
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
 #include <iotc.h>
+#include "mqtt_client.h"
 
 #define DEFAULT_DOOR_UUID   "00b288a8-3db1-40b5-b30f-532af4e12f4b"
 #define DEFAULT_HTTP_URL    "http://34.117.160.50/"
@@ -49,6 +58,31 @@
 #define COMMAND_REQUEST     "Command_Request"
 #define COMMAND_FLAG        "Request_Flag"
 #define COMMAND_DELAY       "Command_Delay_ms"
+
+typedef enum {
+    MCU_INVALID   = -1,
+    MCU_SHUTDOWN  = 0x0,
+    MCU_GETSTATUS = 0x1,
+    LOCK_DOOR     = 0x2,
+    UNLOCK_DOOR   = 0x3,
+    STREAM_CAM    = 0x4,
+} mcu_cmd_type_t;
+
+typedef struct {
+    struct tm timeinfo;
+    mcu_cmd_type_t cmd;
+    int flag;
+    int cmd_delay_ms;
+    bool exec_cmd; // true when the command is new and should be executed / false when it has been executed
+} mcu_cmd_t;
+
+typedef struct {
+    esp_mqtt_client_handle_t client;
+    bool event;
+    int   msg_id;
+    cJSON* json_status;
+    mcu_cmd_t cmd_info;
+} mcu_mqtt_msg_t;
 
 //========== HTTP client ==========
 
@@ -146,5 +180,23 @@ void publish_telemetry_event(iotc_context_handle_t context_handle, iotc_timed_ta
 void stfd_mqtt_subscribe_to_commands(iotc_context_handle_t in_context_handle);
 
 esp_err_t stfd_mqtt_task(char* device_path, char* jwt);
+
+//========== MQTT Client ==========
+/**
+ * @brief Initialize the MQTT connection
+ *
+ * @param mcu_mqtt Structure which will hold the JSON status
+ */
+void stfd_mqtt_init(mcu_mqtt_msg_t* mcu_mqtt);
+
+/**
+ * @brief Scheduled tasks that must run periodically
+ */
+void stfd_mqtt_scheduled_task(mcu_mqtt_msg_t* mcu_mqtt);
+
+/**
+ * @brief Sends a notification to the MQTT broker for redistribution to subs
+ */
+void stfd_mqtt_notif_task(esp_mqtt_client_handle_t client, char* msg);
 
 #endif /* STFD_COMMS_H_ */

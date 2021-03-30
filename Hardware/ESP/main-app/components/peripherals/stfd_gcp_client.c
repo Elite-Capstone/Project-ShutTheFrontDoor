@@ -15,8 +15,6 @@
 #include "esp_event_loop.h"
 #include "nvs_flash.h"
 #include "jsmn.h"
-#include <time.h>
-#include "lwip/apps/sntp.h"
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
@@ -48,7 +46,7 @@ static iotc_context_handle_t iotc_context = IOTC_INVALID_CONTEXT_HANDLE;
  * Once the device is connected it could receive commands
  */
 
-void initialize_sntp(void)
+static void initialize_sntp(void)
 {
     ESP_LOGI(TAG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
@@ -56,7 +54,7 @@ void initialize_sntp(void)
     sntp_init();
 }
 
-void obtain_time(void)
+static void obtain_time(void)
 {
     initialize_sntp();
     // wait for time to be set
@@ -270,14 +268,13 @@ static void stfd_mqtt_commands_subscribe_callback(iotc_context_handle_t in_conte
             // Decode the received string
             cJSON* command_root = cJSON_Parse(sub_message);
             cJSON* request_time = cJSON_GetObjectItem(command_root, COMMAND_TIME);
-            ESP_LOGI(TAG, "Received Request from %i/%i/%i - %i:%i:%i.%i",
+            ESP_LOGI(TAG, "Received Request from %i/%i/%i - %i:%i:%i",
             cJSON_GetObjectItem(request_time, COMMAND_TIME_DAY)->valueint,
             cJSON_GetObjectItem(request_time, COMMAND_TIME_MONTH)->valueint,
             cJSON_GetObjectItem(request_time, COMMAND_TIME_YEAR)->valueint,
             cJSON_GetObjectItem(request_time, COMMAND_TIME_HOUR)->valueint,
             cJSON_GetObjectItem(request_time, COMMAND_TIME_MIN)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_SEC)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_MS)->valueint
+            cJSON_GetObjectItem(request_time, COMMAND_TIME_SEC)->valueint
             );
 
             ESP_LOGI(TAG, "Received command request: %s", 
@@ -315,7 +312,7 @@ void stfd_mqtt_subscribe_to_commands(iotc_context_handle_t in_context_handle) {
 //=====         Section - MQTT Task          =====
 //================================================
 
-esp_err_t stfd_mqtt_task(char* device_path, char* jwt)
+esp_err_t stfd_iotc_task(char* device_path, char* jwt)
 {
     const uint16_t connection_timeout = 0;
     const uint16_t keepalive_timeout = 20;

@@ -10,6 +10,8 @@
 #ifndef STFD_PERIPHERALS_H_
 #define STFD_PERIPHERALS_H_
 
+#include <cJSON.h>
+
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_event.h>
@@ -58,8 +60,8 @@ typedef struct {
     wifi_ap_record_t* ap_info;
     char* device_ip;
     char* pub_device_ip;
-    char* device_path;
-    char* jwt;
+    // char* device_path;
+    // char* jwt;
     uint64_t pic_counter;
 } mcu_content_t;
 
@@ -68,12 +70,21 @@ typedef struct {
     bool cam_initiated;
     bool sdcard_initiated;
     bool cam_server_init;
-    bool iotc_core_init;
-    bool iotc_server_online;
+    bool door_is_locked;
+    bool door_is_closed;
+    uint32_t bat_level;
+
+    // bool iotc_core_init;
+    // bool iotc_server_online;
 } mcu_status_t;
 
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
+
+// esp_err_t stfd_get_door_full_status(cJSON* status) {
+//     // TODO
+//     return ESP_OK;
+// }
 
 //========== CAMERA ==========
 /**
@@ -123,6 +134,13 @@ esp_err_t convert_to_jpeg(camera_fb_t* fb, uint8_t** jpeg_buf, size_t* jpeg_buf_
 esp_err_t stfd_get_frame(uint8_t** jpg_buf, size_t* jpg_buf_len, int64_t frame_time);
 
 //========== GPIO ==========
+/**
+ * @brief Handler for GPIO interrupts
+ * 
+ * @param arg Allocated memory data passed to the handler.
+ *            In this case, the data is the triggered GPIO 
+ */
+void IRAM_ATTR gpio_isr_handler(void* arg);
 
 /**
  * @brief Checks if the triggered input GPIO is valid to perform the action and if it is the required logic value
