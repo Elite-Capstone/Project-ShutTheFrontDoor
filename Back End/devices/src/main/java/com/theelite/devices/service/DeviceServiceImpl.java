@@ -10,6 +10,7 @@ import com.theelite.devices.dao.IpAddressesDao;
 import com.theelite.devices.model.Device;
 import com.theelite.devices.model.DeviceIp;
 import com.theelite.devices.mqtt.MqttConnect;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.beans.factory.annotation.Value;
@@ -192,12 +193,17 @@ public class DeviceServiceImpl implements DeviceService {
         return null;
     }
 
-    public void trySendingMessage(String topic, String message){
+    public void trySendingMessage(String topic, String message) {
         MqttMessage mqttMessage = new MqttMessage(message.getBytes());
         try {
-            MqttConnect.mqttClient.publish(topic, mqttMessage);
+            IMqttToken token = MqttConnect.mqttClient.publish(topic, mqttMessage);
+            token.waitForCompletion();
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+    public List<String> getDeviceIds(){
+        return deviceDao.getDeviceIds();
     }
 }

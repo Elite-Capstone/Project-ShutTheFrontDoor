@@ -23,4 +23,6 @@ public interface CustomDao {
     String getFamilyAccountForDevice(String device);
 
     List<Device> getDevicesWithId(List<String> deviceIdsForAccount);
+
+    List<String> getDeviceIds();
 }

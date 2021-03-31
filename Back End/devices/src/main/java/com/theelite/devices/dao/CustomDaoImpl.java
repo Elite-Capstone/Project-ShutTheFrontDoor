@@ -10,9 +10,11 @@ import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class CustomDaoImpl implements CustomDao {
     private final MongoOperations mongoOperations;
@@ -96,5 +98,17 @@ public class CustomDaoImpl implements CustomDao {
     @Override
     public void testDBConnection() {
         mongoOperations.count(new Query().limit(1), Account.class);
+    }
+
+    @Override
+    public List<String> getDeviceIds() {
+        Query query = new Query();
+        query.fields().include(deviceId);
+        List<Device> devices = mongoOperations.find(query, Device.class);
+        return devices
+                .stream()
+                .map(d -> d.getDeviceId())
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
     }
 }
