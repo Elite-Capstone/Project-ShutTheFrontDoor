@@ -1,33 +1,27 @@
 package com.theelite.devices.service;
 
+import com.theelite.devices.communication.UsersService;
+import com.theelite.devices.dao.IpAddressesDao;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.theelite.devices.model.Device;
 import com.theelite.devices.communication.NotifService;
-import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.DeviceDao;
 
-import com.theelite.devices.dao.IpAddressesDao;
-import com.theelite.devices.model.Device;
 import com.theelite.devices.model.DeviceIp;
 import com.theelite.devices.mqtt.MqttConnect;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Arrays;
 import java.util.List;
 
 @Service
