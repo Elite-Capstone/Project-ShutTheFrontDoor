@@ -94,7 +94,7 @@ static mcu_status_t* mcu_s = &_mcu_s;
 
 mcu_mqtt_msg_t _mcu_mqtt = {
     .client      = NULL,
-    .event       = false,
+    .sntp_init   = false,
     .msg_id      = 0,
     .json_status = NULL,
     .cmd_info = {
@@ -140,7 +140,7 @@ static void task_listener(void* arg) {
             mcu_tl.gpio_task_created = true;
             mcu_tl.gpio_task_init    = false;
         }
-#endif
+#endif /* GPIO_TASK */
 
 #if UDP_STREAM_TASK
         if (!mcu_tl.stream_task_created && mcu_tl.stream_task_init) {
@@ -149,16 +149,15 @@ static void task_listener(void* arg) {
             xTaskCreate(&udp_client_task, "udp_client_task", 4096, NULL, 10, NULL);
             mcu_tl.stream_task_created = true;
         }
-#endif
+#endif /* UDP_STREAM_TASK */
 
 #if MQTT_TASK
         if (!mcu_tl.mqtt_task_created && mcu_tl.mqtt_task_init) {
             ESP_LOGI(TAG, "Creating MQTT task");
             xTaskCreate(&mqtt_task, "mqtt_task", 8192, NULL, 5, NULL);
             mcu_tl.mqtt_task_created = true;
-            mcu_tl.mqtt_task_init    = false;
         }
-#endif
+#endif /* MQTT_TASK */
     }
     mcu_tl.gpio_task_created   = false;
     mcu_tl.stream_task_created = false;
@@ -176,8 +175,13 @@ static void mqtt_task(void* pvParameters) {
         if (mcu_mqtt->cmd_info.exec_cmd) {
             switch (mcu_mqtt->cmd_info.cmd) {
                 case (mcu_cmd_type_t) MCU_GETSTATUS:
+                    stfd_mqtt_publish_status(mcu_mqtt);
+                    break;
+                case (mcu_cmd_type_t) MCU_GETNOTIF:
+                    stfd_mqtt_publish_notif(mcu_mqtt->client, "Notification Message");
                     break;
                 case (mcu_cmd_type_t) LOCK_DOOR:
+                    exec_toggle_motor();
                     break;
                 case (mcu_cmd_type_t) UNLOCK_DOOR:
                     break;
@@ -190,7 +194,9 @@ static void mqtt_task(void* pvParameters) {
             }
             mcu_mqtt->cmd_info.exec_cmd = false;
         }
+        vTaskDelay(2000 / portTICK_RATE_MS);
     }
+    stfd_mqtt_close_client(mcu_mqtt);
     mcu_tl.mqtt_task_created = false;
     ESP_LOGI(TAG, "Deleting MQTT task");
     vTaskDelete(NULL);
@@ -373,10 +379,12 @@ static void exec_gpio_task(mcu_content_t* mcu_c) {
             break;
 
         case (mcu_content_type_t) DRBELL:
-            http_rest_with_url_notification(DRBELL_MSG);
+            //http_rest_with_url_notification(DRBELL_MSG);
+            stfd_mqtt_publish_notif(mcu_mqtt->client, DRBELL_MSG);
             break;
         case (mcu_content_type_t) REEDSW:
-            http_rest_with_url_notification(REEDSW_MSG);
+            //http_rest_with_url_notification(REEDSW_MSG);
+            stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_MSG);
             break;
         case (mcu_content_type_t) STANDBY:
             ESP_LOGI(TAG, "Standing by... 10sec");
@@ -400,9 +408,8 @@ void app_main(void) {
     if (INIT_SDCARD)
         init_sdcard(mcu_s);
     gpio_init_setup(gpio_isr_handler);
-    init_camera(mcu_c, mcu_s, STREAM);
+    //init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c, mcu_s);
-    stfd_mqtt_init(mcu_mqtt);
     // if (iotc_init(mcu_c->device_path) == ESP_OK) {
     //     mcu_s->iotc_core_init = true;
     // }

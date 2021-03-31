@@ -51,6 +51,24 @@ typedef enum {
     MTR_CTRL    = 9
 } mcu_content_type_t;
 
+typedef enum {
+    LOCK_INVALID        = -1,
+    LOCK_FAIL           = 0,
+    LOCK_OK             = 1,
+    LOCK_MOTOR_FAULT    = 2,
+    LOCK_OPEN_DOOR      = 3,
+    LOCK_ALREADY_CLOSED = 4,
+    LOCK_POS_UNKNOWN    = 5,
+    LOCK_ALREADY_OPEN   = 6,
+    LOCK_BATT_LOW       = 7
+} stfd_lock_err_t;
+
+typedef enum {
+    NSW_UNKOWN = -1,
+    NSW_CLOSED = 0,
+    NSW_OPEN   = 1
+} nsw_pos_t;
+
 typedef struct {
     bool save_to_sdcard;
     bool upload_content;
@@ -158,6 +176,17 @@ bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level);
  *        This function toggles the motor to rotate once CW and once CCW
  */
 void exec_toggle_motor(void);
+
+/**
+ * @brief locks/unlocks the door by turning the motor in a CW (true/Unlock) or CCW (false/Lock) direction
+ * 
+ * @param lock_dir Direction of rotation desired:
+ *                 - true  = CW
+ *                 - false = CCW
+ * @param nsw_pos  Position of the NSW
+ * @return Lock error codes defined above
+ */
+ stfd_lock_err_t exec_operate_lock(bool lock_dir);
 
 /**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)

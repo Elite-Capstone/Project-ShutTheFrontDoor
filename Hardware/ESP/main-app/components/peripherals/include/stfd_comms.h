@@ -40,24 +40,42 @@
 #include <iotc.h>
 #include "mqtt_client.h"
 
+#undef  MQTT_MAX_LWT_TOPIC
+#define MQTT_MAX_LWT_TOPIC          128
+#undef  MQTT_MAX_LWT_MSG
+#define MQTT_MAX_LWT_MSG            1024
+
 #define DEFAULT_DOOR_UUID   "00b288a8-3db1-40b5-b30f-532af4e12f4b"
 #define DEFAULT_HTTP_URL    "http://34.117.160.50/"
 #define DEFAULT_STREAM_URI  "/stream"
 
-// JSON Format
-#define COMMAND_NAME        "Door_Command_Request"
-#define COMMAND_TIME        "TimeOfRequest"
-#define COMMAND_TIME_YEAR   "Year"
-#define COMMAND_TIME_MONTH  "Month"
-#define COMMAND_TIME_DAY    "Day"
-#define COMMAND_TIME_HOUR   "Hour"
-#define COMMAND_TIME_MIN    "Minute"
-#define COMMAND_TIME_SEC    "Second"
-#define COMMAND_TIME_MS     "Millisecond"
-#define COMMAND_TARGET      "Target_Device"
-#define COMMAND_REQUEST     "Command_Request"
-#define COMMAND_FLAG        "Request_Flag"
-#define COMMAND_DELAY       "Command_Delay_ms"
+// TimeOfPublish JSON Format
+#define TIME_YEAR   "year"
+#define TIME_MONTH  "month"
+#define TIME_DAY    "day"
+#define TIME_HOUR   "hour"
+#define TIME_MIN    "minute"
+#define TIME_SEC    "second"
+#define TIME_MS     "millisecond"
+
+// Command JSON Format
+#define COMMAND_NAME        "commandRequest"
+#define COMMAND_TIME        "timeOfPublish"
+#define COMMAND_TARGET      "targetDevice"
+#define COMMAND_REQUEST     "commandRequest"
+#define COMMAND_FLAG        "requestFlag"
+#define COMMAND_DELAY       "commandDelayMS"
+
+// Status JSON Format
+#define STATUS_TIME           "timeOfPublish"
+#define STATUS_LIST           "statusList"
+#define STATUS_WIFI_IP        "gotWifiIP"
+#define STATUS_CAM            "camIsInit"
+#define STATUS_SDCARD         "sdcardIsInit"
+#define STATUS_CAM_STREAM     "camStreamIsInit"
+#define STATUS_DOOR_IS_LOCKED "doorIsLocked"
+#define STATUS_DOOR_IS_CLOSED "doorIsClosed"
+#define STATUS_BATTERY_LEVEL  "batteryLevel"
 
 typedef enum {
     MCU_INVALID   = -1,
@@ -66,20 +84,21 @@ typedef enum {
     LOCK_DOOR     = 0x2,
     UNLOCK_DOOR   = 0x3,
     STREAM_CAM    = 0x4,
+    MCU_GETNOTIF  = 0x5,
 } mcu_cmd_type_t;
 
 typedef struct {
     struct tm timeinfo;
     mcu_cmd_type_t cmd;
-    int flag;
-    int cmd_delay_ms;
+    int  flag;
+    int  cmd_delay_ms;
     bool exec_cmd; // true when the command is new and should be executed / false when it has been executed
 } mcu_cmd_t;
 
 typedef struct {
     esp_mqtt_client_handle_t client;
-    bool event;
-    int   msg_id;
+    bool   sntp_init;
+    int    msg_id;
     cJSON* json_status;
     mcu_cmd_t cmd_info;
 } mcu_mqtt_msg_t;
@@ -182,6 +201,9 @@ void stfd_mqtt_subscribe_to_commands(iotc_context_handle_t in_context_handle);
 esp_err_t stfd_mqtt_task(char* device_path, char* jwt);
 
 //========== MQTT Client ==========
+
+void stfd_init_status_json(cJSON** root);
+void stfd_parse_json_command(char* json_cmd, struct tm* timeinfo, mcu_cmd_type_t* cmd, int* flag, int* cmd_delay_ms);
 /**
  * @brief Initialize the MQTT connection
  *
@@ -195,8 +217,15 @@ void stfd_mqtt_init(mcu_mqtt_msg_t* mcu_mqtt);
 void stfd_mqtt_scheduled_task(mcu_mqtt_msg_t* mcu_mqtt);
 
 /**
+ * @brief
+ */
+void stfd_mqtt_publish_status(mcu_mqtt_msg_t* mcu_mqtt);
+
+/**
  * @brief Sends a notification to the MQTT broker for redistribution to subs
  */
-void stfd_mqtt_notif_task(esp_mqtt_client_handle_t client, char* msg);
+void stfd_mqtt_publish_notif(esp_mqtt_client_handle_t client, const char* msg);
+
+void stfd_mqtt_close_client(mcu_mqtt_msg_t* mcu_mqtt);
 
 #endif /* STFD_COMMS_H_ */

@@ -50,10 +50,6 @@ Command Format JSON:
         {
         "name": "Second",
         "type": "int"
-        },
-        {
-        "name": "Millisecond",
-        "type": "int"
         }
       ]
     },

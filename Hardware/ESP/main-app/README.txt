@@ -51,3 +51,75 @@ Note: Can't use ADC 2 with Wifi driver as Wifi uses ADC 2
                  7   27
                  8   25
                  9   26
+
+Command Format JSON:
+{
+  "name": "timeOfRequest",
+  "type": "record",
+  "fields": [
+      {
+      "name": "year",
+      "type": "int"
+      },
+      {
+      "name": "month",
+      "type": "int"
+      },
+      {
+      "name": "day",
+      "type": "int"
+      },
+      {
+      "name": "hour",
+      "type": "int"
+      },
+      {
+      "name": "minute",
+      "type": "int"
+      },
+      {
+      "name": "second",
+      "type": "int"
+      }
+  ],
+  {
+    "name": "targetDevice",
+    "type": "string"
+  },
+  {
+    "name": "commandRequest",
+    "type": "string"
+  },
+  {
+    "name": "requestFlag",
+    "type": "int"
+  },
+  {
+    "name": "commandDelayMS",
+    "type": "int"
+  }
+}
+
+Command types:
+#define MCU_SHUTDOWN_STR    "MCU shutdown"
+#define MCU_GETSTATUS_STR   "Get status"
+#define LOCK_DOOR_STR       "Lock door"
+#define UNLOCK_DOOR_STR     "Unlock door"
+#define STREAM_CAM_STR      "Stream camera"
+
+Example command:
+{
+  "timeOfRequest":
+  {
+      "year": 2021,
+      "month": 3,
+      "day": 31,
+      "hour": 10,
+      "minute": 30,
+      "second": 30
+  },
+  "targetDevice": "ESP32 - Main MCU",
+  "commandRequest": "Get status",
+  "requestFlag": 0,
+  "commandDelayMS": 0
+}

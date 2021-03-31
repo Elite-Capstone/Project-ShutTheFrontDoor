@@ -65,6 +65,12 @@
     "xlocnum": "c",
     "xloctime": "c",
     "stdio.h": "c",
-    "esp_adc_cal.h": "c"
+    "esp_adc_cal.h": "c",
+    "mqtt_client.h": "c",
+    "mqtt_config.h": "c",
+    "esp_transport_tcp.h": "c",
+    "esp_transport.h": "c",
+    "mqtt_msg.h": "c",
+    "platform.h": "c"
   }
 }

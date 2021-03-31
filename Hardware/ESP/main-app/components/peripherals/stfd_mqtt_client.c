@@ -13,16 +13,17 @@
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 
-#define MQTT_BROKER_URL     "mqtt://localhost:1883"
-#define NOTIFICATION_TOPIC  "/topic/device_notif"
-#define STATUS_TOPIC        "/topic/device_status"
-#define CMD_TOPIC           "/topic/device_cmd"
+#define MQTT_BROKER_URL     "mqtt://mqtt.eclipseprojects.io:1883" //"mqtt://192.168.1.17:1883"
+#define NOTIFICATION_TOPIC  "notification/" DEFAULT_DOOR_UUID
+#define STATUS_TOPIC        "status/" DEFAULT_DOOR_UUID
+#define CMD_TOPIC           "command/" DEFAULT_DOOR_UUID
 
-#define MCU_SHUTDOWN_STR    "mcu shutdown"
-#define MCU_GETSTATUS_STR   "get status"
-#define LOCK_DOOR_STR       "lock door"
-#define UNLOCK_DOOR_STR     "unlock door"
-#define STREAM_CAM_STR      "stream camera"
+#define MCU_SHUTDOWN_STR    "MCU shutdown"
+#define MCU_GETSTATUS_STR   "Get status"
+#define MCU_GETNOTIF_STR    "Get notification"
+#define LOCK_DOOR_STR       "Lock door"
+#define UNLOCK_DOOR_STR     "Unlock door"
+#define STREAM_CAM_STR      "Stream camera"
 
 static const char *TAG = "stfd_mqtt_client";
 
@@ -36,15 +37,15 @@ static void initialize_sntp(void)
 
 static struct tm obtain_time(void)
 {
-    initialize_sntp();
     // wait for time to be set
     time_t now = 0;
     struct tm timeinfo = {0};
+    ESP_LOGI(TAG, "Waiting for system time to be set...");
     while (timeinfo.tm_year < (2021 - 1900)) {
-        ESP_LOGI(TAG, "Waiting for system time to be set...");
-        vTaskDelay(2000 / portTICK_PERIOD_MS);
         time(&now);
         localtime_r(&now, &timeinfo);
+        vTaskDelay(500 / portTICK_PERIOD_MS);
+        ESP_LOGI(TAG, "...");
     }
     ESP_LOGI(TAG, "Time is set...");
     return timeinfo;
@@ -61,13 +62,15 @@ char* obtain_time_string(void) {
     return time;
 }
 
-static mcu_cmd_type_t get_mqtt_cmd_type(char* cmd) {
+static mcu_cmd_type_t get_mqtt_cmd_type(const char* cmd) {
     if (!strcmp(cmd, MCU_SHUTDOWN_STR))
         return (mcu_cmd_type_t) MCU_SHUTDOWN;
     else if (!strcmp(cmd, MCU_GETSTATUS_STR))
         return (mcu_cmd_type_t) MCU_GETSTATUS;
     else if (!strcmp(cmd, LOCK_DOOR_STR))
         return (mcu_cmd_type_t) LOCK_DOOR;
+    else if (!strcmp(cmd, MCU_GETNOTIF_STR))
+        return (mcu_cmd_type_t) MCU_GETNOTIF;
     else if (!strcmp(cmd, UNLOCK_DOOR_STR))
         return (mcu_cmd_type_t) UNLOCK_DOOR;
     else if (!strcmp(cmd, STREAM_CAM_STR))
@@ -77,49 +80,66 @@ static mcu_cmd_type_t get_mqtt_cmd_type(char* cmd) {
 }
 
 // JSON status object format
-cJSON stfd_init_status_json(void) {
-    cJSON *root, *status_time, *statuses;
-    root = cJSON_CreateObject();
-    status_time = cJSON_CreateObject();
+void stfd_init_status_json(cJSON** root) {
+    cJSON *publish_time, *statuses;
+    struct tm timeinfo = obtain_time();
+
+    *root = cJSON_CreateObject();
+    publish_time = cJSON_CreateObject();
     statuses = cJSON_CreateObject();
 
-    cJSON_AddItemToObject(root,         "status_time",      status_time);
-    cJSON_AddItemToObject(status_time,  "time_ms",          cJSON_CreateString(obtain_time_string()));
-    cJSON_AddItemToObject(statuses,     "got_wifi_ip",      cJSON_CreateFalse());
-    cJSON_AddItemToObject(statuses,     "cam_init",         cJSON_CreateFalse());
-    cJSON_AddItemToObject(statuses,     "sdcard_init",      cJSON_CreateFalse());
-    cJSON_AddItemToObject(statuses,     "cam_server_init",  cJSON_CreateFalse());
-    cJSON_AddItemToObject(statuses,     "door_is_locked",   cJSON_CreateFalse());
-    cJSON_AddItemToObject(statuses,     "door_is_closed",   cJSON_CreateFalse());
-    cJSON_AddItemToObject(statuses,     "battery_level",    cJSON_CreateNumber(0));
+    cJSON_AddItemToObject(*root,        STATUS_TIME,           publish_time);
+    cJSON_AddItemToObject(*root,        STATUS_LIST,           statuses);
+    cJSON_AddItemToObject(publish_time, TIME_YEAR,             cJSON_CreateNumber(timeinfo.tm_year));
+    cJSON_AddItemToObject(publish_time, TIME_MONTH,            cJSON_CreateNumber(timeinfo.tm_mon));
+    cJSON_AddItemToObject(publish_time, TIME_DAY,              cJSON_CreateNumber(timeinfo.tm_mday));
+    cJSON_AddItemToObject(publish_time, TIME_HOUR,             cJSON_CreateNumber(timeinfo.tm_hour));
+    cJSON_AddItemToObject(publish_time, TIME_MIN,              cJSON_CreateNumber(timeinfo.tm_min));
+    cJSON_AddItemToObject(publish_time, TIME_SEC,              cJSON_CreateNumber(timeinfo.tm_sec));
 
-    return *root;
+    cJSON_AddItemToObject(statuses,     STATUS_WIFI_IP,        cJSON_CreateFalse());
+    cJSON_AddItemToObject(statuses,     STATUS_CAM,            cJSON_CreateFalse());
+    cJSON_AddItemToObject(statuses,     STATUS_SDCARD,         cJSON_CreateFalse());
+    cJSON_AddItemToObject(statuses,     STATUS_CAM_STREAM,     cJSON_CreateFalse());
+    cJSON_AddItemToObject(statuses,     STATUS_DOOR_IS_LOCKED, cJSON_CreateFalse());
+    cJSON_AddItemToObject(statuses,     STATUS_DOOR_IS_CLOSED, cJSON_CreateFalse());
+    cJSON_AddItemToObject(statuses,     STATUS_BATTERY_LEVEL,  cJSON_CreateNumber(0));
 }
 
 // JSON command object format
 void stfd_parse_json_command(char* json_cmd, struct tm* timeinfo, mcu_cmd_type_t* cmd, int* flag, int* cmd_delay_ms) {
+    char* target_device = NULL;
     char* cmd_string = NULL;
-    cJSON *command_root = cJSON_Parse(json_cmd);
-    cJSON* request_time = cJSON_GetObjectItem(command_root, COMMAND_TIME);
+    if (json_cmd != NULL) {
+        cJSON *command_root = cJSON_Parse(json_cmd);
+        cJSON* request_time = cJSON_GetObjectItem(command_root, COMMAND_TIME);
 
-    timeinfo->tm_mday = cJSON_GetObjectItem(request_time, COMMAND_TIME_DAY)->valueint;
-    timeinfo->tm_mon  = cJSON_GetObjectItem(request_time, COMMAND_TIME_MONTH)->valueint;
-    timeinfo->tm_year = cJSON_GetObjectItem(request_time, COMMAND_TIME_YEAR)->valueint;
-    timeinfo->tm_hour = cJSON_GetObjectItem(request_time, COMMAND_TIME_HOUR)->valueint;
-    timeinfo->tm_min  = cJSON_GetObjectItem(request_time, COMMAND_TIME_MIN)->valueint;
-    timeinfo->tm_sec  = cJSON_GetObjectItem(request_time, COMMAND_TIME_SEC)->valueint;
+        timeinfo->tm_mday = cJSON_GetObjectItem(request_time, TIME_DAY)->valueint;
+        timeinfo->tm_mon  = cJSON_GetObjectItem(request_time, TIME_MONTH)->valueint;
+        timeinfo->tm_year = cJSON_GetObjectItem(request_time, TIME_YEAR)->valueint;
+        timeinfo->tm_hour = cJSON_GetObjectItem(request_time, TIME_HOUR)->valueint;
+        timeinfo->tm_min  = cJSON_GetObjectItem(request_time, TIME_MIN)->valueint;
+        timeinfo->tm_sec  = cJSON_GetObjectItem(request_time, TIME_SEC)->valueint;
 
-    asprintf(&cmd_string, cJSON_GetObjectItem(command_root, COMMAND_REQUEST)->valuestring);
-    *flag = cJSON_GetObjectItem(command_root, COMMAND_FLAG)->valueint;
-    *cmd_delay_ms = cJSON_GetObjectItem(command_root, COMMAND_DELAY)->valueint;
+        asprintf(&target_device, cJSON_GetObjectItem(command_root, COMMAND_TARGET)->valuestring);
+        asprintf(&cmd_string, cJSON_GetObjectItem(command_root, COMMAND_REQUEST)->valuestring);
+        *flag = cJSON_GetObjectItem(command_root, COMMAND_FLAG)->valueint;
+        *cmd_delay_ms = cJSON_GetObjectItem(command_root, COMMAND_DELAY)->valueint;
 
-    *cmd = get_mqtt_cmd_type(cmd_string);
+        *cmd = get_mqtt_cmd_type(cmd_string);
 
-    ESP_LOGI(TAG, "Received Request from %i/%i/%i - %i:%i:%i",
-            timeinfo->tm_mday, timeinfo->tm_mon, timeinfo->tm_year,
-            timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
-            );
-    ESP_LOGI(TAG, "Received command request: %s, with flag %i, delayed by %i", cmd_string, *flag, *cmd_delay_ms);
+        ESP_LOGI(TAG, "Received Request to target device %s from %i/%i/%i - %i:%i:%i",
+                target_device,
+                timeinfo->tm_mday, timeinfo->tm_mon, timeinfo->tm_year,
+                timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
+                );
+        ESP_LOGI(TAG, "Received command request: %s, with flag %i, delayed by %i ms", cmd_string, *flag, *cmd_delay_ms);
+        free(target_device);
+        free(cmd_string);
+    }
+    else {
+        ESP_LOGE(TAG, "Passed command string is NULL");
+    }
 }
 
 static esp_err_t mqtt_event_handler_cb(mcu_mqtt_msg_t* mcu_mqtt, esp_mqtt_event_handle_t event)
@@ -133,6 +153,7 @@ static esp_err_t mqtt_event_handler_cb(mcu_mqtt_msg_t* mcu_mqtt, esp_mqtt_event_
                 - Subscribe to command topics
                 - Send current door status
             */
+           stfd_mqtt_scheduled_task(mcu_mqtt);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -151,24 +172,35 @@ static esp_err_t mqtt_event_handler_cb(mcu_mqtt_msg_t* mcu_mqtt, esp_mqtt_event_
             break;
         case MQTT_EVENT_DATA:
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
+            // char* rcv_topic = malloc(event->topic_len*sizeof(char));
+            // snprintf(rcv_topic, event->topic_len+1, event->topic);
+            // ESP_LOGI(TAG, "rcv_topic: %s", rcv_topic);
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
 
-            while(mcu_mqtt->cmd_info.exec_cmd)
-                vTaskDelay(500 / portTICK_PERIOD_MS);
+            //if (strcmp(rcv_topic, CMD_TOPIC) == 0) {
+                // If another task is running
+                while(mcu_mqtt->cmd_info.exec_cmd)
+                    vTaskDelay(500 / portTICK_PERIOD_MS);
 
-            stfd_parse_json_command(event->data, 
-                                    &mcu_mqtt->cmd_info.timeinfo, 
-                                    &mcu_mqtt->cmd_info.cmd, 
-                                    &mcu_mqtt->cmd_info.flag, 
-                                    &mcu_mqtt->cmd_info.cmd_delay_ms
-                                    );
-            vTaskDelay(mcu_mqtt->cmd_info.cmd_delay_ms/portTICK_PERIOD_MS); // Delay by required amount of time in ms
-            mcu_mqtt->cmd_info.exec_cmd = true;
+                stfd_parse_json_command(event->data, 
+                                        &mcu_mqtt->cmd_info.timeinfo, 
+                                        &mcu_mqtt->cmd_info.cmd, 
+                                        &mcu_mqtt->cmd_info.flag, 
+                                        &mcu_mqtt->cmd_info.cmd_delay_ms
+                                        );
+                vTaskDelay(mcu_mqtt->cmd_info.cmd_delay_ms/portTICK_PERIOD_MS); // Delay by required amount of time in ms
+                mcu_mqtt->cmd_info.exec_cmd = true;
+            // }
+            // else {
+            //     if (rcv_topic != NULL)
+            //         free(rcv_topic);
+            //     ESP_LOGE(TAG, "Unrecognized topic - Ignoring data");
+            // }
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
-            break;
+            return ESP_FAIL;
         default:
             ESP_LOGI(TAG, "Other event id:%d", event->event_id);
             break;
@@ -178,29 +210,62 @@ static esp_err_t mqtt_event_handler_cb(mcu_mqtt_msg_t* mcu_mqtt, esp_mqtt_event_
 
 static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_t event_id, void *event_data) {
     ESP_LOGI(TAG, "Event dispatched from event loop base=%s, event_id=%d", base, event_id);
-    mqtt_event_handler_cb(handler_args, event_data);
+    if (mqtt_event_handler_cb(handler_args, event_data) != ESP_OK) {
+        ESP_LOGE(TAG, "MQTT error occured");
+    }
 }
 
 void stfd_mqtt_scheduled_task(mcu_mqtt_msg_t* mcu_mqtt) {
     int msg_id;
-    msg_id = esp_mqtt_client_publish(mcu_mqtt->client, STATUS_TOPIC, cJSON_Print(mcu_mqtt->json_status), 0, 1, 0);
-    ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
-
+    // Command publishes from server should be retained also
     msg_id = esp_mqtt_client_subscribe(mcu_mqtt->client, CMD_TOPIC, 0);
     ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-    // msg_id = esp_mqtt_client_unsubscribe(client, "/topic/qos1");
-    // ESP_LOGI(TAG, "sent unsubscribe successful, msg_id=%d", msg_id);
+    stfd_mqtt_publish_status(mcu_mqtt);
 }
 
-void stfd_mqtt_notif_task(esp_mqtt_client_handle_t client, char* msg) {
+void stfd_mqtt_publish_status(mcu_mqtt_msg_t* mcu_mqtt) {
+    int msg_id;
+    if (mcu_mqtt->json_status != NULL) {
+        char* status = cJSON_Print(mcu_mqtt->json_status);
+        ESP_LOGI(TAG, "JSON Status: %s", status);
+        // Status publishes should be retained if not subscribed
+        if (status != NULL && mcu_mqtt->client != NULL) {
+        msg_id = esp_mqtt_client_publish(mcu_mqtt->client, STATUS_TOPIC, status, 0, 1, 1);
+        ESP_LOGI(TAG, "published status successfully, msg_id=%d", msg_id);
+        free(status);
+        }
+        else if (status == NULL) ESP_LOGE(TAG, "status is NULL");
+        else {
+            ESP_LOGE(TAG, "Tried to publish to null client");
+            free(status);
+        }
+    }
+    else ESP_LOGW(TAG, "Tried sending a NULL JSON object");
+}
+
+void stfd_mqtt_publish_notif(esp_mqtt_client_handle_t client, const char* msg) {
     int msg_id;
     msg_id = esp_mqtt_client_publish(client, NOTIFICATION_TOPIC, msg, 0, 1, 0);
-    ESP_LOGI(TAG, "sent publish successful, msg_id=%d", msg_id);
+    ESP_LOGI(TAG, "published notification successfully, msg_id=%d", msg_id);
+}
+
+void stfd_mqtt_close_client(mcu_mqtt_msg_t* mcu_mqtt) {
+    int msg_id;
+    msg_id = esp_mqtt_client_unsubscribe(mcu_mqtt->client, CMD_TOPIC);
+    ESP_LOGI(TAG, "unsubscribed successfully, msg_id=%d", msg_id);
+    if (esp_mqtt_client_disconnect(mcu_mqtt->client) != ESP_OK)
+        ESP_LOGE(TAG, "Could not disconnect the MQTT client properly");
+    if (esp_mqtt_client_destroy(mcu_mqtt->client) != ESP_OK)
+        ESP_LOGE(TAG, "Could not destry the MQTT client properly");
 }
 
 void stfd_mqtt_init(mcu_mqtt_msg_t* mcu_mqtt) {
-    *(mcu_mqtt->json_status) = stfd_init_status_json();
+    if (!mcu_mqtt->sntp_init) {
+        initialize_sntp();
+        mcu_mqtt->sntp_init = true;
+    }
+    stfd_init_status_json(&mcu_mqtt->json_status);
     esp_mqtt_client_config_t mqtt_cfg = {
         .uri = MQTT_BROKER_URL,
     };
