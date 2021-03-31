@@ -8,12 +8,13 @@ from threading import Thread, Event
 import sys
 
 import cv2
+import self as self
 import zmq
 import base64
 import numpy
 from numpy.compat import unicode
 
-#-----------------------------------------------------------
+# -----------------------------------------------------------
 # Code used to distribute video with ZMQ
 #
 # stream_socket = zmq.Context().sokect(zmq.SUB)
@@ -34,19 +35,21 @@ from numpy.compat import unicode
 #         break
 #
 # cv2.destroyAllWindows()
-#-------------------------------------------------------------------
+# -------------------------------------------------------------------
 
-#==================================================================
+# ==================================================================
 # This code is to use for the receiving server that will display the stream
-#==================================================================
+# ==================================================================
 
 # -----------  Config  ----------
-HOST = '' # IP of Ben's local machine: '192.168.1.17'
+
+HOST = ""  # IP of Ben's local machine: '192.168.1.17'
 PORT = 5555
 BUFSIZE = 64000  # Maximum buffer size for receiving
 ADDR = (HOST, PORT)
 print(ADDR)
-    
+
+
 class UdpServer:
 
     def __init__(self, host, port, family_addr, persist=False):
@@ -56,7 +59,7 @@ class UdpServer:
         self.socket = socket.socket(family_addr, socket.SOCK_DGRAM)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        #self.socket.settimeout(30.0) # Sets the interval of time after which if there is no event, the server shuts down
+        # self.socket.settimeout(30.0) # Sets the interval of time after which if there is no event, the server shuts down
         self.shutdown = Event()
         self.persist = persist
 
@@ -76,7 +79,7 @@ class UdpServer:
     def __exit__(self, exc_type, exc_value, traceback):
         if self.persist:
             sock = socket.socket(self.family_addr, socket.SOCK_DGRAM)
-            sock.sendto(b'Stop', ('localhost', self.port))
+            sock.sendto(b'Stop', ('', 5555))
             sock.close()
             cv2.destroyAllWindows()
             self.shutdown.set()
@@ -89,15 +92,15 @@ class UdpServer:
                 data, addr = self.socket.recvfrom(BUFSIZE)
                 if not data:
                     return
-                if data.decode() == "Shutting down socket...":
-                    print("Shutdown socket manually from device")
-                    return
+                # if data.decode() == "Shutting down socket...":
+                #     print("Shutdown socket manually from device")
+                #     return
                 if data != b"":
                     # print(data, addr) # For debug
                     npimg = numpy.frombuffer(data, dtype=numpy.uint8)
                     source = cv2.imdecode(npimg, 1)
-                    source = cv2.rotate(source, cv2.cv2.ROTATE_90_CLOCKWISE)
-                    cv2.imshow('IP Camera stream',source)
+                    source = cv2.rotate(source, cv2.cv2.ROTATE_180)
+                    cv2.imshow('IP Camera stream', source)
                     if cv2.waitKey(1) & 0xFF == ord('q'):
                         break
 
@@ -106,7 +109,14 @@ class UdpServer:
                 raise
             if not self.persist:
                 break
-        
+
+
+def loop_on_socket(sm):
+    while True:
+        d, addr = s.recvfrom(1500)
+        print(d, addr)
+        sm.sendto("ECHO: ".encode('utf8') + d, addr)
+
 
 # Main function
 if __name__ == '__main__':

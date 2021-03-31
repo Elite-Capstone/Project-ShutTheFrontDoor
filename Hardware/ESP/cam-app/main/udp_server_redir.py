@@ -1,24 +1,23 @@
 from __future__ import print_function
 from __future__ import unicode_literals
-from builtins import input
+
+import base64
+import datetime
 import os
 import re
 import socket
 from threading import Thread, Event
-import sys
 
-import cv2
-import zmq
-import base64
 import numpy
-from numpy.compat import unicode
+import zmq
+from imutils.video import FPS
 
 SHUTDOWN_STR = "Shutting down socket..."
 
-#==================================================================
+# ==================================================================
 # This code is to use for the a redirecting server, that will 
 # receiving the stream and resend it to the client
-#==================================================================
+# ==================================================================
 
 # -----------  Config  ----------
 HOST = socket.gethostbyname(socket.gethostname())
@@ -26,12 +25,12 @@ HOST_PORT = 5555
 BUFSIZE = 64000  # Maximum buffer size for receiving
 ADDR = (HOST, HOST_PORT)
 print(ADDR)
-#-----  Stream Client Config  -----
+# -----  Stream Client Config  -----
 # If client is computer, maybe use router IP
-CLIENT = ''
+CLIENT = '65.97.41.217'
 CLIENT_PORT = 5555
 
-    
+
 class UdpServer:
 
     def __init__(self, host, host_port, client, client_port, family_addr, persist=False):
@@ -47,8 +46,13 @@ class UdpServer:
         self.shutdown = Event()
         self.persist = persist
 
+        self.context = zmq.Context()
+        self.footage_socket = self.context.socket(zmq.PUB)
+        self.fps = FPS().start()
+
         try:
-            self.socket.bind(self.host, self.port)
+            print("{}:{}".format(self.host, self.host_port))
+            self.socket.bind((self.host, self.host_port))
         except socket.error as e:
             print("Bind failed:{}".format(e))
             raise
@@ -73,21 +77,36 @@ class UdpServer:
                 data, addr = self.socket.recvfrom(BUFSIZE)
                 if not data:
                     return
-                if data.decode() == SHUTDOWN_STR:
-                    # Received Shutdown command. Pass command to receiving stream client
-                    stop_server(self)
-                    return
+                # if data.decode() == SHUTDOWN_STR:
+                #     # Received Shutdown command. Pass command to receiving stream client
+                #     self.stop_server(self)
+                #     return
 
                 if data != b"":
                     # print(data, addr)
-                    self.socket.sendto(data, CLIENT)
+                    self.socket.sendto(data, (CLIENT, CLIENT_PORT))
+                    # self.zmq_pub(data)
 
             except socket.error as e:
                 print("Running server failed:{}".format(e))
                 raise
             if not self.persist:
                 break
-        
+
+    def zmq_pub(self, data):
+        try:
+            npimg = numpy.frombuffer(data, dtype=numpy.uint8)
+            print(npimg)
+            self.footage_socket.send(base64.b64encode(npimg))
+            # Update the FPS counter
+            self.fps.update()
+        except KeyboardInterrupt:
+            # stop the timer and display FPS information
+            self.fps.stop()
+            print("[INFO] elasped time: {:.2f}".format(self.fps.elapsed()))
+            print("[INFO] approx. FPS: {:.2f}".format(self.fps.fps()))
+            print("\n\nBye bye\n")
+
 
 if __name__ == '__main__':
     family_addr = socket.AF_INET
