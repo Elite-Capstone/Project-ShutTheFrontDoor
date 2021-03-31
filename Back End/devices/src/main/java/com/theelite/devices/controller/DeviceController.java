@@ -72,7 +72,13 @@ public class DeviceController {
     }
 
     @GetMapping("/{id}/address/{email}/{token}")
-    public String getIdForDevice(@PathVariable("id")String deviceId, @PathVariable("email") String email, @PathVariable("token") String token){
+    public String getIdForDevice(@PathVariable("id") String deviceId, @PathVariable("email") String email, @PathVariable("token") String token) {
         return deviceService.getIpAddressForDevice(deviceId, email, token);
+    }
+
+    @PostMapping("/{id}/command/{cmd}/")
+    public String testMqtt(@PathVariable("id") String deviceId, @PathVariable("cmd") String command) {
+        deviceService.trySendingMessage(deviceId, command);
+        return "Sent";
     }
 }
