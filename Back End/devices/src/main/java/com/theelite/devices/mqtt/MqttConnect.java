@@ -35,7 +35,7 @@ public class MqttConnect implements MqttCallback {
     @Async
     void connectToMqttBroker() {
         try {
-            String clientId = MqttAsyncClient.generateClientId();
+            String clientId = "DeviceMS";
             mqttClient = new MqttAsyncClient(mqttServerUrl, clientId);
             mqttClient.setCallback(this);
             MqttConnectOptions connOpts = new MqttConnectOptions();
