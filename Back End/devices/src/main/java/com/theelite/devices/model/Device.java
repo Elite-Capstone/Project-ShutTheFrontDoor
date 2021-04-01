@@ -16,5 +16,5 @@ public class Device {
     private String deviceId;
     private String deviceName;
     private DeviceType type;
-
+    private Status status;
 }

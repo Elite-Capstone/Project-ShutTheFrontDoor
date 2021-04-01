@@ -2,6 +2,7 @@ package com.theelite.devices.dao;
 
 import com.theelite.devices.model.Account;
 import com.theelite.devices.model.Device;
+import com.theelite.devices.model.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -20,6 +21,7 @@ public class CustomDaoImpl implements CustomDao {
     private final String deviceId = "deviceId";
     private final String deviceName = "deviceName";
     private final String accountId = "accountId";
+    private final String deviceStatus = "status";
 
     @Autowired
     public CustomDaoImpl(MongoOperations mongoOperations) {
@@ -108,5 +110,12 @@ public class CustomDaoImpl implements CustomDao {
                 .map(d -> d.getDeviceId())
                 .filter(id -> id != null)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateDeviceStatus(String id, Status status) {
+        Query query = new Query().addCriteria(Criteria.where(deviceId).is(id));
+        Update update = new Update().set(deviceStatus, status);
+        mongoOperations.findAndModify(query, update, Device.class);
     }
 }

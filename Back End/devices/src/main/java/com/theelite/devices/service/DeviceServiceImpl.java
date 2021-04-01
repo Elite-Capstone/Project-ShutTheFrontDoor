@@ -4,12 +4,10 @@ import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.IpAddressesDao;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.theelite.devices.model.Command;
-import com.theelite.devices.model.Device;
+import com.theelite.devices.model.*;
 import com.theelite.devices.communication.NotifService;
 import com.theelite.devices.dao.DeviceDao;
 
-import com.theelite.devices.model.DeviceIp;
 import com.theelite.devices.mqtt.MqttConnect;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -32,7 +30,6 @@ public class DeviceServiceImpl implements DeviceService {
     private final IpAddressesDao ipDao;
     private final UsersService usersService;
     private final NotifService notifService;
-    private final String COMMAND = "command/";
 
     public DeviceServiceImpl(DeviceDao deviceDao, IpAddressesDao ipDao, Environment environment) {
         this.deviceDao = deviceDao;
@@ -197,13 +194,20 @@ public class DeviceServiceImpl implements DeviceService {
         try {
             if (!validateUser(email, token)) return new ResponseEntity<>("Invalid User", HttpStatus.UNAUTHORIZED);
             MqttMessage message = new MqttMessage(MqttConnect.serializeObject(command));
-            IMqttToken mqttToken = MqttConnect.mqttClient.publish(COMMAND + command.getTargetDevice(), message);
+            message.setQos(1);
+            IMqttToken mqttToken = MqttConnect.mqttClient.publish(MqttConnect.COMMAND + command.getTargetDevice(), message);
             mqttToken.waitForCompletion();
         } catch (IOException | MqttException e) {
             e.printStackTrace();
             return new ResponseEntity<>("Error when publishing\n", HttpStatus.INTERNAL_SERVER_ERROR);
         }
         return new ResponseEntity<>("Published", HttpStatus.OK);
+    }
+
+    @Override
+    public boolean updateDeviceStatus(String id, Status status) {
+        if (deviceDao.deviceExistsWithId(id)) deviceDao.updateDeviceStatus(id, status);
+        return false;
     }
 
     public void trySendingMessage(String topic, String message) {
