@@ -1,6 +1,7 @@
 package com.theelite.mqttKafkaBridge;
 
-import com.theelite.notifications.model.Notification;
+import com.google.gson.Gson;
+import com.theelite.mqttKafkaBridge.model.Notification;
 
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
@@ -15,10 +16,14 @@ import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
 
-import java.util.Properties;
+import java.util.*;
+import java.util.stream.Collectors;
 
+@EnableAsync
 @Component
 public class Bridge implements MqttCallback {
     public final int fiveMinutes = 300000;
@@ -27,7 +32,8 @@ public class Bridge implements MqttCallback {
     private final String brokerUri;
     public static MqttAsyncClient mqtt;
     private static AdminClient kafkaAdmin;
-    public static Producer<String, Notification> kafkaProducer;
+    private final String NOTIFICATION = "notification/";
+    public static Producer<String, String> kafkaProducer;
 
 
     public Bridge(Environment environment) {
@@ -49,12 +55,20 @@ public class Bridge implements MqttCallback {
     }
 
     Runnable periodicallyGetKafkaTopics = new Runnable() {
+
         @Override
         public void run() {
             logger.info("Started Thread to periodically check and subscribe to kafka topics");
             while (true) {
                 try {
-                    String[] topics = kafkaAdmin.listTopics().names().get().toArray(String[]::new);
+                    String[] topics = kafkaAdmin
+                            .listTopics()
+                            .names()
+                            .get()
+                            .stream().map(t -> NOTIFICATION + t)
+                            .collect(Collectors.toList())
+                            .toArray(String[]::new);
+
                     logger.log(Level.INFO, "Got topics");
                     if (topics != null && topics.length > 0) {
                         logger.log(Level.INFO, "Topics not null and more than one");
@@ -72,7 +86,7 @@ public class Bridge implements MqttCallback {
 
     public void connect() {
         try {
-            mqtt = new MqttAsyncClient(mqttServerUri, MqttAsyncClient.generateClientId());
+            mqtt = new MqttAsyncClient(mqttServerUri, "MqttKafkaBridge");
             mqtt.setCallback(this);
             MqttConnectOptions connOpts = new MqttConnectOptions();
             connOpts.setCleanSession(true);
@@ -81,7 +95,7 @@ public class Bridge implements MqttCallback {
             props.put("bootstrap.servers", brokerUri);
             kafkaAdmin = KafkaAdminClient.create(props);
             props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-            props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerializer");
+            props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
             kafkaProducer = new KafkaProducer<>(props);
             token.waitForCompletion();
         } catch (MqttException e) {
@@ -95,6 +109,7 @@ public class Bridge implements MqttCallback {
     }
 
 
+    @Async
     @Override
     public void connectionLost(Throwable cause) {
         logger.warn("Lost connection to MQTT server", cause);
@@ -118,11 +133,17 @@ public class Bridge implements MqttCallback {
     @Override
     public void messageArrived(String topic, MqttMessage message) throws Exception {
         byte[] payload = message.getPayload();
-        System.out.println("NEW MQTT MESSAGE - " + new String(payload));
-        if (!topic.contains("cmd")) {
+        logger.log(Level.INFO, "Message Arrived " + topic);
+        if (topic.contains(NOTIFICATION)) {
+            topic = getDeviceIdFromTopic(topic);
             Notification notification = new Notification(new String(payload), topic);
-            kafkaProducer.send((new ProducerRecord<>(topic, notification)));
+            kafkaProducer.send((new ProducerRecord<>(topic, new Gson().toJson(notification))));
         }
+    }
+
+
+    private String getDeviceIdFromTopic(String topic) {
+        return topic.split("/")[1];
     }
 
     private void subcribeToTopics(String[] topics) {
@@ -156,6 +177,6 @@ public class Bridge implements MqttCallback {
         } catch (Exception e) {
             return new ResponseEntity<>("Kafka Server Error", HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>("Everything seems fine!", HttpStatus.OK);
+        return new ResponseEntity<>("Everything seems fine!\nMqtt Connection: " + mqtt.isConnected(), HttpStatus.OK);
     }
 }
