@@ -3,28 +3,32 @@ package com.theelite.devices.mqtt;
 import com.theelite.devices.service.DeviceServiceImpl;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.core.env.Environment;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.io.*;
+import java.util.*;
 
-@Component
+@Service
+@EnableAsync
 public class MqttConnect implements MqttCallback {
-    private String mqttServerUrl;
+    private final String mqttServerUrl;
     public final int fiveMinutes = 300000;
     public static MqttAsyncClient mqttClient;
-    private DeviceServiceImpl deviceService;
+    private final DeviceServiceImpl deviceService;
 
     public MqttConnect(Environment environment, DeviceServiceImpl deviceService) {
         mqttServerUrl = environment.getProperty("mqtt.server");
         this.deviceService = deviceService;
-        connectToMqttBroker();
-        periodicallySubscribeToTopics.run();
+        mqttThread.run();
+        Timer timer = new Timer("Timer");
+        timer.scheduleAtFixedRate(periodicallySubscribeToTopics, 0, fiveMinutes);
     }
 
-
-    private void connectToMqttBroker() {
+    @Async
+    void connectToMqttBroker() {
         try {
             String clientId = MqttAsyncClient.generateClientId();
             mqttClient = new MqttAsyncClient(mqttServerUrl, clientId);
@@ -33,6 +37,7 @@ public class MqttConnect implements MqttCallback {
             connOpts.setCleanSession(true);
             IMqttToken token = mqttClient.connect(connOpts);
             token.waitForCompletion();
+            findTopicsToSubsribe();
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -44,6 +49,7 @@ public class MqttConnect implements MqttCallback {
     }
 
     @Override
+    @Async
     public void connectionLost(Throwable throwable) {
         while (true) {
             try {
@@ -76,27 +82,30 @@ public class MqttConnect implements MqttCallback {
         }
     }
 
+    Runnable mqttThread = this::connectToMqttBroker;
 
-    Runnable periodicallySubscribeToTopics = new Runnable() {
-        @Override
+
+    TimerTask periodicallySubscribeToTopics = new TimerTask() {
         public void run() {
-//            logger.info("Started Thread to periodically check and subscribe to kafka topics");
-            while (true) {
-                try {
-                    var deviceIds = deviceService.getDeviceIds();
-//                    logger.log(Level.INFO, "Got topics");
-                    if (deviceIds != null && deviceIds.size() > 0) {
-//                        logger.log(Level.INFO, "Topics not null and more than one");
-                        subscribeToTopics(getMqttTopicsFromDeviceIds(deviceIds).toArray(String[]::new));
-                    }
-//                    logger.trace("Thread to check new Topics going to sleep");
-                    Thread.sleep(fiveMinutes);
-                } catch (Exception e) {
-//                    logger.error(e.getMessage());
-                }
-            }
+            System.out.println("Started Thread to periodically check and subscribe to kafka topics");
+            findTopicsToSubsribe();
         }
     };
+
+    @Async
+    void findTopicsToSubsribe() {
+        try {
+            var deviceIds = deviceService.getDeviceIds();
+            System.out.println("Got topics");
+            if (deviceIds != null && deviceIds.size() > 0) {
+                System.out.println("Topics not null and more than one");
+                subscribeToTopics(getMqttTopicsFromDeviceIds(deviceIds).toArray(String[]::new));
+            }
+            System.out.println("Thread to check new Topics going to sleep");
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
 
     private void subscribeToTopics(String[] topics) throws MqttException {
         int[] qos = new int[topics.length];
@@ -111,5 +120,20 @@ public class MqttConnect implements MqttCallback {
             topics.add("status/" + id);
         });
         return topics;
+    }
+
+    public static <T> byte[] serializeObject(T object) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             ObjectOutputStream out = new ObjectOutputStream(bos)) {
+            out.writeObject(object);
+            return bos.toByteArray();
+        }
+    }
+
+    private Object convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             ObjectInputStream in = new ObjectInputStream(bis)) {
+            return in.readObject();
+        }
     }
 }
