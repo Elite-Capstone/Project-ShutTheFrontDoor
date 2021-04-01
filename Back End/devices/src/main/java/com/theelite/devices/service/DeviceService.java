@@ -1,5 +1,6 @@
 package com.theelite.devices.service;
 
+import com.theelite.devices.model.Command;
 import com.theelite.devices.model.Device;
 import org.springframework.http.ResponseEntity;
 
@@ -29,4 +30,6 @@ public interface DeviceService {
     List<Device> getDevices(String email, String token);
 
     String saveIpAddress(String deviceId, HttpServletRequest request);
+
+    ResponseEntity<String> publishCommand(Command command, String email, String token);
 }

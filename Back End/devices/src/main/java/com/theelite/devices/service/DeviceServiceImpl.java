@@ -4,6 +4,7 @@ import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.IpAddressesDao;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.theelite.devices.model.Command;
 import com.theelite.devices.model.Device;
 import com.theelite.devices.communication.NotifService;
 import com.theelite.devices.dao.DeviceDao;
@@ -31,6 +32,7 @@ public class DeviceServiceImpl implements DeviceService {
     private final IpAddressesDao ipDao;
     private final UsersService usersService;
     private final NotifService notifService;
+    private final String COMMAND = "command/";
 
     public DeviceServiceImpl(DeviceDao deviceDao, IpAddressesDao ipDao, Environment environment) {
         this.deviceDao = deviceDao;
@@ -69,11 +71,14 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     private String getFamilyAccount(String email, String token) throws IOException {
-        Boolean userIsLegit = usersService.validateUser(email, token).execute().body();
+        Boolean userIsLegit = validateUser(email, token);
         if (userIsLegit == null || !userIsLegit) return null;
         return usersService.getFamilyAccountFor(email).execute().body();
     }
 
+    private boolean validateUser(String email, String token) throws IOException {
+        return usersService.validateUser(email, token).execute().body();
+    }
 
     @Override
     public boolean changeDeviceName(Device device) {
@@ -187,6 +192,20 @@ public class DeviceServiceImpl implements DeviceService {
         return null;
     }
 
+    @Override
+    public ResponseEntity<String> publishCommand(Command command, String email, String token) {
+        try {
+            if (!validateUser(email, token)) return new ResponseEntity<>("Invalid User", HttpStatus.UNAUTHORIZED);
+            MqttMessage message = new MqttMessage(MqttConnect.serializeObject(command));
+            IMqttToken mqttToken = MqttConnect.mqttClient.publish(COMMAND + command.getTargetDevice(), message);
+            mqttToken.waitForCompletion();
+        } catch (IOException | MqttException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error when publishing\n", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>("Published", HttpStatus.OK);
+    }
+
     public void trySendingMessage(String topic, String message) {
         MqttMessage mqttMessage = new MqttMessage(message.getBytes());
         try {
@@ -197,7 +216,7 @@ public class DeviceServiceImpl implements DeviceService {
         }
     }
 
-    public List<String> getDeviceIds(){
+    public List<String> getDeviceIds() {
         return deviceDao.getDeviceIds();
     }
 }

@@ -1,5 +1,6 @@
 package com.theelite.devices.controller;
 
+import com.theelite.devices.model.Command;
 import com.theelite.devices.model.Device;
 import com.theelite.devices.service.DeviceServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -76,9 +77,20 @@ public class DeviceController {
         return deviceService.getIpAddressForDevice(deviceId, email, token);
     }
 
+    @PostMapping("/command/{email}/{token}")
+    public ResponseEntity<String> SendDeviceCommand(@RequestBody Command command , @PathVariable("email") String email, @PathVariable("token") String token) {
+       return deviceService.publishCommand(command, email, token);
+
+    }
+
     @PostMapping("/{id}/command/{cmd}/")
     public String testMqtt(@PathVariable("id") String deviceId, @PathVariable("cmd") String command) {
         deviceService.trySendingMessage(deviceId, command);
         return "Sent";
+    }
+
+    @GetMapping("/ids")
+    public List<String> getIds() {
+        return deviceService.getDeviceIds();
     }
 }
