@@ -2,12 +2,14 @@ package com.theelite.devices.model;
 
 import lombok.*;
 
+import java.io.Serializable;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Data
-public class TimeOfRequest {
+public class TimeOfRequest implements Serializable {
     private long year;
     private long month;
     private long day;
