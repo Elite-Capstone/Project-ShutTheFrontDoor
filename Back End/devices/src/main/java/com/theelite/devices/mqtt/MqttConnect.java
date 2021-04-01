@@ -1,11 +1,12 @@
 package com.theelite.devices.mqtt;
 
+import com.google.gson.Gson;
+import com.theelite.devices.model.Status;
 import com.theelite.devices.service.DeviceServiceImpl;
 import org.eclipse.paho.client.mqttv3.*;
 import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.EnableAsync;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
@@ -16,8 +17,12 @@ import java.util.*;
 public class MqttConnect implements MqttCallback {
     private final String mqttServerUrl;
     public final int fiveMinutes = 300000;
-    public static MqttAsyncClient mqttClient;
+    private final int andGetDeviceId = 1;
+    private final String onTopicSeparator = "/";
     private final DeviceServiceImpl deviceService;
+    public static MqttAsyncClient mqttClient;
+    public final static String COMMAND = "command/";
+    public final static String STATUS = "status/";
 
     public MqttConnect(Environment environment, DeviceServiceImpl deviceService) {
         mqttServerUrl = environment.getProperty("mqtt.server");
@@ -69,25 +74,30 @@ public class MqttConnect implements MqttCallback {
     }
 
     @Override
-    public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
-        System.out.println("Received Messaged from " + s);
+    public void messageArrived(String topic, MqttMessage mqttMessage) throws Exception {
+        if (topic.contains(STATUS)) {
+            Status status = deserializeObject(mqttMessage.getPayload(), Status.class);
+            deviceService.updateDeviceStatus(getDeviceIdFromTopic(topic), status);
+        }
+//        else { }
+        mqttMessage.getPayload();
+        System.out.println("Received Messaged from " + topic);
     }
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
         try {
-            System.out.println("Delivery complete: " + iMqttDeliveryToken.getMessage());
-        } catch (MqttException e) {
+            System.out.println("Delivery complete: " + iMqttDeliveryToken.isComplete());
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     Runnable mqttThread = this::connectToMqttBroker;
 
-
     TimerTask periodicallySubscribeToTopics = new TimerTask() {
         public void run() {
-            System.out.println("Started Thread to periodically check and subscribe to kafka topics");
+            System.out.println("Started Thread to periodically subscribe to topics");
             findTopicsToSubsribe();
         }
     };
@@ -109,31 +119,28 @@ public class MqttConnect implements MqttCallback {
 
     private void subscribeToTopics(String[] topics) throws MqttException {
         int[] qos = new int[topics.length];
-        Arrays.stream(qos).forEach(q -> q = 0);
+        Arrays.stream(qos).forEach(q -> q = 1);
         mqttClient.subscribe(topics, qos);
     }
 
     private List<String> getMqttTopicsFromDeviceIds(List<String> deviceIds) {
         var topics = new ArrayList<String>();
         deviceIds.forEach(id -> {
-            topics.add("command/" + id);
-            topics.add("status/" + id);
+            topics.add(COMMAND + id);
+            topics.add(STATUS + id);
         });
         return topics;
     }
 
     public static <T> byte[] serializeObject(T object) throws IOException {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-             ObjectOutputStream out = new ObjectOutputStream(bos)) {
-            out.writeObject(object);
-            return bos.toByteArray();
-        }
+        return new Gson().toJson(object).getBytes();
     }
 
-    private Object convertFromBytes(byte[] bytes) throws IOException, ClassNotFoundException {
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             ObjectInputStream in = new ObjectInputStream(bis)) {
-            return in.readObject();
-        }
+    private static <T> T deserializeObject(byte[] bytes, Class<T> tClass) {
+        return new Gson().fromJson(new String(bytes), tClass);
+    }
+
+    private String getDeviceIdFromTopic(String topic) {
+        return topic.split(onTopicSeparator)[andGetDeviceId];
     }
 }

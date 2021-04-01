@@ -9,7 +9,7 @@ import java.io.Serializable;
 @Getter
 @Setter
 @Data
-public class TimeOfRequest implements Serializable {
+public class TimeOfPublish implements Serializable {
     private long year;
     private long month;
     private long day;

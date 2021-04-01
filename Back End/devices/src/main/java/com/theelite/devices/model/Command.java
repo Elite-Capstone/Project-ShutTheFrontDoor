@@ -14,5 +14,5 @@ public class Command implements Serializable {
     private String commandRequest;
     private long requestFlag;
     private long commandDelayMS;
-    private TimeOfRequest timeOfRequest;
+    private TimeOfPublish timeOfPublish;
 }
