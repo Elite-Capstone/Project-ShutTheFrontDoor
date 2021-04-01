@@ -37,40 +37,19 @@ public class NotificationConfigurations {
 
     @Bean
     public AdminClient kafkaAdminClient(KafkaProperties kafkaProperties) {
-
-//        Properties properties = new Properties();
-//        properties.put("bootstrap.servers", kafkaProperties.);
-//        properties.put("connections.max.idle.ms", 10000);
-//        properties.put("request.timeout.ms", 5000);
-//        try (
-//                AdminClient client =
         return KafkaAdminClient.create(kafkaProperties.buildAdminProperties());
-
-//        ) {
-//            CreateTopicsResult result = client.createTopics(Arrays.asList(
-//                    new NewTopic("storage-topic", 1, (short) 1),
-//                    new NewTopic("global-id-topic", 1, (short) 1),
-//                    new NewTopic("snapshot-topic", 1, (short) 1)
-//            ));
-//            try {
-//                result.all().get();
-//            } catch (InterruptedException | ExecutionException e) {
-//                throw new IllegalStateException(e);
-//            }
-//        }
     }
 
 
     public static Properties getConsumerProps(String clientId, String consumerGroup, String bootstrapServer) {
-        // TODO deserializer for java object
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.setProperty("group.id", consumerGroup);
         props.setProperty("client.id", clientId);
         props.setProperty("enable.auto.commit", "true");
         props.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
-        props.setProperty("value.deserializer", "org.springframework.kafka.support.serializer.JsonDeserializer");
-        props.setProperty(JsonDeserializer.TRUSTED_PACKAGES,"*");
+        props.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+//        props.setProperty(JsonDeserializer.TRUSTED_PACKAGES,"*");
 
         return props;
     }
@@ -80,7 +59,7 @@ public class NotificationConfigurations {
         Properties props = new Properties();
         props.setProperty("bootstrap.servers", bootstrapServer);
         props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
-        props.put("value.serializer", "org.springframework.kafka.support.serializer.JsonSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
 
         return props;
     }
