@@ -43,7 +43,10 @@ public class DeviceServiceImpl implements DeviceService {
         try {
             String familyAccount = getFamilyAccount(email, token);
             if (familyAccount == null || familyAccount.isEmpty() || familyAccount.isBlank()) return false;
-            if (deviceDao.deviceExistsWithId(device.getDeviceId())) return false;
+            if (deviceDao.deviceExistsWithId(device.getDeviceId())) {
+                deviceDao.registerDeviceToAccount(device.getDeviceId(), familyAccount);
+                return true;
+            }
             deviceDao.save(device);
             deviceDao.registerDeviceToAccount(device.getDeviceId(), familyAccount);
             notifService.newDeviceAdded(device.getDeviceId()).execute();
