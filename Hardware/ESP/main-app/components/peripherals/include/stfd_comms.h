@@ -18,6 +18,7 @@
 #include <cJSON.h> 
 
 #include <time.h>
+#include <esp_sntp.h>
 
 #include <esp_log.h>
 #include <esp_system.h>
@@ -46,8 +47,16 @@
 #define MQTT_MAX_LWT_MSG            1024
 
 #define DEFAULT_DOOR_UUID   "00b288a8-3db1-40b5-b30f-532af4e12f4b"
+
+// HTTP connection
 #define DEFAULT_HTTP_URL    "http://34.117.160.50/"
 #define DEFAULT_STREAM_URI  "/stream"
+
+// MQTT connection
+#define MQTT_BROKER_URL     "mqtt://34.95.9.208:1883" //"mqtt://mqtt.eclipseprojects.io:1883" //"mqtt://192.168.1.17:1883"
+#define NOTIFICATION_TOPIC  "notification/" DEFAULT_DOOR_UUID
+#define STATUS_TOPIC        "status/" DEFAULT_DOOR_UUID
+#define CMD_TOPIC           "command/" DEFAULT_DOOR_UUID
 
 // TimeOfPublish JSON Format
 #define TIME_YEAR   "year"
@@ -70,21 +79,31 @@
 #define STATUS_TIME           "timeOfPublish"
 #define STATUS_LIST           "statusList"
 #define STATUS_WIFI_IP        "gotWifiIP"
-#define STATUS_CAM            "camIsInit"
-#define STATUS_SDCARD         "sdcardIsInit"
-#define STATUS_CAM_STREAM     "camStreamIsInit"
-#define STATUS_DOOR_IS_LOCKED "doorIsLocked"
-#define STATUS_DOOR_IS_CLOSED "doorIsClosed"
+#define STATUS_CAM            "camInit"
+#define STATUS_SDCARD         "sdcardInit"
+#define STATUS_CAM_STREAM     "camStreamInit"
+#define STATUS_DOOR_IS_LOCKED "doorLocked"
+#define STATUS_DOOR_IS_CLOSED "doorClosed"
 #define STATUS_BATTERY_LEVEL  "batteryLevel"
 
+// Device commands
+#define MCU_SHUTDOWN_STR     "MCU shutdown"
+#define MCU_GETSTATUS_STR    "Get status"
+#define MCU_GETNOTIF_STR     "Get notification"
+#define TOGGLE_LOCK_DOOR_STR "Toggle door lock"
+#define LOCK_DOOR_STR        "Lock door"
+#define UNLOCK_DOOR_STR      "Unlock door"
+#define STREAM_CAM_STR       "Stream camera"
+
 typedef enum {
-    MCU_INVALID   = -1,
-    MCU_SHUTDOWN  = 0x0,
-    MCU_GETSTATUS = 0x1,
-    LOCK_DOOR     = 0x2,
-    UNLOCK_DOOR   = 0x3,
-    STREAM_CAM    = 0x4,
-    MCU_GETNOTIF  = 0x5,
+    MCU_INVALID      = -1,
+    MCU_SHUTDOWN     = 0x0,
+    MCU_GETSTATUS    = 0x1,
+    LOCK_DOOR        = 0x2,
+    UNLOCK_DOOR      = 0x3,
+    STREAM_CAM       = 0x4,
+    MCU_GETNOTIF     = 0x5,
+    TOGGLE_LOCK_DOOR = 0x6,
 } mcu_cmd_type_t;
 
 typedef struct {

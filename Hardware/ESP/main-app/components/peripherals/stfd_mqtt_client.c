@@ -13,26 +13,22 @@
 #include "lwip/dns.h"
 #include "lwip/netdb.h"
 
-#define MQTT_BROKER_URL     "mqtt://mqtt.eclipseprojects.io:1883" //"mqtt://192.168.1.17:1883"
-#define NOTIFICATION_TOPIC  "notification/" DEFAULT_DOOR_UUID
-#define STATUS_TOPIC        "status/" DEFAULT_DOOR_UUID
-#define CMD_TOPIC           "command/" DEFAULT_DOOR_UUID
-
-#define MCU_SHUTDOWN_STR    "MCU shutdown"
-#define MCU_GETSTATUS_STR   "Get status"
-#define MCU_GETNOTIF_STR    "Get notification"
-#define LOCK_DOOR_STR       "Lock door"
-#define UNLOCK_DOOR_STR     "Unlock door"
-#define STREAM_CAM_STR      "Stream camera"
-
 static const char *TAG = "stfd_mqtt_client";
 
 static void initialize_sntp(void)
 {
+    int retry = 0;
+    const int retry_count = 10;
+
     ESP_LOGI(TAG, "Initializing SNTP");
     sntp_setoperatingmode(SNTP_OPMODE_POLL);
-    sntp_setservername(0, "time.google.com");
+    sntp_setservername(0, "pool.ntp.org");
     sntp_init();
+
+    while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET && ++retry < retry_count) {
+        ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry, retry_count);
+        vTaskDelay(2000 / portTICK_PERIOD_MS);
+    }
 } 
 
 static struct tm obtain_time(void)
@@ -40,12 +36,11 @@ static struct tm obtain_time(void)
     // wait for time to be set
     time_t now = 0;
     struct tm timeinfo = {0};
-    ESP_LOGI(TAG, "Waiting for system time to be set...");
-    while (timeinfo.tm_year < (2021 - 1900)) {
+    while (timeinfo.tm_year < (2016 - 1900)) {
         time(&now);
         localtime_r(&now, &timeinfo);
-        vTaskDelay(500 / portTICK_PERIOD_MS);
-        ESP_LOGI(TAG, "...");
+        // vTaskDelay(500 / portTICK_PERIOD_MS);
+        // ESP_LOGI(TAG, "...");
     }
     ESP_LOGI(TAG, "Time is set...");
     return timeinfo;
@@ -63,20 +58,25 @@ char* obtain_time_string(void) {
 }
 
 static mcu_cmd_type_t get_mqtt_cmd_type(const char* cmd) {
-    if (!strcmp(cmd, MCU_SHUTDOWN_STR))
-        return (mcu_cmd_type_t) MCU_SHUTDOWN;
-    else if (!strcmp(cmd, MCU_GETSTATUS_STR))
-        return (mcu_cmd_type_t) MCU_GETSTATUS;
-    else if (!strcmp(cmd, LOCK_DOOR_STR))
-        return (mcu_cmd_type_t) LOCK_DOOR;
-    else if (!strcmp(cmd, MCU_GETNOTIF_STR))
-        return (mcu_cmd_type_t) MCU_GETNOTIF;
-    else if (!strcmp(cmd, UNLOCK_DOOR_STR))
-        return (mcu_cmd_type_t) UNLOCK_DOOR;
-    else if (!strcmp(cmd, STREAM_CAM_STR))
-        return (mcu_cmd_type_t) STREAM_CAM;
-    else
-        return (mcu_cmd_type_t) MCU_INVALID;
+    if (cmd != NULL) {
+        if (!strcmp(cmd, MCU_SHUTDOWN_STR))
+            return (mcu_cmd_type_t) MCU_SHUTDOWN;
+        else if (!strcmp(cmd, MCU_GETSTATUS_STR))
+            return (mcu_cmd_type_t) MCU_GETSTATUS;
+        else if (!strcmp(cmd, LOCK_DOOR_STR))
+            return (mcu_cmd_type_t) LOCK_DOOR;
+        else if (!strcmp(cmd, MCU_GETNOTIF_STR))
+            return (mcu_cmd_type_t) MCU_GETNOTIF;
+        else if (!strcmp(cmd, TOGGLE_LOCK_DOOR_STR))
+            return (mcu_cmd_type_t) TOGGLE_LOCK_DOOR;
+        else if (!strcmp(cmd, UNLOCK_DOOR_STR))
+            return (mcu_cmd_type_t) UNLOCK_DOOR;
+        else if (!strcmp(cmd, STREAM_CAM_STR))
+            return (mcu_cmd_type_t) STREAM_CAM;
+        else
+            return (mcu_cmd_type_t) MCU_INVALID;
+    } 
+    else return (mcu_cmd_type_t) MCU_INVALID;
 }
 
 // JSON status object format
@@ -112,30 +112,40 @@ void stfd_parse_json_command(char* json_cmd, struct tm* timeinfo, mcu_cmd_type_t
     char* cmd_string = NULL;
     if (json_cmd != NULL) {
         cJSON *command_root = cJSON_Parse(json_cmd);
-        cJSON* request_time = cJSON_GetObjectItem(command_root, COMMAND_TIME);
+        if (command_root != NULL) {
+            cJSON* request_time = cJSON_GetObjectItem(command_root, COMMAND_TIME);
 
-        timeinfo->tm_mday = cJSON_GetObjectItem(request_time, TIME_DAY)->valueint;
-        timeinfo->tm_mon  = cJSON_GetObjectItem(request_time, TIME_MONTH)->valueint;
-        timeinfo->tm_year = cJSON_GetObjectItem(request_time, TIME_YEAR)->valueint;
-        timeinfo->tm_hour = cJSON_GetObjectItem(request_time, TIME_HOUR)->valueint;
-        timeinfo->tm_min  = cJSON_GetObjectItem(request_time, TIME_MIN)->valueint;
-        timeinfo->tm_sec  = cJSON_GetObjectItem(request_time, TIME_SEC)->valueint;
+            if (request_time != NULL) {
+                timeinfo->tm_mday = cJSON_GetObjectItem(request_time, TIME_DAY)->valueint;
+                timeinfo->tm_mon  = cJSON_GetObjectItem(request_time, TIME_MONTH)->valueint;
+                timeinfo->tm_year = cJSON_GetObjectItem(request_time, TIME_YEAR)->valueint;
+                timeinfo->tm_hour = cJSON_GetObjectItem(request_time, TIME_HOUR)->valueint;
+                timeinfo->tm_min  = cJSON_GetObjectItem(request_time, TIME_MIN)->valueint;
+                timeinfo->tm_sec  = cJSON_GetObjectItem(request_time, TIME_SEC)->valueint;
+            }
+            else {
+                ESP_LOGE(TAG, "Could not parse %s object of the JSON command", COMMAND_TIME);
+            }
+            
+            asprintf(&target_device, cJSON_GetObjectItem(command_root, COMMAND_TARGET)->valuestring);
+            asprintf(&cmd_string, cJSON_GetObjectItem(command_root, COMMAND_REQUEST)->valuestring);
+            *flag = cJSON_GetObjectItem(command_root, COMMAND_FLAG)->valueint;
+            *cmd_delay_ms = cJSON_GetObjectItem(command_root, COMMAND_DELAY)->valueint;
 
-        asprintf(&target_device, cJSON_GetObjectItem(command_root, COMMAND_TARGET)->valuestring);
-        asprintf(&cmd_string, cJSON_GetObjectItem(command_root, COMMAND_REQUEST)->valuestring);
-        *flag = cJSON_GetObjectItem(command_root, COMMAND_FLAG)->valueint;
-        *cmd_delay_ms = cJSON_GetObjectItem(command_root, COMMAND_DELAY)->valueint;
+            *cmd = get_mqtt_cmd_type(cmd_string);
 
-        *cmd = get_mqtt_cmd_type(cmd_string);
-
-        ESP_LOGI(TAG, "Received Request to target device %s from %i/%i/%i - %i:%i:%i",
-                target_device,
-                timeinfo->tm_mday, timeinfo->tm_mon, timeinfo->tm_year,
-                timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
-                );
-        ESP_LOGI(TAG, "Received command request: %s, with flag %i, delayed by %i ms", cmd_string, *flag, *cmd_delay_ms);
-        free(target_device);
-        free(cmd_string);
+            ESP_LOGI(TAG, "Received Request to target device %s from %i/%i/%i - %i:%i:%i",
+                    target_device,
+                    timeinfo->tm_mday, timeinfo->tm_mon, timeinfo->tm_year,
+                    timeinfo->tm_hour, timeinfo->tm_min, timeinfo->tm_sec
+                    );
+            ESP_LOGI(TAG, "Received command request: %s, with flag %i, delayed by %i ms", cmd_string, *flag, *cmd_delay_ms);
+            free(target_device);
+            free(cmd_string);
+        }
+        else {
+            ESP_LOGE(TAG, "Could not parse command JSON string");
+        }
     }
     else {
         ESP_LOGE(TAG, "Passed command string is NULL");

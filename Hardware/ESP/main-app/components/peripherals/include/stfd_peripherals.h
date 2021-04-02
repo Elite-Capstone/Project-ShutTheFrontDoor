@@ -26,15 +26,17 @@
 #include "freertos/queue.h"
 #include "driver/gpio.h"
 #include "driver/adc.h"
+#include "driver/timer.h"
 #include "esp_adc_cal.h"
 
-#include "soc/soc.h" //disable brownout problems
+#include "soc/soc.h"           //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
 
 typedef enum {
     SIGNAL_IGNORED = -1,
     SIGNAL_LOW  = 0x0,
-    SIGNAL_HIGH = 0x1
+    SIGNAL_HIGH = 0x1,
+    SIGNAL_ANY  = 0x2,
 } gpio_sig_level_t;
 
 typedef enum {
@@ -72,7 +74,7 @@ typedef enum {
 typedef struct {
     bool save_to_sdcard;
     bool upload_content;
-    bool trig_signal;
+    gpio_sig_level_t trig_signal;
     mcu_content_type_t content_type;
     esp_netif_t *netif;
     wifi_ap_record_t* ap_info;
@@ -168,8 +170,15 @@ void IRAM_ATTR gpio_isr_handler(void* arg);
  * 
  * @return         Return value indicates if the correct gpio was triggered with the correct signal value
  */
-bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level);
+bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level);
 //bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level);
+
+/**
+ * @brief Returns the current position of the N-switch read by its GPIO
+ * 
+ * @return The current position of the N-switch
+ */
+nsw_pos_t get_nsw_pos(void);
 
 /**
  * @brief This function sends a signal pulse through the output GPIOs for motor control.
@@ -189,6 +198,18 @@ void exec_toggle_motor(void);
  stfd_lock_err_t exec_operate_lock(bool lock_dir);
 
 /**
+ * @brief Checks if the fault condition detected should be stopped
+ * 
+ * @return Lock error codes defined above
+ */
+ stfd_lock_err_t check_motor_fault_cond(void);
+
+/**
+ * @brief Begins a countdown timer which will lock the door after it has counted down
+ */
+ void stfd_start_autolock_timer(void);
+
+/**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)
  * 
  * @param io_num            GPIO used to create the interrupt
@@ -200,13 +221,6 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
  * @brief
  */
 uint32_t get_battery_level(void);
-
-/**
- * @brief This function programs what to do upon interrupt
- * 
- * @param arg   arguments passed from the isr queue
- */
-void IRAM_ATTR gpio_isr_handler(void* arg);
 
 /**
  * @brief
@@ -237,9 +251,13 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
  * @param isr_handler function that will handle the interrupt events on the gpio it is installed on
  */
 void gpio_init_setup(gpio_isr_t isr_handler);
-void gpio_setup_input(gpio_isr_t isr_handler);
-void gpio_setup_adc(void);
-void gpio_setup_output(void);
+
+/**
+ * @brief Sets up the timer used for the autolock functionality
+ * 
+ * @param isr_handler function that will handle the interrupt events on the timer
+ */
+void timer_init_setup(timer_isr_t isr_handler);
 
 //========== WiFi Scan ==========
 

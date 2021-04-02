@@ -19,8 +19,10 @@
 #define DEFAULT_VREF    1100        //Use adc2_vref_to_gpio() to obtain a better estimate
 #define NO_OF_SAMPLES   64          //Multisampling
 
-#define MOTOR_FAULT_COND_CNT 20
-#define MOTOR_NORMAL_CYCLE_CNT 100
+#define MOTOR_FAULT_COND_CNT 10
+#define MOTOR_FULL_CYCLE_MS 2600
+#define MOTOR_AUTOLOCK_TIMER 100000//1000000 // 5min = 300 sec -- 300 sec * 80 MHz / 24000 = 1 000 000 ticks
+#define TIMER_DIVIDER 24000
 
 static const char* TAG = "stfd_gpio";
 
@@ -34,19 +36,30 @@ static esp_adc_cal_characteristics_t* bat_monitor_chars = NULL;
 // Forward Declaration of local functions
 static void check_efuse(void);
 static void print_char_val_type(esp_adc_cal_value_t val_type);
+static void exec_brake_motor(void);
 
 // ===== Peripherals functions =====
 
-bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
-    return gpio_get_level(io_num) == sg_level;
+bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level) {
+    if (sg_level == SIGNAL_ANY)
+        return true;
+    else
+        return gpio_get_level(io_num) == (uint8_t) sg_level;
 }
 
 nsw_pos_t get_nsw_pos(void) {
-    if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_HIGH)
+    if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_HIGH) {
+        ESP_LOGI(TAG, "N-switch is open");
         return NSW_OPEN;
-    else if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_LOW)
+    }
+    else if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_LOW) {
+        ESP_LOGI(TAG, "N-switch is closed");
         return NSW_CLOSED;
-    else return NSW_UNKOWN;
+    }
+    else {
+        ESP_LOGW(TAG, "N-switch position unknown");
+        return NSW_UNKOWN;
+    }
 }
 
 // bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level) {
@@ -63,7 +76,7 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             break;
         case GPIO_INPUT_NSW:
             mcu_content->content_type = NSW;
-            mcu_content->trig_signal  = SIGNAL_LOW;
+            mcu_content->trig_signal  = SIGNAL_ANY;
             break;
         case GPIO_INPUT_BATTERY:
             mcu_content->content_type = BATTERY;
@@ -78,10 +91,13 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             mcu_content->trig_signal  = SIGNAL_LOW;
             break;
         case GPIO_INPUT_MOTOR_FAULT:
+            mcu_content->content_type = MTR_CTRL;
+            mcu_content->trig_signal  = SIGNAL_LOW;
+            break;
         case GPIO_OUTPUT_MOTOR_IN1:
         case GPIO_OUTPUT_MOTOR_IN2:
             mcu_content->content_type = MTR_CTRL;
-            mcu_content->trig_signal  = SIGNAL_LOW;
+            mcu_content->trig_signal  = SIGNAL_IGNORED;
             break;
         case GPIO_INPUT_BOOT:
             mcu_content->content_type = STANDBY;
@@ -93,90 +109,121 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
     }
 }
 
-void exec_toggle_motor(void) {
-    ESP_LOGI(TAG, "toggle e-motor...");
-
-    // Rotate Clockwise
+static void exec_brake_motor(void) {
+    // Braking
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
-    gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
-    vTaskDelay(5000 / portTICK_RATE_MS);
-
-    // Sleep mode
-    gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
-    gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
-    vTaskDelay(1000 / portTICK_RATE_MS);
-
-    // Rotate Counter-clockwise
-    gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 1);
-    vTaskDelay(5000 / portTICK_RATE_MS);
-
-    // Sleep mode
+    vTaskDelay(100 / portTICK_RATE_MS);
+    // Sleep
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
-    vTaskDelay(1000 / portTICK_RATE_MS);
 }
 
-stfd_lock_err_t exec_operate_lock(bool lock_dir) {
+void exec_toggle_motor(void) {
+    ESP_LOGI(TAG, "toggle e-motor...");
+    int lock = 1;
+
+    // If initially locked, start by unlocking
+    if (get_nsw_pos() == NSW_CLOSED)
+        lock = 0;
+    else if (get_nsw_pos() == NSW_OPEN)
+        lock = 1;
+    else {
+        ESP_LOGE(TAG, "Unknown N-switch position, will not operate toggle");
+        return;
+    }
+
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, lock);
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, !lock);
+    vTaskDelay(MOTOR_FULL_CYCLE_MS / portTICK_RATE_MS);
+
+    // Brake mode
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 1);
+    vTaskDelay(1000 / portTICK_RATE_MS);
+
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, !lock);
+    gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, lock);
+    vTaskDelay(MOTOR_FULL_CYCLE_MS / portTICK_RATE_MS);
+
+    exec_brake_motor();
+}
+
+stfd_lock_err_t exec_operate_lock(bool lock) {
     int operation_cnt = 0;
     nsw_pos_t old_pos = get_nsw_pos();
+    /*
+    When the door is already locked (bolt out), the N-switch is in closed position, right at the end
+    WHen the door is unlocked (bolt in), the N-switch is in open position for most the rotation
+    */
     if (old_pos == NSW_UNKOWN)
         return LOCK_POS_UNKNOWN;
-    else if (lock_dir && (old_pos == NSW_OPEN))
-        return LOCK_ALREADY_OPEN;
-    else if (!lock_dir && (old_pos == NSW_CLOSED))
+    else if (lock && (old_pos == NSW_CLOSED))
         return LOCK_ALREADY_CLOSED;
-    else if (lock_dir) {
+    else if (!lock && (old_pos == NSW_OPEN))
+        return LOCK_ALREADY_OPEN;
+    else if (lock) {
         // CW
-        ESP_LOGI(TAG, "Opening door lock");
-        gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
-        gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
-    }
-    else if (!lock_dir) {
-        // CCW
         ESP_LOGI(TAG, "Closing door lock");
         gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
         gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 1);
     }
-    vTaskDelay(50 / portTICK_RATE_MS);
-    /* 
-    When the lock initially operates, it generates a stall current (high inrush current).
-    As long as the "fault" condition does not persist, the operation may continue normally.
-    */
-    while (gpio_get_level(GPIO_INPUT_MOTOR_FAULT) == SIGNAL_HIGH) {
+    else if (!lock) {
+        // CCW
+        ESP_LOGI(TAG, "Opening door lock");
+        gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
+        gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
+    }
+
+    vTaskDelay(MOTOR_FULL_CYCLE_MS / portTICK_RATE_MS);
+
+    // while ((lock && gpio_get_level(GPIO_INPUT_MOTOR_FAULT) == SIGNAL_HIGH && get_nsw_pos() == NSW_OPEN) ||
+    //       (!lock && gpio_get_level(GPIO_INPUT_MOTOR_FAULT) == SIGNAL_HIGH)) 
+    // {
+    //     operation_cnt++;
+    //     vTaskDelay(50 / portTICK_RATE_MS);
+    //     if (operation_cnt > MOTOR_NORMAL_CYCLE_CNT) {
+    //         ESP_LOGE(TAG, "Lock/Unlock operation cannot complete succesfully - aborting");
+    //         exec_brake_motor();
+    //         return LOCK_FAIL;
+    //     }
+    // }
+
+    // End of operation
+    exec_brake_motor();
+    return LOCK_OK;
+}
+
+/* 
+When the lock initially operates, it generates a stall current (high inrush current).
+This forces FAULTn output low as it wakes up from sleep mode.
+As long as the "fault" condition does not persist, the operation may continue normally.
+*/
+stfd_lock_err_t check_motor_fault_cond(void) {
+    int operation_cnt = 0;
+    while (gpio_get_level(GPIO_INPUT_MOTOR_FAULT) == SIGNAL_LOW) {
         operation_cnt++;
-        vTaskDelay(50 / portTICK_RATE_MS);
+        vTaskDelay(100 / portTICK_RATE_MS);
         if (operation_cnt > MOTOR_FAULT_COND_CNT) {
             // Fault condition persisted
             ESP_LOGE(TAG, "Fault condition detected from motor lock - Stopping lock");
-            // Braking
-            gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
-            gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 1);
-            vTaskDelay(100 / portTICK_RATE_MS);
-            // Sleep
-            gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 0);
-            gpio_set_level(GPIO_OUTPUT_MOTOR_IN2, 0);
+            exec_brake_motor();
             
             return LOCK_MOTOR_FAULT;
         }
     }
     operation_cnt = 0;
-    /*
-    If the lock reaches the end (where the deadbolt cannot move anymore), 
-    a stall current will appear, creating an expected fault condition.
-    Otherwise, when the switch reaches the end during locking,
-    the N-switch closes and the GPIO signal goes low
-    */
-    while ((lock_dir && gpio_get_level(GPIO_INPUT_MOTOR_FAULT) == SIGNAL_LOW && get_nsw_pos() == NSW_OPEN) ||
-          (!lock_dir && gpio_get_level(GPIO_INPUT_MOTOR_FAULT) == SIGNAL_LOW)) 
-    {
-        operation_cnt++;
-        vTaskDelay(50 / portTICK_RATE_MS);
-        if (operation_cnt > 100)
-            ESP_LOGE(TAG, "Lock/Unlock operation cannot complete succesfully - aborting");
-            return LOCK_FAIL;
-    }
     return LOCK_OK;
+}
+
+void stfd_start_autolock_timer(void) {
+    uint64_t counter_time = 0;
+    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &counter_time);
+    if (counter_time > 0) {
+        timer_pause(TIMER_GROUP_0, TIMER_0);
+    }
+    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, MOTOR_AUTOLOCK_TIMER);
+    timer_start(TIMER_GROUP_0, TIMER_0);
 }
 
 uint32_t get_battery_level(void) {
@@ -229,7 +276,7 @@ esp_err_t stfd_gpio_config(GPIO_INT_TYPE int_type, uint64_t bit_mask, gpio_mode_
     return ESP_OK;
 }
 
-void gpio_setup_input(gpio_isr_t isr_handler) {
+static void gpio_setup_input(gpio_isr_t isr_handler) {
     // BOOT
     if( stfd_gpio_config(
         GPIO_PIN_INTR_NEGEDGE, 
@@ -277,7 +324,7 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
 #if CONFIG_MAIN_MCU
     // NSW
     if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_PIN_INTR_ANYEDGE, 
         GPIO_INPUT_NSW_PIN_SEL, 
         GPIO_MODE_INPUT, 
         GPIO_PULLDOWN_DISABLE, 
@@ -329,7 +376,7 @@ void gpio_setup_input(gpio_isr_t isr_handler) {
 #endif
 }
 
-void gpio_setup_adc(void) {
+static void gpio_setup_adc(void) {
 #if CONFIG_MAIN_MCU
 
     //Check if Two Point or Vref are burned into eFuse
@@ -367,7 +414,7 @@ void gpio_setup_adc(void) {
 #endif
 }
 
-void gpio_setup_output(void) {
+static void gpio_setup_output(void) {
     
 #if CONFIG_MAIN_MCU
     if( stfd_gpio_config(
@@ -412,9 +459,23 @@ void gpio_setup_output(void) {
 void gpio_init_setup(gpio_isr_t isr_handler) {
     gpio_overlap_check(TAG);
     ESP_LOGI(TAG, "GPIO setup...");
+    WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0); //disable brownout detector
     gpio_setup_input(isr_handler);
     gpio_setup_adc();
     gpio_setup_output();
+}
+
+void timer_init_setup(timer_isr_t isr_handler) {
+    ESP_LOGI(TAG, "Timer setup...");
+    timer_config_t timer_config = {
+        .divider     = TIMER_DIVIDER,
+        .counter_en  = TIMER_PAUSE,
+        .counter_dir = TIMER_COUNT_DOWN,
+        .auto_reload = TIMER_AUTORELOAD_DIS
+    };
+    timer_init(TIMER_GROUP_0, TIMER_0, &timer_config);
+    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, MOTOR_AUTOLOCK_TIMER);
+    timer_isr_register(TIMER_GROUP_0, TIMER_0, &isr_handler, (void *) TIMER_0, 0, NULL);
 }
 
 static void check_efuse(void)

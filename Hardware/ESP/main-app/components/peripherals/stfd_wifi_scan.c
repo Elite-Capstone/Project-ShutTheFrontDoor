@@ -111,10 +111,9 @@ void event_handler(void* arg, esp_event_base_t event_base, int32_t event_id, voi
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
         // Get Local IP
         esp_ip4addr_ntoa(&event->ip_info.ip, esp_ip_addr, IP_ADDR_BUF_LEN);
-        // Get Public IP
-        http_rest_with_url_get_device_ip(esp_public_ip_addr);
         ESP_LOGI(TAG, "got local ip:" IPSTR, IP2STR(&event->ip_info.ip));
-        ESP_LOGI(TAG, "got public ip: %s", esp_public_ip_addr);
+        // Get Public IP
+        //http_rest_with_url_get_device_ip(esp_public_ip_addr);
 
         retry_num = 0;
 

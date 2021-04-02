@@ -52,9 +52,24 @@ Note: Can't use ADC 2 with Wifi driver as Wifi uses ADC 2
                  8   25
                  9   26
 
+The MCU connects to the following MQTT server:
+
+#define MQTT_BROKER_URL "mqtt://34.95.9.208:1883"
+
+And uses its door UUID to publish/subscribe to topics. 
+This unit's UUID and topics are defined below:
+
+#define DEFAULT_DOOR_UUID "00b288a8-3db1-40b5-b30f-532af4e12f4b"
+
+#define NOTIFICATION_TOPIC  "notification/" DEFAULT_DOOR_UUID
+#define STATUS_TOPIC        "status/" DEFAULT_DOOR_UUID
+#define CMD_TOPIC           "command/" DEFAULT_DOOR_UUID
+
+JSONs are used to communicate the MCU's state and commands. 
+The formats are defined below for commands.
 Command Format JSON:
 {
-  "name": "timeOfRequest",
+  "name": "timeOfPublish",
   "type": "record",
   "fields": [
       {
@@ -109,7 +124,7 @@ Command types:
 
 Example command:
 {
-  "timeOfRequest":
+  "timeOfPublish":
   {
       "year": 2021,
       "month": 3,
