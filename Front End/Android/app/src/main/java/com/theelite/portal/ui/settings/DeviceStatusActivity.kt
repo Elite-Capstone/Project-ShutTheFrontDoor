@@ -1,5 +1,6 @@
 package com.theelite.portal.ui.settings
 
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.os.Handler
 import android.view.MenuItem
@@ -7,15 +8,26 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.theelite.portal.Objects.DeviceDescription
-import com.theelite.portal.Objects.SystemDescription
+import com.theelite.portal.Objects.*
 import com.theelite.portal.R
+import com.theelite.portal.request.DeviceService
+import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.adapters.SystemsStatusAdapter
+import com.theelite.portal.ui.login.LoginActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.Dispatcher
+import okio.IOException
 
-class DeviceStatusActivity : AppCompatActivity(), ClickListener {
+class DeviceStatusActivity : AppCompatActivity() {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var activityStatusRecyclerView: RecyclerView
+    private lateinit var email: String
+    private lateinit var token: String
+    private var devices: MutableList<Device> = mutableListOf()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,39 +36,37 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
     }
 
     private fun setUpView() {
+        loadState()
         setUpRefreshLayout()
+        retrieveDevices()
         setUpRecyclerView()
     }
 
-    //TODO: Allow user to fetch new status
     private fun setUpRefreshLayout() {
         swipeRefreshLayout = findViewById(R.id.activityStatusSwipeRefresh)
         swipeRefreshLayout.setOnRefreshListener {
             println("Status update -- Starting to Refresh!!")
-            val handler = Handler()
-            handler.postDelayed({
-                if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
-            }, 1000)
+            retrieveDevices()
         }
     }
 
-    // TODO: Each system is associated to a single instance within the adapter
+    private fun loadState() {
+        val sharedPreferences: SharedPreferences = this.getSharedPreferences(
+            LoginActivity.SHARED_PREFS, MODE_PRIVATE
+        )
+        email = sharedPreferences.getString(LoginActivity.EMAIL, null)!!
+        token = sharedPreferences.getString(LoginActivity.TOKEN, null)!!
+    }
+
+
     private fun setUpRecyclerView() {
         activityStatusRecyclerView = findViewById(R.id.activityStatusRecyclerView)
         activityStatusRecyclerView.layoutManager =
             LinearLayoutManager(this, RecyclerView.VERTICAL, false)
-
-        val systems = getConnectedDevices()
-        val systemStatusAdapter = SystemsStatusAdapter(systems)
+        val systemStatusAdapter = SystemsStatusAdapter(devices)
         activityStatusRecyclerView.adapter = systemStatusAdapter
     }
 
-    private fun getConnectedDevices(): ArrayList<SystemDescription> {
-        val systems = ArrayList<SystemDescription>()
-        systems.add(getSmartDoorSystemList())
-        systems.add(getSmartDoorSystemList())
-        return systems
-    }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         println("Pressed on back arrow from Device Status Settings")
@@ -64,53 +74,34 @@ class DeviceStatusActivity : AppCompatActivity(), ClickListener {
         return true
     }
 
-    override fun onItemClicked(name: String) {
-        TODO("Not yet implemented")
+    private fun retrieveDevices() {
+        println("Email $email")
+        println("Token $token")
+        GlobalScope.launch(Dispatchers.Main) {
+            devices = get().toMutableList()
+            activityStatusRecyclerView.adapter = SystemsStatusAdapter(devices)
+            if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
+        }
     }
 
-    // Temporary elements
-    private fun getSmartDoorSystemList(): SystemDescription {
-        val singleSys = SystemDescription(
-            "Smart Front Door",
-            "Fully operational as of " + System.currentTimeMillis()/(24*3600*1000) + " days since 1970"
-        )
 
-        val device = DeviceDescription(getString(R.string.battery_device_name), "100%")
-        device.getDevExtra().add("Battery Full")
-        device.getDevExtra().add("Battery Life: 80%")
-        singleSys.addDeviceDesc(device)
-
-        singleSys.addDeviceDesc(
-            DeviceDescription(
-                getString(R.string.camera_device_name),
-                "Connected and operational"
-            )
-        )
-        singleSys.addDeviceDesc(
-            DeviceDescription(
-                getString(R.string.display_screen_device_name),
-                "Connected and operational"
-            )
-        )
-        singleSys.addDeviceDesc(
-            DeviceDescription(
-                getString(R.string.doorbell_device_name),
-                "Connected and operational"
-            )
-        )
-        singleSys.addDeviceDesc(
-            DeviceDescription(
-                getString(R.string.doorlock_device_name),
-                "Connected and operational"
-            )
-        )
-        singleSys.addDeviceDesc(
-            DeviceDescription(
-                getString(R.string.motion_sensor_device_name),
-                "Connected and operational"
-            )
-        )
-
-        return singleSys
+    private suspend fun get(): List<Device> = withContext(Dispatchers.IO) {
+        var devicesList: List<Device> = ArrayList()
+        val retrofit = RetroFit.get(getString(R.string.url))
+        val deviceService = retrofit.create(DeviceService::class.java)
+        try {
+            println("Starting to retrieve device info")
+            val result = deviceService.getDevices(email, token).execute()
+            if (result.isSuccessful && result.body() != null) {
+                println("Result is successful!")
+                println("Devices has ${devices.size}")
+                devicesList = result.body()!!
+            }
+        } catch (e: IOException) {
+            println(e.message)
+        }
+        return@withContext devicesList
     }
+
+
 }

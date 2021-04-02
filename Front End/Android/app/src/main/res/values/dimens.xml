@@ -16,6 +16,6 @@
     <dimen name="card_title_size_float">24.0</dimen>
     <dimen name="card_subtitle_size">16sp</dimen>
     <dimen name="card_subtitle_size_float">18.0</dimen>
-    <dimen name="card_body_size">16sp</dimen>
+    <dimen name="card_body_size">17sp</dimen>
     <dimen name="card_body_size_float">14.0</dimen>
 </resources>

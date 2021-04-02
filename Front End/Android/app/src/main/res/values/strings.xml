@@ -43,5 +43,12 @@
     <string name="firstname_hint">First Name</string>
     <string name="lastname_hint">Last Name</string>
     <string name="remember_me">Remember Me</string>
+    <string name="door_closed">Door Closed</string>
+    <string name="door_locked">Door Locked</string>
+    <string name="battery_level">Battery Level</string>
+    <string name="connected_to_wifi">Connected to Wifi</string>
+    <string name="camera_stream">Camera Stream</string>
+    <string name="camera_ready">Camera Ready</string>
+    <string name="sd_card_ready">SD Card Ready</string>
 
 </resources>
