@@ -50,5 +50,8 @@
     <string name="camera_stream">Camera Stream</string>
     <string name="camera_ready">Camera Ready</string>
     <string name="sd_card_ready">SD Card Ready</string>
+    <string name="mediaTitle">media title</string>
+    <string name="downloadVideo">Download</string>
+    <string name="videoName">"Video Name "</string>
 
 </resources>
