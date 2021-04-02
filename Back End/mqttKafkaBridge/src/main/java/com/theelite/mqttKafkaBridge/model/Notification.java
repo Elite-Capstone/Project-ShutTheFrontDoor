@@ -1,6 +1,5 @@
-package com.theelite.notifications.model;
+package com.theelite.mqttKafkaBridge.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -8,10 +7,9 @@ import lombok.Setter;
 import java.util.Date;
 import java.util.UUID;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
 public class Notification {
     private String notification;
     private Date date;

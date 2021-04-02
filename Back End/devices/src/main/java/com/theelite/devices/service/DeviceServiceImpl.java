@@ -1,15 +1,17 @@
 package com.theelite.devices.service;
 
+import com.theelite.devices.communication.UsersService;
+import com.theelite.devices.dao.IpAddressesDao;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.theelite.devices.model.*;
 import com.theelite.devices.communication.NotifService;
-import com.theelite.devices.communication.UsersService;
 import com.theelite.devices.dao.DeviceDao;
 
-import com.theelite.devices.dao.IpAddressesDao;
-import com.theelite.devices.model.Device;
-import com.theelite.devices.model.DeviceIp;
-import org.springframework.beans.factory.annotation.Value;
+import com.theelite.devices.mqtt.MqttConnect;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -46,7 +48,10 @@ public class DeviceServiceImpl implements DeviceService {
         try {
             String familyAccount = getFamilyAccount(email, token);
             if (familyAccount == null || familyAccount.isEmpty() || familyAccount.isBlank()) return false;
-            if (deviceDao.deviceExistsWithId(device.getDeviceId())) return false;
+            if (deviceDao.deviceExistsWithId(device.getDeviceId())) {
+                deviceDao.registerDeviceToAccount(device.getDeviceId(), familyAccount);
+                return true;
+            }
             deviceDao.save(device);
             deviceDao.registerDeviceToAccount(device.getDeviceId(), familyAccount);
             notifService.newDeviceAdded(device.getDeviceId()).execute();
@@ -71,11 +76,14 @@ public class DeviceServiceImpl implements DeviceService {
     }
 
     private String getFamilyAccount(String email, String token) throws IOException {
-        Boolean userIsLegit = usersService.validateUser(email, token).execute().body();
+        Boolean userIsLegit = validateUser(email, token);
         if (userIsLegit == null || !userIsLegit) return null;
         return usersService.getFamilyAccountFor(email).execute().body();
     }
 
+    private boolean validateUser(String email, String token) throws IOException {
+        return usersService.validateUser(email, token).execute().body();
+    }
 
     @Override
     public boolean changeDeviceName(Device device) {
@@ -111,6 +119,7 @@ public class DeviceServiceImpl implements DeviceService {
     public ResponseEntity<String> getHealth() {
         try {
             deviceDao.testDBConnection();
+            ipDao.deviceIdSaved("");
             if (usersService == null)
                 return new ResponseEntity<>("userService is null.", HttpStatus.INTERNAL_SERVER_ERROR);
             else if (notifService == null)
@@ -186,5 +195,40 @@ public class DeviceServiceImpl implements DeviceService {
             System.out.println(e.getMessage());
         }
         return null;
+    }
+
+    @Override
+    public ResponseEntity<String> publishCommand(Command command, String email, String token) {
+        try {
+            if (!validateUser(email, token)) return new ResponseEntity<>("Invalid User", HttpStatus.UNAUTHORIZED);
+            MqttMessage message = new MqttMessage(MqttConnect.serializeObject(command));
+            message.setQos(1);
+            IMqttToken mqttToken = MqttConnect.mqttClient.publish(MqttConnect.COMMAND + command.getTargetDevice(), message);
+            mqttToken.waitForCompletion();
+        } catch (IOException | MqttException e) {
+            e.printStackTrace();
+            return new ResponseEntity<>("Error when publishing\n", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>("Published", HttpStatus.OK);
+    }
+
+    @Override
+    public boolean updateDeviceStatus(String id, Status status) {
+        if (deviceDao.deviceExistsWithId(id)) deviceDao.updateDeviceStatus(id, status);
+        return false;
+    }
+
+    public void trySendingMessage(String topic, String message) {
+        MqttMessage mqttMessage = new MqttMessage(message.getBytes());
+        try {
+            IMqttToken token = MqttConnect.mqttClient.publish(topic, mqttMessage);
+            token.waitForCompletion();
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public List<String> getDeviceIds() {
+        return deviceDao.getDeviceIds();
     }
 }

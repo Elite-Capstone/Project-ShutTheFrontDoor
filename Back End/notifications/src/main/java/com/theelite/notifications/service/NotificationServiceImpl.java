@@ -71,14 +71,15 @@ public class NotificationServiceImpl implements NotificationService {
         if (accountId != null && topics != null && topics.size() > 0) {
 
             List<Notification> notifications = new ArrayList<>();
-            KafkaConsumer<String, Notification> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, email, bootStrapServer));
+            KafkaConsumer<String, String> consumer = new KafkaConsumer<>(NotificationConfigurations.getConsumerProps(email, email, bootStrapServer));
 
             consumer.subscribe(topics);
-            ConsumerRecords<String, Notification> records = consumer.poll(Duration.ofSeconds(2));
+            ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(2));
             consumer.commitAsync();
+            Gson gson = new Gson();
 
-            for (ConsumerRecord<String, Notification> r : records) {
-                notifications.add(r.value());
+            for (ConsumerRecord<String, String> r : records) {
+                notifications.add(gson.fromJson(r.value(), Notification.class));
             }
             consumer.close();
             return notifications;
@@ -89,9 +90,9 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     public boolean publishNotification(Notification notification) {
         if (kafkaTopicExist(notification.getDoorId().toString())) {
-            KafkaProducer<String, Notification> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
+            KafkaProducer<String, String> producer = new KafkaProducer<>(NotificationConfigurations.getProducerProps(bootStrapServer));
             notification.setDate(new Date());
-            producer.send(new ProducerRecord<>(notification.getDoorId().toString(), notification));
+            producer.send(new ProducerRecord<>(notification.getDoorId().toString(), new Gson().toJson(notification)));
             producer.close();
             return true;
         } else return false;

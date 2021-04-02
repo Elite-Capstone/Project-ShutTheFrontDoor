@@ -235,3 +235,6 @@ Back End/devices/target/
 Back End/file-storage-service/src/main/resources/META-INF/
 
 *.paw
+Back End/users/paho451302729116159-tcplocalhost1883/.lck
+*.lck
+Back End/mqttKafkaBridge/target/

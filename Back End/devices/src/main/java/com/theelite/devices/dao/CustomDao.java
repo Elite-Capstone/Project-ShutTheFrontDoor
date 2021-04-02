@@ -1,6 +1,7 @@
 package com.theelite.devices.dao;
 
 import com.theelite.devices.model.Device;
+import com.theelite.devices.model.Status;
 
 import java.util.List;
 
@@ -23,4 +24,8 @@ public interface CustomDao {
     String getFamilyAccountForDevice(String device);
 
     List<Device> getDevicesWithId(List<String> deviceIdsForAccount);
+
+    List<String> getDeviceIds();
+
+    void updateDeviceStatus(String id, Status status);
 }

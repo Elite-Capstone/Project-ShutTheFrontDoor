@@ -2,7 +2,7 @@ package com.theelite.devices.dao;
 
 import com.theelite.devices.model.Account;
 import com.theelite.devices.model.Device;
-import com.theelite.devices.model.DeviceType;
+import com.theelite.devices.model.Status;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoOperations;
@@ -13,6 +13,7 @@ import org.springframework.data.mongodb.core.query.Update;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class CustomDaoImpl implements CustomDao {
     private final MongoOperations mongoOperations;
@@ -20,6 +21,7 @@ public class CustomDaoImpl implements CustomDao {
     private final String deviceId = "deviceId";
     private final String deviceName = "deviceName";
     private final String accountId = "accountId";
+    private final String deviceStatus = "status";
 
     @Autowired
     public CustomDaoImpl(MongoOperations mongoOperations) {
@@ -96,5 +98,24 @@ public class CustomDaoImpl implements CustomDao {
     @Override
     public void testDBConnection() {
         mongoOperations.count(new Query().limit(1), Account.class);
+    }
+
+    @Override
+    public List<String> getDeviceIds() {
+        Query query = new Query();
+        query.fields().include(deviceId);
+        List<Device> devices = mongoOperations.find(query, Device.class);
+        return devices
+                .stream()
+                .map(d -> d.getDeviceId())
+                .filter(id -> id != null)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void updateDeviceStatus(String id, Status status) {
+        Query query = new Query().addCriteria(Criteria.where(deviceId).is(id));
+        Update update = new Update().set(deviceStatus, status);
+        mongoOperations.findAndModify(query, update, Device.class);
     }
 }
