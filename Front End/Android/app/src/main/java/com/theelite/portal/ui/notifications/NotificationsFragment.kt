@@ -94,6 +94,7 @@ class NotificationsFragment : Fragment(), ClickListener {
 
             override fun onFailure(call: Call<List<Notification>>, t: Throwable) {
                 Toast.makeText(activity, "${t.message}", Toast.LENGTH_SHORT).show()
+                if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }
 
         })
