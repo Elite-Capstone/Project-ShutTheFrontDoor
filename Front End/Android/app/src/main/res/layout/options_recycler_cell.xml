@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="@dimen/general_padding"
+    android:background="?android:attr/selectableItemBackground"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="@dimen/general_padding"
+        android:layout_marginStart="@dimen/general_padding">
+
+        <ImageView
+            android:id="@+id/settingsCustomCellImageView"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
+            android:src="@drawable/account" />
+
+        <TextView
+            android:id="@+id/settingsCustomCellTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingLeft="10dp"
+            android:paddingTop="10dp"
+            android:text="@string/test"
+            android:textAppearance="@style/TextAppearance.AppCompat.Caption"
+            android:textSize="20sp"
+
+            android:paddingStart="10dp" />
+    </LinearLayout>
+</FrameLayout>

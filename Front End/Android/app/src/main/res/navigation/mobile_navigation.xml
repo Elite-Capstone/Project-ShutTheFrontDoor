@@ -22,4 +22,11 @@
         android:name="com.theelite.portal.ui.notifications.NotificationsFragment"
         android:label="@string/title_notifications"
         tools:layout="@layout/fragment_notifications" />
+
+    <fragment
+        android:id="@+id/navigation_media"
+        android:name="com.theelite.portal.ui.media.MediaFragment"
+        android:label="@string/title_media"
+        tools:layout="@layout/fragment_media" />
+
 </navigation>
