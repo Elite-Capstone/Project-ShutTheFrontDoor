@@ -24,8 +24,25 @@ services:
     depends_on:
       - zookeeper
 
+
+  mosquitto:
+    image: hivemq/hivemq-ce
+    ports:
+      - 1883:1883
+      - 8883:8883
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-logs:/mosquitto/logs
+      - mosquitto-conf:/mosquitto/config
+    restart: unless-stopped
+
 volumes:
   zookeeper_data:
     driver: local
   kafka_data:
     driver: local
+  store:
+  config:
+  mosquitto-data:
+  mosquitto-logs:
+  mosquitto-conf:
