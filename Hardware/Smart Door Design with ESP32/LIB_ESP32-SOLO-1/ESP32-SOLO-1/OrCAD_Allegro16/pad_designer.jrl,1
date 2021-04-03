@@ -1,0 +1,38 @@
+\t (00:00:01) pad_designer 16.6-2015 S051 (v16-6-112DY) Windows 32
+\t (00:00:01)     Journal start - Fri Dec 18 20:56:46 2020
+\t (00:00:01)         Host=B-LANTHIER-LAPT User=benji Pid=10216 CPUs=4
+\t (00:00:01) CmdLine= pad_designer -s padstack1.scr
+\t (00:00:01) 
+\i (00:00:02) setwindow form.padedit
+\i (00:00:02) replay padstack1.scr 
+\i (00:00:02) setwindow Form.padedit 
+\i (00:00:02) pse_new 
+\i (00:00:02) fillin r200_90.pad 
+\i (00:00:02) FORM padedit units Millimeter 
+\i (00:00:02) FORM padedit units Millimeter 
+\i (00:00:08) fillin yes 
+\w (00:00:08) WARNING(SPMHUT-48): Scaled value has been rounded off.
+\i (00:00:08) FORM padedit layers 
+\i (00:00:08) FORM padedit layers  
+\i (00:00:08) FORM padedit grid row 1 
+\i (00:00:08) FORM padedit grid row begin_layer 
+\i (00:00:08) FORM padedit geometry Rectangle 
+\i (00:00:08) FORM padedit geometry Rectangle 
+\i (00:00:08) FORM padedit width 0.900 
+\i (00:00:08) FORM padedit width 0.900 
+\i (00:00:08) FORM padedit height 2.000 
+\i (00:00:08) FORM padedit height 2.000 
+\i (00:00:08) FORM padedit x_offset 0 
+\i (00:00:08) FORM padedit x_offset 0 
+\i (00:00:08) FORM padedit y_offset 0 
+\i (00:00:08) FORM padedit y_offset 0 
+\i (00:00:08) FORM padedit geometry_th Null 
+\i (00:00:08) FORM padedit geometry_ant Null 
+\i (00:00:08) FORM padedit single YES 
+\i (00:00:08) FORM padedit single YES 
+\i (00:00:08) FORM padedit plating Non-Plated 
+\i (00:00:08) FORM padedit plating Non-Plated 
+\i (00:00:08) pse_save_as 
+\i (00:00:08) fillin r200_90.Pad 
+\i (00:00:11) pse_exit
+\t (00:00:12)     Journal end - Fri Dec 18 20:56:57 2020
