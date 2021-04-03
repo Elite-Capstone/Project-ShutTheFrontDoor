@@ -1,0 +1,181 @@
+(ExpressProject ""
+  (ProjectVersion "19981106")
+  (Folder "Design Resources"
+    (Folder "Library"
+      (File ".\smartdoor.olb"
+        (Type "Schematic Library")))
+    (File ".\esp32-solo-1_v1_0316.dsn"
+      (Type "Schematic Design"))
+    (BuildFileAddedOrDeleted "x")
+    (CompileFileAddedOrDeleted "x")
+    (NoModify)
+    (RootChangedForceReNetlist "x")
+    (ANNOTATE_Scope "0")
+    (ANNOTATE_Mode "1")
+    (ANNOTATE_Action "0")
+    (Annotate_Page_Order "0")
+    (ANNOTATE_Reset_References_to_1 "TRUE")
+    (ANNOTATE_No_Page_Number_Change "FALSE")
+    (ANNOTATE_Property_Combine "{Value}{Source Package}{POWER_GROUP}")
+    (ANNOTATE_IncludeNonPrimitive "FALSE")
+    (ANNOTATE_PreserveDesignator "FALSE")
+    (ANNOTATE_PreserveUserEdits "FALSE")
+    (ANNOTATE_Refdes_Control_Required "FALSE")
+    (Update_Instace_for_External_Design "FALSE")
+    (Annotate_type "Default")
+    (width_pages "100")
+    (width_start "80")
+    (width_End "80"))
+  (Folder "Outputs")
+  (Folder "Referenced Projects")
+  (PartMRUSelector
+    ("BATTERY ELEM"
+      (FullPartName "BATTERY ELEM.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (LP3962
+      (FullPartName "LP3962.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (R
+      (FullPartName "R.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (VCC
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (GND
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (ILI9341
+      (FullPartName "ILI9341.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (113990580
+      (FullPartName "113990580.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("G7XKD01AA - Front"
+      (FullPartName "G7XKD01AA - Front.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("G7XKD01AA - Back"
+      (FullPartName "G7XKD01AA - Back.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (SL-7306
+      (FullPartName "SL-7306.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (ESP32-SOLO-1
+      (FullPartName "ESP32-SOLO-1.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("PLUG AC MALE"
+      (FullPartName "PLUG AC MALE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    ("Lock - Front"
+      (FullPartName "Lock - Front.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("SW PUSHBUTTON"
+      (FullPartName "SW PUSHBUTTON.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (VCC_ARROW
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("PLUG FEMAL"
+      (FullPartName "PLUG FEMAL.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    ("PLUG MALE"
+      (FullPartName "PLUG MALE.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (C
+      (FullPartName "C.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    (ArduCam-M-2MP
+      (FullPartName "ArduCam-M-2MP.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    ("Motion Sensor"
+      (FullPartName "Motion Sensor.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (GND_SIGNAL
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    (VCC_BAR
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\CAPSYM.OLB")
+      (DeviceIndex "0"))
+    ("DIODE ZENER"
+      (FullPartName "DIODE ZENER.Normal")
+      (LibraryName
+         "C:\CADENCE\SPB_17.2-SILENT\TOOLS\CAPTURE\LIBRARY\IEC\DEVICE.OLB")
+      (DeviceIndex "0"))
+    ("DC/DC Volt. Regulator"
+      (FullPartName "DC/DC Volt. Regulator.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0"))
+    (AMS1117
+      (FullPartName "AMS1117.Normal")
+      (LibraryName
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\SMARTDOOR.OLB")
+      (DeviceIndex "0")))
+  (MPSSessionName "b_lanth")
+  (LastUsedLibraryBrowseDirectory
+     "C:\Cadence\SPB_17.2-silent\tools\capture\library\iec")
+  (GlobalState
+    (FileView
+      (Path "Design Resources")
+      (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn")
+      (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Smart Door")
+      (Path "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Components")
+      (Path "Design Resources" "Library")
+      (Path "Design Resources" "Library" ".\smartdoor.olb")
+      (Select "Design Resources" ".\esp32-solo-1_v1_0316.dsn" "Smart Door"
+         "Overall Design"))
+    (HierarchyView)
+    (Doc
+      (Type "COrCapturePMDoc")
+      (Frame
+        (Placement "44 0 1 -1 -1 -8 -31 0 336 0 469"))
+      (Tab 0))
+    (Doc
+      (Type "COrSchematicDoc")
+      (Frame
+        (Placement "44 2 3 -1 -1 -8 -31 156 1534 156 615")
+        (Scroll "-234 408")
+        (Zoom "174")
+        (Occurrence "/"))
+      (Path
+         "G:\COURSES\490\ESP32-SOLO-1_REFERENCE_DESIGN\ESP32-SOLO-1_REFERENCE_DESIGN\01_SCHEMATIC\ESP32-SOLO-1_V1_0316.DSN")
+      (Schematic "Smart Door")
+      (Page "Overall Design"))))
