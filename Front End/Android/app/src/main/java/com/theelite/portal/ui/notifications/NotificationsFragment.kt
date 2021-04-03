@@ -20,6 +20,7 @@ import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.adapters.RecentNotificationsAdapter
 import com.theelite.portal.ui.login.LoginActivity
+import com.theelite.portal.ui.stream.StreamActivity
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import io.realm.RealmResults
@@ -142,9 +143,16 @@ class NotificationsFragment : Fragment(), ClickListener {
     }
 
     override fun onItemClicked(name: String) {
-        val i = Intent(Intent.ACTION_VIEW)
-        i.data = Uri.parse(name)
-        requireActivity().startActivity(i)
+
+        if (name.equals("StreamActivity")){
+            val intent = Intent(this.context, StreamActivity::class.java)
+            this.startActivity(intent)
+        }
+        else {
+            val i = Intent(Intent.ACTION_VIEW)
+            i.data = Uri.parse(name)
+            requireActivity().startActivity(i)
+        }
     }
 
     private fun loadState() {
@@ -153,5 +161,6 @@ class NotificationsFragment : Fragment(), ClickListener {
         email = sharedPreferences.getString(LoginActivity.EMAIL, null)
         token = sharedPreferences.getString(LoginActivity.TOKEN, null)
     }
+
 
 }
