@@ -20,6 +20,14 @@ import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.ClickListener
 import com.theelite.portal.ui.adapters.RecentNotificationsAdapter
 import com.theelite.portal.ui.login.LoginActivity
+import io.realm.Realm
+import io.realm.RealmConfiguration
+import io.realm.RealmResults
+import io.realm.exceptions.RealmMigrationNeededException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -31,7 +39,8 @@ class NotificationsFragment : Fragment(), ClickListener {
     private lateinit var recentNotificationRecyclerView: RecyclerView
     private lateinit var root: View
     private lateinit var recentNotificationsAdapter: RecentNotificationsAdapter
-    private lateinit var notifications: MutableList<Notification>
+    private var notifications: MutableList<Notification> = mutableListOf()
+    private lateinit var backgroundThreadRealm: Realm
 
     private var email: String? = null
     private var token: String? = null
@@ -42,6 +51,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         savedInstanceState: Bundle?
     ): View {
         loadState()
+        setUpRealm()
         root = inflater.inflate(R.layout.fragment_notifications, container, false)
         setUpRecyclerView()
         setUpRefreshLayout()
@@ -52,9 +62,7 @@ class NotificationsFragment : Fragment(), ClickListener {
     private fun setUpRefreshLayout() {
         swipeRefreshLayout = root.findViewById(R.id.swipeRefreshRecentNotifications)
         swipeRefreshLayout.setOnRefreshListener {
-//            println("Recent Notifications -- Starting to Refresh!!")
             getNotifications()
-//                recentNotificationsAdapter.notify()
         }
     }
 
@@ -64,9 +72,18 @@ class NotificationsFragment : Fragment(), ClickListener {
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        recentNotificationsAdapter = RecentNotificationsAdapter(notifications,this)
+        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this)
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
+        loadExistingNotifications()
         getNotifications()
+    }
+
+    private fun loadExistingNotifications() {
+        println("Loading existing notifications")
+        notifications.addAll(backgroundThreadRealm.where(Notification::class.java).findAllAsync())
+        println("Notifications is ${notifications.size}")
+        orderNotifications()
+        if (recentNotificationsAdapter != null) recentNotificationsAdapter.notifyDataSetChanged()
     }
 
     private fun getNotifications() {
@@ -76,7 +93,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         println("$email and $token")
         val call = notifService.getRecentNotifications(
             "$email",
-                "$token"
+            "$token"
         )
 
         call.enqueue(object : Callback<List<Notification>> {
@@ -86,6 +103,11 @@ class NotificationsFragment : Fragment(), ClickListener {
             ) {
                 if (response.isSuccessful) {
                     notifications.addAll(response.body()!!)
+//                    GlobalScope.launch(context = Dispatchers.IO) {
+                    backgroundThreadRealm.executeTransactionAsync { transactionRealm ->
+                        transactionRealm.insert(response.body()!!)
+//                        }
+                    }
                     orderNotifications()
                     recentNotificationsAdapter.notifyDataSetChanged()
                 }
@@ -101,6 +123,18 @@ class NotificationsFragment : Fragment(), ClickListener {
 
     }
 
+    private fun setUpRealm() {
+        Realm.init(this.activity)
+        val realmName: String = "DoorhubNotifications"
+        try {
+            val config = RealmConfiguration.Builder().name(realmName)
+                .deleteRealmIfMigrationNeeded()
+                .build()
+            backgroundThreadRealm = Realm.getInstance(config)
+        } catch (e: RealmMigrationNeededException) {
+            println(e.message)
+        }
+    }
 
 
     private fun orderNotifications() {
@@ -113,10 +147,11 @@ class NotificationsFragment : Fragment(), ClickListener {
         requireActivity().startActivity(i)
     }
 
-    private fun loadState(){
-        val sharedPreferences: SharedPreferences = this.requireActivity().getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
-        email = sharedPreferences.getString(LoginActivity.EMAIL,null)
-        token = sharedPreferences.getString(LoginActivity.TOKEN,null)
+    private fun loadState() {
+        val sharedPreferences: SharedPreferences = this.requireActivity()
+            .getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
+        email = sharedPreferences.getString(LoginActivity.EMAIL, null)
+        token = sharedPreferences.getString(LoginActivity.TOKEN, null)
     }
 
 }

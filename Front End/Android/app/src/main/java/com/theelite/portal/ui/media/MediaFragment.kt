@@ -26,14 +26,14 @@ import retrofit2.Callback
 import retrofit2.Response
 
 
-class MediaFragment : Fragment() , ClickListener {
+class MediaFragment : Fragment(), ClickListener {
 
     private lateinit var root: View
-    private lateinit var videoAdapter:VideoDownloadAdapter
-    private lateinit var nameList:MutableList<String>
+    private lateinit var videoAdapter: VideoDownloadAdapter
+    private lateinit var nameList: MutableList<String>
     private lateinit var videoRecyclerView: RecyclerView
 
-    private lateinit var newNames:List<String>
+    private lateinit var newNames: List<String>
 
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
 
@@ -54,7 +54,7 @@ class MediaFragment : Fragment() , ClickListener {
         loadState()
         nameList = mutableListOf()
         getFileNames()
-        videoAdapter = VideoDownloadAdapter(nameList,this)
+        videoAdapter = VideoDownloadAdapter(nameList, this)
         videoRecyclerView.adapter = videoAdapter
         return root
 
@@ -73,23 +73,23 @@ class MediaFragment : Fragment() , ClickListener {
         }
     }
 
-    private fun getFileNames(){
+    private fun getFileNames() {
         val retrofit = RetroFit.get(getString(R.string.url))
         val mediaService: MediaService = retrofit.create(MediaService::class.java)
 
 
         val call = mediaService.getFileNames(
-                "$email",
-                "$token"
+            "$email",
+            "$token"
         )
 
         call.enqueue(object : Callback<List<String>> {
             override fun onResponse(
-                    call: Call<List<String>>,
-                    response: Response<List<String>>
+                call: Call<List<String>>,
+                response: Response<List<String>>
             ) {
-                println(response.body()!!.toString())
-                if (response.isSuccessful) {
+                if (response.isSuccessful && response.body() != null) {
+                    println(response.body()?.toString())
                     newNames = findRedundant((response.body() as MutableList<String>?)!!)
                     nameList.addAll(newNames)
                     videoAdapter.notifyDataSetChanged()
@@ -98,7 +98,7 @@ class MediaFragment : Fragment() , ClickListener {
             }
 
             override fun onFailure(call: Call<List<String>>, t: Throwable) {
-                println("On failure: "+ t.message)
+                println("On failure: " + t.message)
                 Toast.makeText(activity, "${t.message}", Toast.LENGTH_SHORT).show()
                 if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }
@@ -107,13 +107,14 @@ class MediaFragment : Fragment() , ClickListener {
 
     }
 
-    private fun loadState(){
-        val sharedPreferences: SharedPreferences = this.requireActivity().getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
-        email = sharedPreferences.getString(LoginActivity.EMAIL,null)
-        token = sharedPreferences.getString(LoginActivity.TOKEN,null)
+    private fun loadState() {
+        val sharedPreferences: SharedPreferences = this.requireActivity()
+            .getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
+        email = sharedPreferences.getString(LoginActivity.EMAIL, null)
+        token = sharedPreferences.getString(LoginActivity.TOKEN, null)
     }
 
-    private fun findRedundant(allString:MutableList<String>):List<String>{
+    private fun findRedundant(allString: MutableList<String>): List<String> {
         allString.removeAll(nameList)
         return allString
     }
