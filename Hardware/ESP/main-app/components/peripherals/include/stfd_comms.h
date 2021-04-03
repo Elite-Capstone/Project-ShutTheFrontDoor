@@ -38,8 +38,8 @@
 #include "lwip/sockets.h"
 #include "soc/soc.h" //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
-#include <iotc.h>
 #include "mqtt_client.h"
+#include <iotc.h>
 
 #undef  MQTT_MAX_LWT_TOPIC
 #define MQTT_MAX_LWT_TOPIC          128

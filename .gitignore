@@ -220,6 +220,9 @@ Hardware/ESP/main-app/sdkconfig
 
 Hardware/ESP/main-app/sdkconfig.old
 
+**sdkconfig
+**sdkconfig.old
+
 Back End/users/target/
 
 Back End/notifications/src/main/resources/application.properties
@@ -247,6 +250,9 @@ Hardware/ESP/esp32-opencv-master/
 Hardware/ESP/esp32-cam-webserver/
 Hardware/ESP/http_client/
 Hardware/ESP/examples/
+**esp-google-iot/
+**esp32_camera
+
 
 
 Hardware/ESP/main-app/components/esp32-camera
