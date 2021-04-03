@@ -1,6 +1,7 @@
 package com.theelite.portal.ui.register
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.Button
 import android.widget.Toast
@@ -11,6 +12,8 @@ import com.theelite.portal.Objects.User
 import com.theelite.portal.R
 import com.theelite.portal.request.RetroFit
 import com.theelite.portal.request.UserService
+import com.theelite.portal.ui.login.LoginActivity
+import kotlinx.android.synthetic.main.activity_login.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -50,13 +53,16 @@ class RegisterActivity : AppCompatActivity() {
         val userService = retrofit.create(UserService::class.java)
 
         val call = userService.newUser(getUserInfo())
-        call.enqueue(object : Callback<Boolean> {
-            override fun onResponse(call: Call<Boolean>, response: Response<Boolean>) {
-                if (response.isSuccessful && response.body()!!) moveToHomeActivity() else couldNotCreateUser()
+        call.enqueue(object : Callback<String> {
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if (response.isSuccessful && response.body() != null && !response.body().equals("unsuccessful")){
+                    saveState(response.body()!!,emailTextField.text.toString())
+                    moveToHomeActivity()
+                } else couldNotCreateUser()
             }
 
 
-            override fun onFailure(call: Call<Boolean>, t: Throwable) {
+            override fun onFailure(call: Call<String>, t: Throwable) {
                 Toast.makeText(this@RegisterActivity, "${t.message}", Toast.LENGTH_LONG).show()
             }
         })
@@ -90,5 +96,14 @@ class RegisterActivity : AppCompatActivity() {
             null,
             null
         )
+    }
+
+    private fun saveState(token: String, email: String){
+        val sharedPreferences: SharedPreferences = this.getSharedPreferences(LoginActivity.SHARED_PREFS, MODE_PRIVATE)
+        val editor: SharedPreferences.Editor =  sharedPreferences.edit()
+        editor.putBoolean(LoginActivity.SWITCH,false)
+        editor.putString(LoginActivity.EMAIL,email)
+        editor.putString(LoginActivity.TOKEN,token)
+        editor.apply()
     }
 }

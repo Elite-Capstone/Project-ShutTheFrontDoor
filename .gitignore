@@ -226,8 +226,21 @@ Back End/notifications/src/main/resources/application.properties
 Back End/notifications/target/
 
 Back End/file-storage-service/target/
+Hardware/ESP/esp32-cam/.vscode/
+
+*.vscode/
+
+Back End/devices/target/
+
+Back End/file-storage-service/src/main/resources/META-INF/
+
+*.paw
+Back End/users/paho451302729116159-tcplocalhost1883/.lck
+*.lck
+Back End/mqttKafkaBridge/target/
 Hardware/ESP/arduino-esp32-master/
-
 Hardware/ESP/nabto-esp32cam/
-
 Hardware/ESP/esp32-opencv-master/
+
+
+Hardware/ESP/main-app/components/esp32-camera
