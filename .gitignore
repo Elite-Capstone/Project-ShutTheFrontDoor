@@ -256,3 +256,7 @@ Hardware/ESP/examples/
 
 
 Hardware/ESP/main-app/components/esp32-camera
+
+Hardware/ESP/cam-app/components/esp32-camera/
+
+Hardware/ESP/cam-app/components/esp-google-iot/
