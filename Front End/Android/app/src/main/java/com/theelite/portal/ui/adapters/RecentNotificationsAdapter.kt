@@ -83,7 +83,7 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.titleTextView.text = dataSet[position].notification
-        holder.descriptionTextView.text = dataSet[position].notification
+        holder.descriptionTextView.text = dataSet[position].doorId
         holder.dateTextView.text = dataSet[position].date.toString()
         holder.recentNotificationsWActionsPeekButton?.setOnClickListener {
             context.onItemClicked("http://192.168.1.19/stream")
