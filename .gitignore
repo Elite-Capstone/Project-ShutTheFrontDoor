@@ -211,7 +211,7 @@ nodes_modules/
 Front End/Web/Portal/.vscode/
 *.mvn/
 *.idea/
-*/.idea/
+**.idea/
 Hardware/ESP/esp-idf
 
 Hardware/ESP/main-app_deprecated/
