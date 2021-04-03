@@ -222,6 +222,7 @@ esp_err_t stfd_mqtt_task(char* device_path, char* jwt);
 //========== MQTT Client ==========
 
 void stfd_init_status_json(cJSON** root);
+void stfd_set_status_json(cJSON** root, bool got_wifi_ip, bool cam_init, bool sdcard_init, bool cam_stream_init, bool door_locked, bool door_closed, int bat_level);
 void stfd_parse_json_command(char* json_cmd, struct tm* timeinfo, mcu_cmd_type_t* cmd, int* flag, int* cmd_delay_ms);
 /**
  * @brief Initialize the MQTT connection

@@ -185,6 +185,21 @@ static void mqtt_task(void* pvParameters) {
         if (mcu_mqtt->cmd_info.exec_cmd) {
             switch (mcu_mqtt->cmd_info.cmd) {
                 case (mcu_cmd_type_t) MCU_GETSTATUS:
+                    // Update json_status object
+                    mcu_s->door_is_locked = get_door_is_locked();
+                    mcu_s->door_is_closed = get_door_is_closed();
+                    mcu_s->bat_level = get_battery_level();
+                    
+                    stfd_set_status_json(
+                        &mcu_mqtt->json_status,
+                        mcu_s->got_wifi_ip,
+                        mcu_s->cam_initiated,
+                        mcu_s->sdcard_initiated,
+                        mcu_s->cam_server_init,
+                        mcu_s->door_is_locked,
+                        mcu_s->door_is_closed,
+                        mcu_s->bat_level
+                    );
                     stfd_mqtt_publish_status(mcu_mqtt);
                     break;
                 case (mcu_cmd_type_t) MCU_GETNOTIF:

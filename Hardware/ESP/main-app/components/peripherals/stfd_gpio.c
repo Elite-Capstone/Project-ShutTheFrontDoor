@@ -47,6 +47,22 @@ bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level) {
         return gpio_get_level(io_num) == (uint8_t) sg_level;
 }
 
+// Door is closed when Reed switch is open, i.e. the line is 
+// still pulled up by the resistor
+bool get_door_is_closed(void) {
+    if (gpio_get_level(GPIO_INPUT_REEDSW_STATUS) == SIGNAL_HIGH)
+        return true;
+    else return false;
+}
+
+bool get_door_is_locked(void) {
+    if (get_nsw_pos() == NSW_OPEN)
+        return false;
+    else return false; // if (get_nsw_pos() == NSW_CLOSED);
+}
+
+// Locked position is closed N-switch
+// Unlocked is open N-switch
 nsw_pos_t get_nsw_pos(void) {
     if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_HIGH) {
         ESP_LOGI(TAG, "N-switch is open");
@@ -227,7 +243,24 @@ void stfd_start_autolock_timer(void) {
 }
 
 uint32_t get_battery_level(void) {
-    return get_adc_reading(bat_monitor_unit, bat_monitor_channel);
+    uint32_t adc_mV = get_adc_reading(bat_monitor_unit, bat_monitor_channel);
+    // If battery is full
+    if (adc_mV == adc_val[0]) {
+        ESP_LOGI(TAG, "Battery full charge");
+        return bat_val[0];
+    }
+    else if (adc_mV > adc_val[98]) {
+        ESP_LOGW(TAG, "Battery is completely discharged!");
+        return 0;
+    }
+    for (uint16_t i = 1; i < sizeof(adc_val)/sizeof(uint32_t); i++) {
+        if (adc_mV > adc_val[i-1] && adc_mV <= adc_val[i]) {
+            ESP_LOGI(TAG, "Battery voltage is : %i", bat_val[i]);
+            return bat_val[i];
+        }
+    }
+    ESP_LOGW(TAG, "Could not read battery voltage properly");
+    return 0;
 }
 
 uint32_t get_adc_reading(adc_unit_t unit, adc_channel_t channel) {

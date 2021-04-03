@@ -507,7 +507,7 @@
     #define BATTERY_ADC_CH 3
     #define BATTERY_ADC_UNIT 1
     #else
-    #define GPIO_INPUT_BATTERY 27
+    #define GPIO_INPUT_BATTERY 36
     #define BATTERY_ADC_CH 7
     #define BATTERY_ADC_UNIT 2
     #endif /* CONFIG_GPIO_INPUT_BATTERY */
@@ -997,7 +997,7 @@ extern const uint32_t adc_val[99] = {
     2250, 2275, 2300, 2325, 2350, 2375, 2400, 2425, 2450
 };
 
-extern const uint32_t bat_val[99] = {
+extern const uint32_t bat_val[100] = {
     100, 99, 98, 97, 96, 95, 94, 93, 92, 91,
     90, 89, 88, 87, 86, 85, 84, 83, 82, 81,
     80, 79, 78, 77, 76, 75, 74, 73, 72, 71,
@@ -1008,4 +1008,4 @@ extern const uint32_t bat_val[99] = {
     30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
     20, 19, 18, 17, 16, 15, 14, 13, 12, 11,
     10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-}
+};

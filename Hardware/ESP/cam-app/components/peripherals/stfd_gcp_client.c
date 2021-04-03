@@ -270,14 +270,13 @@ static void stfd_mqtt_commands_subscribe_callback(iotc_context_handle_t in_conte
             // Decode the received string
             cJSON* command_root = cJSON_Parse(sub_message);
             cJSON* request_time = cJSON_GetObjectItem(command_root, COMMAND_TIME);
-            ESP_LOGI(TAG, "Received Request from %i/%i/%i - %i:%i:%i.%i",
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_DAY)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_MONTH)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_YEAR)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_HOUR)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_MIN)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_SEC)->valueint,
-            cJSON_GetObjectItem(request_time, COMMAND_TIME_MS)->valueint
+            ESP_LOGI(TAG, "Received Request from %i/%i/%i - %i:%i:%i",
+            cJSON_GetObjectItem(request_time, TIME_DAY)->valueint,
+            cJSON_GetObjectItem(request_time, TIME_MONTH)->valueint,
+            cJSON_GetObjectItem(request_time, TIME_YEAR)->valueint,
+            cJSON_GetObjectItem(request_time, TIME_HOUR)->valueint,
+            cJSON_GetObjectItem(request_time, TIME_MIN)->valueint,
+            cJSON_GetObjectItem(request_time, TIME_SEC)->valueint
             );
 
             ESP_LOGI(TAG, "Received command request: %s", 

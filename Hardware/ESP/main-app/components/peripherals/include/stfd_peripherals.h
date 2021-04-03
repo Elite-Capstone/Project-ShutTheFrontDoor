@@ -174,7 +174,20 @@ bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level);
 //bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level);
 
 /**
+ * @brief Returns the position of the door corresponding the the position
+ *        of the Reed switch
+ */
+bool get_door_is_closed(void);
+
+/**
+ * @brief Returns the position of the lock as locked/unlocked
+ */
+bool get_door_is_locked(void);
+
+/**
  * @brief Returns the current position of the N-switch read by its GPIO
+ *        An open N-switch indicates an unlocked door
+ *        A closed N-switch indicates a locked door
  * 
  * @return The current position of the N-switch
  */
@@ -218,12 +231,12 @@ void exec_toggle_motor(void);
 void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
 
 /**
- * @brief
+ * @brief Returns the battery's actual voltage in % of charge
  */
 uint32_t get_battery_level(void);
 
 /**
- * @brief
+ * @brief Returns the battery's ADC reading in mV (up to 2450 mV)
  */
 uint32_t get_adc_reading(adc_unit_t unit, adc_channel_t channel);
 

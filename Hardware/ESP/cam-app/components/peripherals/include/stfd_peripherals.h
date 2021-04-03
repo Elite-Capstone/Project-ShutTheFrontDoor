@@ -10,25 +10,31 @@
 #ifndef STFD_PERIPHERALS_H_
 #define STFD_PERIPHERALS_H_
 
+#include <cJSON.h>
+
 #include <esp_log.h>
 #include <esp_system.h>
 #include <esp_event.h>
 #include <esp_wifi.h>
+#include <esp_http_server.h>
+#include "http_server.h"
+#include <esp_http_client.h>
 #include "esp_camera.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
 #include "driver/gpio.h"
+#include "driver/timer.h"
 
-#include "soc/soc.h" //disable brownout problems
+#include "soc/soc.h"           //disable brownout problems
 #include "soc/rtc_cntl_reg.h"  //disable brownout problems
-
 
 typedef enum {
     SIGNAL_IGNORED = -1,
     SIGNAL_LOW  = 0x0,
-    SIGNAL_HIGH = 0x1
+    SIGNAL_HIGH = 0x1,
+    SIGNAL_ANY  = 0x2,
 } gpio_sig_level_t;
 
 typedef enum {
@@ -45,14 +51,14 @@ typedef enum {
 typedef struct {
     bool save_to_sdcard;
     bool upload_content;
-    bool trig_signal;
+    gpio_sig_level_t trig_signal;
     mcu_content_type_t content_type;
     esp_netif_t *netif;
     wifi_ap_record_t* ap_info;
     char* device_ip;
     char* pub_device_ip;
-    char* device_path;
-    char* jwt;
+    // char* device_path;
+    // char* jwt;
     uint64_t pic_counter;
 } mcu_content_t;
 
@@ -61,8 +67,12 @@ typedef struct {
     bool cam_initiated;
     bool sdcard_initiated;
     bool cam_server_init;
-    bool iotc_core_init;
-    bool iotc_server_online;
+    bool door_is_locked;
+    bool door_is_closed;
+    uint32_t bat_level;
+
+    // bool iotc_core_init;
+    // bool iotc_server_online;
 } mcu_status_t;
 
 uint32_t getDefaultScanListSize(void);
@@ -125,7 +135,7 @@ esp_err_t stfd_get_frame(uint8_t** jpg_buf, size_t* jpg_buf_len, int64_t frame_t
  * 
  * @return         Return value indicates if the correct gpio was triggered with the correct signal value
  */
-bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level);
+bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level);
 //bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level);
 
 /**

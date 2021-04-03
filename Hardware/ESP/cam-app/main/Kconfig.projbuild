@@ -613,15 +613,15 @@ menu "Project ShutTheFrontDoor Configuration"
     
         config IPV4_ADDR
             string "IPV4 Address"
-            default "192.168.1.165"
-            depends on IPV4
+            default "Enter Cloud IPV4 Address"
+            depends on SERVER_IPV4
             help
                 The MCU's TCP client will connect to this IPV4 address.
     
         config IPV6_ADDR
             string "IPV6 Address"
-            default "FE80::30AD:E57B:C212:68AD"
-            depends on IPV6
+            default "Enter Cloud IPV6 Address"
+            depends on SERVER_IPV6
             help
                 The MCU's TCP client will connect to this IPV6 address.
     
