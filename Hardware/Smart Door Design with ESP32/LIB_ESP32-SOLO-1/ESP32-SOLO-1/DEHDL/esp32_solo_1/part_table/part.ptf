@@ -1,0 +1,11 @@
+FILE_TYPE = MULTI_PHYS_TABLE;
+
+PART 'ESP32_SOLO_1'
+CLASS = IC
+{========================================================================================}
+:"MANUFACTURER_NAME", "MANUFACTURER_PART_NUMBER"= "PART_NUMBER", "JEDEC_TYPE", "PACK_TYPE", "ARROW_PART_NUMBER", "ARROW_PRICE/STOCK", "MOUSER_PART_NUMBER", "MOUSER_PRICE/STOCK", "DESCRIPTION", "DATASHEET";
+{========================================================================================}
+ "Espressif Systems", "ESP32-SOLO-1" (!) = "", "ESP32SOLO1", "Other", "", "", "356-ESP32-SOLO-1", "https://www.mouser.co.uk/ProductDetail/Espressif-Systems/ESP32-SOLO-1?qs=w%2Fv1CP2dgqpIFRWX9FvikA%3D%3D", "WiFi Modules (802.11) SMD Module, ESP32-S0WD, 32Mbits SPI flash, UART mode,", "https://www.espressif.com/sites/default/files/documentation/esp32-solo-1_datasheet_en.pdf"
+END_PART
+
+END.
