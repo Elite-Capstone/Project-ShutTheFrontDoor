@@ -98,6 +98,10 @@ typedef struct {
     // bool iotc_server_online;
 } mcu_status_t;
 
+extern const timer_group_t autotimer_group;
+extern const timer_idx_t   lock_timer_num;
+extern const timer_idx_t   camserver_timer_num;
+
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
 
@@ -221,6 +225,11 @@ void exec_toggle_motor(void);
  * @brief Begins a countdown timer which will lock the door after it has counted down
  */
  void stfd_start_autolock_timer(void);
+
+ /**
+  * @brief Begins a countdown timer which will stop the camera stream after times runs out
+  */
+ void stfd_start_camserver_timer(void);
 
 /**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)

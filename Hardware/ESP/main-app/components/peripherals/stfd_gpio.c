@@ -7,6 +7,9 @@
     Desc;       This file contains the gpio setup and interrupts
 */
 
+#ifndef STFD_GPIO_C_
+#define STFD_GPIO_C_
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -21,8 +24,12 @@
 
 #define MOTOR_FAULT_COND_CNT 10
 #define MOTOR_FULL_CYCLE_MS 2600
-#define MOTOR_AUTOLOCK_TIMER 100000//1000000 // 5min = 300 sec -- 300 sec * 80 MHz / 24000 = 1 000 000 ticks
-#define TIMER_DIVIDER 24000
+
+#define TIMER_DIVIDER 16
+#define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER)
+#define MOTOR_AUTOLOCK_TIMER 5 // 5min,  *TIMER_SCALE to use in setting timer values
+#define CAM_SERVER_TIMER 300    // 5min
+
 
 static const char* TAG = "stfd_gpio";
 
@@ -32,6 +39,10 @@ static const adc_atten_t      battery_adc_atten     = ADC_ATTEN_DB_11;
 static const adc_unit_t       bat_monitor_unit      = BATTERY_ADC_UNIT;
 static const adc_channel_t    bat_monitor_channel   = BATTERY_ADC_CH;
 static esp_adc_cal_characteristics_t* bat_monitor_chars = NULL;
+
+const timer_group_t autotimer_group       = TIMER_GROUP_0;
+const timer_idx_t   lock_timer_num        = TIMER_0;
+const timer_idx_t   camserver_timer_num   = TIMER_1;
 
 // Forward Declaration of local functions
 static void check_efuse(void);
@@ -56,8 +67,8 @@ bool get_door_is_closed(void) {
 }
 
 bool get_door_is_locked(void) {
-    if (get_nsw_pos() == NSW_OPEN)
-        return false;
+    if (get_nsw_pos() == NSW_CLOSED)
+        return true;
     else return false; // if (get_nsw_pos() == NSW_CLOSED);
 }
 
@@ -166,7 +177,7 @@ void exec_toggle_motor(void) {
 }
 
 stfd_lock_err_t exec_operate_lock(bool lock) {
-    int operation_cnt = 0;
+    //int operation_cnt = 0;
     nsw_pos_t old_pos = get_nsw_pos();
     /*
     When the door is already locked (bolt out), the N-switch is in closed position, right at the end
@@ -232,14 +243,23 @@ stfd_lock_err_t check_motor_fault_cond(void) {
     return LOCK_OK;
 }
 
-void stfd_start_autolock_timer(void) {
-    uint64_t counter_time = 0;
-    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &counter_time);
+static void start_auto_timer(timer_group_t group_num, timer_idx_t timer_num, uint64_t load_val) {
+    double counter_time = 0;
+    timer_get_counter_time_sec(group_num, timer_num, &counter_time);
     if (counter_time > 0) {
-        timer_pause(TIMER_GROUP_0, TIMER_0);
+        ESP_LOGI(TAG, "Timer reset at %f", counter_time);
     }
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, MOTOR_AUTOLOCK_TIMER);
-    timer_start(TIMER_GROUP_0, TIMER_0);
+    timer_pause(group_num, timer_num);
+    timer_set_counter_value(group_num, timer_num, load_val * TIMER_SCALE);
+    timer_start(group_num, timer_num);
+}
+
+void stfd_start_autolock_timer(void) {
+    start_auto_timer(autotimer_group, lock_timer_num, MOTOR_AUTOLOCK_TIMER);
+}
+
+void stfd_start_camserver_timer(void) {
+    start_auto_timer(autotimer_group, camserver_timer_num, CAM_SERVER_TIMER);
 }
 
 uint32_t get_battery_level(void) {
@@ -498,17 +518,26 @@ void gpio_init_setup(gpio_isr_t isr_handler) {
     gpio_setup_output();
 }
 
+// The timer value input is in seconds
+static void single_timer_setup(timer_config_t timer_config, timer_isr_t isr_handler, timer_group_t timer_group, timer_idx_t timer_idx, uint64_t timer_val, uint64_t alarm_val) {
+    timer_init(timer_group, timer_idx, &timer_config);
+    timer_set_counter_value(timer_group, timer_idx, timer_val * TIMER_SCALE);
+    timer_set_alarm_value(timer_group, timer_idx, alarm_val * TIMER_SCALE);
+    timer_enable_intr(timer_group, timer_idx);
+    timer_isr_register(timer_group, timer_idx, isr_handler, (void *) timer_idx, ESP_INTR_FLAG_IRAM, NULL);   
+}
+
 void timer_init_setup(timer_isr_t isr_handler) {
     ESP_LOGI(TAG, "Timer setup...");
     timer_config_t timer_config = {
         .divider     = TIMER_DIVIDER,
         .counter_en  = TIMER_PAUSE,
-        .counter_dir = TIMER_COUNT_DOWN,
-        .auto_reload = TIMER_AUTORELOAD_DIS
+        .counter_dir = TIMER_COUNT_UP,
+        .alarm_en    = TIMER_ALARM_EN,
+        .auto_reload = TIMER_AUTORELOAD_DIS,
     };
-    timer_init(TIMER_GROUP_0, TIMER_0, &timer_config);
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, MOTOR_AUTOLOCK_TIMER);
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, &isr_handler, (void *) TIMER_0, 0, NULL);
+    single_timer_setup(timer_config, isr_handler, autotimer_group, lock_timer_num, 0, MOTOR_AUTOLOCK_TIMER);
+    single_timer_setup(timer_config, isr_handler, autotimer_group, camserver_timer_num, 0, CAM_SERVER_TIMER);
 }
 
 static void check_efuse(void)
@@ -547,3 +576,5 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
         printf("Characterized using Default Vref\n");
     }
 }
+
+#endif /* STFD_GPIO_C_ */
