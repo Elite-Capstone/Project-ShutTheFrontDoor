@@ -36,6 +36,7 @@ class LoginActivity : AppCompatActivity() {
         const val SWITCH = "switchRemember"
         const val EMAIL = "emailRemember"
         const val TOKEN = "tokenRemember"
+        const val DOORSTATE= "doorState"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
