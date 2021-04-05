@@ -263,28 +263,9 @@ static void mqtt_task(void* pvParameters) {
  * @param mcu_c Camera current status with its content
  */
 void exec_gpio_task(mcu_content_t* mcu_c) {    
-    camera_fb_t* camera_pic;
-    uint8_t* jpeg_buf = NULL;
-    size_t jpeg_buf_len = 0;
 
     switch (mcu_c->content_type) {
-        case (mcu_content_type_t) PICTURE:
-            init_camera(mcu_c, mcu_s, PICTURE);
-
-            camera_pic = camera_take_picture(mcu_c);
-            convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
-
-            if (mcu_c->save_to_sdcard && mcu_s->sdcard_initiated)
-                save_image_to_sdcard(jpeg_buf, jpeg_buf_len, mcu_c->pic_counter);
-
-            if (mcu_c->upload_content) {   
-                ESP_LOGI(TAG, "Uploading picture");
-                //ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
-                ESP_LOGI(TAG, "buffer length: %i", jpeg_buf_len);
-                http_rest_with_url_upload_picture(jpeg_buf, jpeg_buf_len);
-            }
-            break;
-
+       
         case (mcu_content_type_t) STREAM:
             if (!mcu_tl.stream_task_created) {
                 ESP_LOGI(TAG, "Starting Stream from GPIO");
@@ -295,19 +276,6 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
                 ESP_LOGI(TAG, "Stopping Stream from GPIO");
                 mcu_tl.stream_task_init = false;
             }
-            break;
-
-        case (mcu_content_type_t) DRBELL:
-            //http_rest_with_url_notification(DRBELL_MSG);
-            stfd_mqtt_publish_notif(mcu_mqtt->client, DRBELL_MSG);
-            break;
-        case (mcu_content_type_t) REEDSW:
-            //http_rest_with_url_notification(REEDSW_MSG);
-            stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_MSG);
-            break;
-        case (mcu_content_type_t) STANDBY:
-            ESP_LOGI(TAG, "Standing by... 10sec");
-            vTaskDelay(10000/portTICK_RATE_MS);
             break;
         case (mcu_content_type_t) INVALID:
         default:
