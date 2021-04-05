@@ -192,7 +192,7 @@ static esp_err_t mqtt_event_handler_cb(mcu_mqtt_msg_t* mcu_mqtt, esp_mqtt_event_
                 - Subscribe to command topics
                 - Send current door status
             */
-            stfd_mqtt_publish_status(mcu_mqtt);
+            stfd_mqtt_scheduled_task(mcu_mqtt);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -253,19 +253,22 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base, int32_
 
 void stfd_mqtt_scheduled_task(mcu_mqtt_msg_t* mcu_mqtt) {
     int msg_id;
-    // Command publishes from server should be retained also
-    msg_id = esp_mqtt_client_subscribe(mcu_mqtt->client, CMD_TOPIC, 0);
-    ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
+    if (mcu_mqtt->client != NULL) {
+        // Command publishes from server should be retained also
+        msg_id = esp_mqtt_client_subscribe(mcu_mqtt->client, CMD_TOPIC, 0);
+        ESP_LOGI(TAG, "sent subscribe successful, msg_id=%d", msg_id);
 
-    while (mcu_mqtt->cmd_info.exec_cmd) {
-        vTaskDelay(1000 / portTICK_RATE_MS);
+        while (mcu_mqtt->cmd_info.exec_cmd) {
+            vTaskDelay(1000 / portTICK_RATE_MS);
+        }
+        mcu_mqtt->cmd_info.timeinfo = obtain_time();
+        mcu_mqtt->cmd_info.cmd = MCU_GETSTATUS;
+        mcu_mqtt->cmd_info.cmd_delay_ms = 0;
+        mcu_mqtt->cmd_info.flag = 0;
+        mcu_mqtt->cmd_info.exec_cmd = true;
+        //stfd_mqtt_publish_status(mcu_mqtt);
     }
-    mcu_mqtt->cmd_info.timeinfo = obtain_time();
-    mcu_mqtt->cmd_info.cmd = MCU_GETSTATUS;
-    mcu_mqtt->cmd_info.cmd_delay_ms = 0;
-    mcu_mqtt->cmd_info.flag = 0;
-    mcu_mqtt->cmd_info.exec_cmd = true;
-    //stfd_mqtt_publish_status(mcu_mqtt);
+    else ESP_LOGE(TAG, "Tried performing scheduled task on null client");
 }
 
 void stfd_mqtt_publish_status(mcu_mqtt_msg_t* mcu_mqtt) {
@@ -290,17 +293,24 @@ void stfd_mqtt_publish_status(mcu_mqtt_msg_t* mcu_mqtt) {
 
 void stfd_mqtt_publish_notif(esp_mqtt_client_handle_t client, const char* msg) {
     int msg_id;
-    msg_id = esp_mqtt_client_publish(client, NOTIFICATION_TOPIC, msg, 0, 1, 0);
-    ESP_LOGI(TAG, "published notification successfully, msg_id=%d", msg_id);
+    if (client != NULL) {
+        msg_id = esp_mqtt_client_publish(client, NOTIFICATION_TOPIC, msg, 0, 1, 0);
+        ESP_LOGI(TAG, "published notification successfully, msg_id=%d", msg_id);
+    }
+    else ESP_LOGW(TAG, "Tried to publish with null client - Initialization not complete");
 }
 
 void stfd_mqtt_close_client(mcu_mqtt_msg_t* mcu_mqtt) {
     int msg_id;
-    msg_id = esp_mqtt_client_unsubscribe(mcu_mqtt->client, CMD_TOPIC);
-    ESP_LOGI(TAG, "unsubscribed successfully, msg_id=%d", msg_id);
-    if (esp_mqtt_client_disconnect(mcu_mqtt->client) != ESP_OK)
-        ESP_LOGE(TAG, "Could not disconnect the MQTT client properly");
-    if (esp_mqtt_client_destroy(mcu_mqtt->client) != ESP_OK)
+    if (mcu_mqtt->client != NULL) {
+        msg_id = esp_mqtt_client_unsubscribe(mcu_mqtt->client, CMD_TOPIC);
+        ESP_LOGI(TAG, "unsubscribed successfully, msg_id=%d", msg_id);
+        if (esp_mqtt_client_disconnect(mcu_mqtt->client) != ESP_OK)
+            ESP_LOGE(TAG, "Could not disconnect the MQTT client properly");
+        if (esp_mqtt_client_destroy(mcu_mqtt->client) != ESP_OK)
+            ESP_LOGE(TAG, "Could not destry the MQTT client properly");
+    }
+    else
         ESP_LOGE(TAG, "Could not destry the MQTT client properly");
 }
 

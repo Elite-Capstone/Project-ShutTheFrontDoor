@@ -370,6 +370,7 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
         case (mcu_content_type_t) STREAM:
             if (!mcu_tl.stream_task_created) {
                 ESP_LOGI(TAG, "Starting Stream from GPIO");
+                stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
                 mcu_tl.stream_task_init = true;
             }
             else {
