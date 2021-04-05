@@ -93,9 +93,15 @@ class LoginActivity : AppCompatActivity() {
 
     private fun moveToHomePage() {
         val mainActivityIntent = Intent(this, MainActivity::class.java)
-        val greeting: String = when (Random(System.currentTimeMillis()).nextInt(3) + 1) {
+        val greeting: String = when (Random(System.currentTimeMillis()).nextInt(9) + 1) {
             2    -> getString(R.string.login_message2)
             3    -> getString(R.string.login_message3)
+            4    -> getString(R.string.login_message4)
+            5    -> getString(R.string.login_message5)
+            6    -> getString(R.string.login_message6)
+            7    -> getString(R.string.login_message7)
+            8    -> getString(R.string.login_message8)
+            9    -> getString(R.string.login_message9)
             else -> getString(R.string.login_message1)
         }
         mainActivityIntent.putExtra("Home_Greeting", greeting)
