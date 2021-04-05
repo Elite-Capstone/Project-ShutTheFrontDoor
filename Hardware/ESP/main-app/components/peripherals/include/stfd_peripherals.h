@@ -222,16 +222,6 @@ void exec_toggle_motor(void);
  stfd_lock_err_t check_motor_fault_cond(void);
 
 /**
- * @brief Begins a countdown timer which will lock the door after it has counted down
- */
- void stfd_start_autolock_timer(void);
-
- /**
-  * @brief Begins a countdown timer which will stop the camera stream after times runs out
-  */
- void stfd_start_camserver_timer(void);
-
-/**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)
  * 
  * @param io_num            GPIO used to create the interrupt
@@ -280,6 +270,21 @@ void gpio_init_setup(gpio_isr_t isr_handler);
  * @param isr_handler function that will handle the interrupt events on the timer
  */
 void timer_init_setup(timer_isr_t isr_handler);
+
+/**
+ * @brief Stops the autolock timer. Executes when the door is locked
+ */
+void stfd_autolock_timer_stop(void);
+
+/**
+ * @brief Begins a countdown timer which will lock the door after it has counted down
+ */
+ void stfd_start_autolock_timer(void);
+
+ /**
+  * @brief Begins a countdown timer which will stop the camera stream after times runs out
+  */
+ void stfd_start_camserver_timer(void);
 
 //========== WiFi Scan ==========
 

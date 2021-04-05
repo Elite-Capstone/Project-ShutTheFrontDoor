@@ -27,8 +27,8 @@
 
 #define TIMER_DIVIDER 16
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER)
-#define MOTOR_AUTOLOCK_TIMER 5 // 5min,  *TIMER_SCALE to use in setting timer values
-#define CAM_SERVER_TIMER 300    // 5min
+#define MOTOR_AUTOLOCK_TIMER 60 // 5min,  *TIMER_SCALE to use in setting timer values
+#define CAM_SERVER_TIMER 60    // 5min
 
 
 static const char* TAG = "stfd_gpio";
@@ -251,6 +251,7 @@ static void start_auto_timer(timer_group_t group_num, timer_idx_t timer_num, uin
     }
     timer_pause(group_num, timer_num);
     timer_set_counter_value(group_num, timer_num, load_val * TIMER_SCALE);
+    timer_set_alarm(group_num, timer_num, TIMER_ALARM_EN);
     timer_start(group_num, timer_num);
 }
 
@@ -532,12 +533,16 @@ void timer_init_setup(timer_isr_t isr_handler) {
     timer_config_t timer_config = {
         .divider     = TIMER_DIVIDER,
         .counter_en  = TIMER_PAUSE,
-        .counter_dir = TIMER_COUNT_UP,
+        .counter_dir = TIMER_COUNT_DOWN,
         .alarm_en    = TIMER_ALARM_EN,
         .auto_reload = TIMER_AUTORELOAD_DIS,
     };
-    single_timer_setup(timer_config, isr_handler, autotimer_group, lock_timer_num, 0, MOTOR_AUTOLOCK_TIMER);
-    single_timer_setup(timer_config, isr_handler, autotimer_group, camserver_timer_num, 0, CAM_SERVER_TIMER);
+    single_timer_setup(timer_config, isr_handler, autotimer_group, lock_timer_num, MOTOR_AUTOLOCK_TIMER, 0x00000000ULL);
+    single_timer_setup(timer_config, isr_handler, autotimer_group, camserver_timer_num, CAM_SERVER_TIMER, 0x00000000ULL);
+}
+
+void stfd_autolock_timer_stop(void) {
+    timer_pause(autotimer_group, lock_timer_num);
 }
 
 static void check_efuse(void)
