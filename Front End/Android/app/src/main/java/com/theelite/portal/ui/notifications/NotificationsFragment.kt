@@ -13,8 +13,11 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.theelite.portal.Objects.Command
 import com.theelite.portal.Objects.Notification
+import com.theelite.portal.Objects.TimeOfPublish
 import com.theelite.portal.R
+import com.theelite.portal.request.LockService
 import com.theelite.portal.request.NotificationService
 import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.ClickListener
@@ -32,6 +35,7 @@ import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.util.*
 
 
 class NotificationsFragment : Fragment(), ClickListener {
@@ -73,7 +77,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this)
+        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this.requireActivity(),this)
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
         loadExistingNotifications()
         getNotifications()
@@ -143,16 +147,68 @@ class NotificationsFragment : Fragment(), ClickListener {
     }
 
     override fun onItemClicked(name: String) {
+        when (name){
+            "StreamActivity"->{
+                val intent = Intent(this.context, StreamActivity::class.java)
+                this.startActivity(intent)
+            }
+            "lock"->{
+                changeState("lock")
+            }
+            "unlock"->{
+                changeState("unlock")
+            }
+            else->{
+                val i = Intent(Intent.ACTION_VIEW)
+                i.data = Uri.parse(name)
+                requireActivity().startActivity(i)
+            }
+        }
+    }
 
-        if (name.equals("StreamActivity")){
-            val intent = Intent(this.context, StreamActivity::class.java)
-            this.startActivity(intent)
+    private fun changeState(state:String){
+        val retrofit = RetroFit.get(getString(R.string.url))
+        val lockService: LockService = retrofit.create(LockService::class.java)
+
+        var commandRequest:String = ""
+
+        val c = Calendar.getInstance()
+
+        val year = c.get(Calendar.YEAR)
+        val month = c.get(Calendar.MONTH)
+        val day = c.get(Calendar.DAY_OF_MONTH)
+
+        val hour = c.get(Calendar.HOUR_OF_DAY)
+        val minute = c.get(Calendar.MINUTE)
+        val second = c.get(Calendar.SECOND)
+
+        when (state){
+            "lock" -> {
+                commandRequest = "Lock door"
+            }
+            "unlock" -> {
+                commandRequest = "Unlock door"
+            }
         }
-        else {
-            val i = Intent(Intent.ACTION_VIEW)
-            i.data = Uri.parse(name)
-            requireActivity().startActivity(i)
-        }
+
+        var timeOfPublish= TimeOfPublish(year,month,day,hour,minute,second)
+        var command: Command = Command(timeOfPublish,"00b288a8-3db1-40b5-b30f-532af4e12f4b",commandRequest,0,0)
+        println("$email and $token")
+        val call = lockService.sendCommand(
+                command,
+                "$email",
+                "$token"
+        )
+
+        call.enqueue(object : Callback<String> {
+            override fun onResponse(call: Call<String>, response: Response<String>) {
+                if (response.isSuccessful) {
+                }
+            }
+            override fun onFailure(call: Call<String>, t: Throwable) {
+                Toast.makeText(activity, "${t.message}", Toast.LENGTH_SHORT).show()
+            }
+        })
     }
 
     private fun loadState() {
