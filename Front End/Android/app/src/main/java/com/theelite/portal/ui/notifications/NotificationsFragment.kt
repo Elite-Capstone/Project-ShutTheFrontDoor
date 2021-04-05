@@ -110,7 +110,7 @@ class NotificationsFragment : Fragment(), ClickListener {
 //                        }
                     }
                     orderNotifications()
-                    recentNotificationsAdapter.notifyDataSetChanged()
+                    recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this@NotificationsFragment)
                 }
                 if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }
