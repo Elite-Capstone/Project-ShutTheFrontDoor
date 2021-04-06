@@ -79,7 +79,9 @@ class NotificationsFragment : Fragment(), ClickListener {
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this.requireActivity(), this)
+
+        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this.requireActivity(),this)
+
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
         loadExistingNotifications()
         getNotifications()
@@ -165,6 +167,7 @@ class NotificationsFragment : Fragment(), ClickListener {
                 changeState("lock")
             }
             "unlock" -> {
+
                 changeState("unlock")
             }
             else->{
@@ -175,7 +178,9 @@ class NotificationsFragment : Fragment(), ClickListener {
         }
     }
 
+
     private fun changeState(state: String){
+
         val retrofit = RetroFit.get(getString(R.string.url))
         val lockService: LockService = retrofit.create(LockService::class.java)
 
@@ -200,8 +205,10 @@ class NotificationsFragment : Fragment(), ClickListener {
             }
         }
 
+
         var timeOfPublish= TimeOfPublish(year, month, day, hour, minute, second)
         var command: Command = Command(timeOfPublish, "00b288a8-3db1-40b5-b30f-532af4e12f4b", commandRequest, 0, 0)
+
         println("$email and $token")
         val call = lockService.sendCommand(
                 command,
