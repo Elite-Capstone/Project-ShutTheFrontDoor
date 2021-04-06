@@ -96,7 +96,8 @@ mcu_status_t _mcu_s = {
     .cam_server_init    = false,
     .door_is_locked     = false,
     .door_is_closed     = false,
-    .bat_level          = 0
+    .bat_level          = 0,
+    .dbell_ongoing      = false
     // .iotc_core_init     = false,
     // .iotc_server_online = false
 };
@@ -336,20 +337,28 @@ void IRAM_ATTR gpio_isr_handler(void* arg) {
  */
 static void gpio_trig_task(void* arg)
 {
+    BaseType_t gotFromQueue;
     uint32_t io_num;
     mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
     mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
     for(;;) {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+        gotFromQueue = xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
+        if (gotFromQueue == pdTRUE && !mcu_s->dbell_ongoing) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
             get_io_type(io_num, mcu_c);
+
+            if (mcu_c->content_type == DRBELL)
+                mcu_s->dbell_ongoing = true;
 
             if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
                 exec_gpio_task(mcu_c);
             }
             else {
                 ESP_LOGI(TAG, "Triggered the wrong input pin or wrong signal level");
-            }   
+            }
+        }
+        else if ((gotFromQueue == pdTRUE && return_io_type(io_num) != DRBELL) || gotFromQueue == pdFALSE) {
+            mcu_s->dbell_ongoing = false;
         }
         //vTaskDelay(500 / portTICK_RATE_MS);
     }
@@ -423,28 +432,31 @@ static void exec_gpio_task(mcu_content_t* mcu_c) {
                 ESP_LOGI(TAG, "Stopping Stream from MS GPIO");
                 mcu_tl.stream_task_init = false;
             }
-
+            break;
         case (mcu_content_type_t) DRBELL:
             //http_rest_with_url_notification(DRBELL_MSG);
             stfd_mqtt_publish_notif(mcu_mqtt->client, DRBELL_MSG);
             break;
         case (mcu_content_type_t) REEDSW:
             //http_rest_with_url_notification(REEDSW_MSG);
-            stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_MSG);
+            if (get_reedsw_pos() == SW_CLOSED)
+                stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_MSG);
+            else if (get_reedsw_pos() == SW_OPEN)
+                stfd_mqtt_publish_notif(mcu_mqtt->client, "Door is closed");
             break;
         case (mcu_content_type_t) MTR_CTRL:
             if (check_motor_fault_cond() != LOCK_OK)
                 stfd_mqtt_publish_notif(mcu_mqtt->client, LOCK_FAULT_MSG);
             break;
         case (mcu_content_type_t) NSW:
-            if (get_nsw_pos() == NSW_OPEN) {
+            if (get_nsw_pos() == SW_OPEN) {
                 stfd_mqtt_publish_notif(mcu_mqtt->client, DOOR_UNLOCK_MSG);
                 if (!mcu_tl.timer_task_created) {
                     mcu_tl.timer_task_created = true;
                     xTaskCreate(&autolock_timer_task, "autolock_timer_task", 2048, NULL, 10, NULL);
                 }
             }
-            else if (get_nsw_pos() == NSW_CLOSED) {
+            else if (get_nsw_pos() == SW_CLOSED) {
                 stfd_mqtt_publish_notif(mcu_mqtt->client, DOOR_LOCK_MSG);
                 stfd_autolock_timer_stop();
                 mcu_tl.timer_task_created = false;
@@ -490,7 +502,6 @@ void IRAM_ATTR autotimer_isr_handler(void* arg) {
 
 static void autolock_timer_task(void* arg) {
     timer_idx_t timer;
-    double timer_counter_value;
     stfd_start_autolock_timer();
     ESP_LOGI(TAG, "Autolock timer started");
     while(mcu_tl.timer_task_created) {

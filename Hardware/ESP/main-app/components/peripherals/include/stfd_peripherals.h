@@ -66,10 +66,10 @@ typedef enum {
 } stfd_lock_err_t;
 
 typedef enum {
-    NSW_UNKOWN = -1,
-    NSW_CLOSED = 0,
-    NSW_OPEN   = 1
-} nsw_pos_t;
+    SW_UNKNOWN = -1,
+    SW_CLOSED = 0,
+    SW_OPEN   = 1
+} sw_pos_t;
 
 typedef struct {
     bool save_to_sdcard;
@@ -93,7 +93,7 @@ typedef struct {
     bool door_is_locked;
     bool door_is_closed;
     uint32_t bat_level;
-
+    bool dbell_ongoing;
     // bool iotc_core_init;
     // bool iotc_server_online;
 } mcu_status_t;
@@ -189,13 +189,22 @@ bool get_door_is_closed(void);
 bool get_door_is_locked(void);
 
 /**
- * @brief Returns the current position of the N-switch read by its GPIO
+ * @brief Returns the current position of the N-Switch read by its GPIO
  *        An open N-switch indicates an unlocked door
  *        A closed N-switch indicates a locked door
  * 
  * @return The current position of the N-switch
  */
-nsw_pos_t get_nsw_pos(void);
+sw_pos_t get_nsw_pos();
+
+/**
+ * @brief Returns the current position of the Reed Switch read by its GPIO
+ *        An open Reed switch indicates a closed door
+ *        A closed Reed switch indicates an open door
+ * 
+ * @return The current position of the N-switch
+ */
+sw_pos_t get_reedsw_pos();
 
 /**
  * @brief This function sends a signal pulse through the output GPIOs for motor control.
@@ -228,6 +237,8 @@ void exec_toggle_motor(void);
  * @param mcu_content   MCU content array to which will be passed the type and the desired signal level
  */
 void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
+
+mcu_content_type_t return_io_type(uint32_t io_num);
 
 /**
  * @brief Returns the battery's actual voltage in % of charge
