@@ -13,11 +13,10 @@
         android:layout_marginStart="15dp"
         android:layout_marginLeft="15dp"
         android:layout_marginTop="20dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginRight="8dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginRight="15dp"
         android:fontFamily="sans-serif-black"
-        android:gravity="center_horizontal|center_vertical"
-        android:textSize="20sp"
+        android:textSize="30sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -29,7 +28,7 @@
         android:layout_height="190dp"
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="25dp"
+        android:layout_marginTop="35dp"
         android:layout_marginEnd="10dp"
         android:layout_marginRight="10dp"
         app:cardCornerRadius="8dp"
@@ -68,12 +67,11 @@
         android:layout_height="190dp"
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
-        android:layout_marginTop="-40dp"
+        android:layout_marginTop="40dp"
         android:layout_marginEnd="10dp"
         android:layout_marginRight="10dp"
         app:cardCornerRadius="8dp"
         app:cardElevation="10dp"
-        app:layout_constraintBottom_toTopOf="@+id/imageView"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/homeCardViewForDoor">
@@ -87,13 +85,12 @@
             android:src="@drawable/front2"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/text_home"
+            app:layout_constraintTop_toBottomOf="@+id/text_home"/>
 
         <Button
             android:id="@+id/streamVideo"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-
             android:layout_marginLeft="100dp"
             android:layout_marginTop="120dp"
             android:layout_marginRight="100dp"
@@ -101,8 +98,7 @@
             android:text="@string/open_stream"
             android:textSize="19sp"
             android:textStyle="bold"
-            app:layout_constraintTop_toTopOf="@+id/OutsideImageView" />
-
+            app:layout_constraintTop_toTopOf="@+id/outsideImageView" />
 
     </androidx.cardview.widget.CardView>
 
