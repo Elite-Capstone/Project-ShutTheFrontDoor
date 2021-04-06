@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -38,6 +39,7 @@ class NotificationsFragment : Fragment(), ClickListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recentNotificationRecyclerView: RecyclerView
     private lateinit var root: View
+    private lateinit var deleteNotifs:ImageButton
     private lateinit var recentNotificationsAdapter: RecentNotificationsAdapter
     private var notifications: MutableList<Notification> = mutableListOf()
     private lateinit var backgroundThreadRealm: Realm
@@ -46,15 +48,20 @@ class NotificationsFragment : Fragment(), ClickListener {
     private var token: String? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         loadState()
         setUpRealm()
         root = inflater.inflate(R.layout.fragment_notifications, container, false)
+        deleteNotifs = root.findViewById(R.id.deleteButton)
         setUpRecyclerView()
         setUpRefreshLayout()
+        deleteNotifs.setOnClickListener(){
+            deleteOldNotifs()
+            recentNotificationsAdapter.notifyDataSetChanged()
+        }
         return root
     }
 
@@ -77,6 +84,13 @@ class NotificationsFragment : Fragment(), ClickListener {
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
         loadExistingNotifications()
         getNotifications()
+    }
+
+    private fun deleteOldNotifs(){
+        backgroundThreadRealm.beginTransaction()
+        backgroundThreadRealm.deleteAll()
+        backgroundThreadRealm.commitTransaction()
+        notifications.clear()
     }
 
     private fun loadExistingNotifications() {
@@ -115,8 +129,8 @@ class NotificationsFragment : Fragment(), ClickListener {
 
         call.enqueue(object : Callback<List<Notification>> {
             override fun onResponse(
-                call: Call<List<Notification>>,
-                response: Response<List<Notification>>
+                    call: Call<List<Notification>>,
+                    response: Response<List<Notification>>
             ) {
 
                 if (response.isSuccessful && response.body() != null && response.body()!!
@@ -170,6 +184,7 @@ class NotificationsFragment : Fragment(), ClickListener {
                 changeState("lock")
             }
             "unlock" -> {
+
                 changeState("unlock")
             }
             else -> {
