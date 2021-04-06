@@ -16,6 +16,7 @@ import com.theelite.portal.ui.OptionsAdapter
 import com.theelite.portal.ui.OptionsList
 
 import com.theelite.portal.ui.login.LoginActivity
+import com.theelite.portal.ui.notifications.NotificationsFragment
 import kotlinx.android.synthetic.main.activity_login.*
 
 class SettingsFragment : Fragment(), ClickListener {
@@ -60,6 +61,11 @@ class SettingsFragment : Fragment(), ClickListener {
                 val intent = Intent(this.context, DeviceStatusActivity::class.java)
                 this.startActivity(intent)
             }
+            "Help" -> {
+                val intent = Intent(this.context, HelpActivity::class.java)
+                this.startActivity(intent)
+            }
+
             "Log Out" -> {
                 saveState()
                 val intent = Intent(this.context, LoginActivity::class.java)

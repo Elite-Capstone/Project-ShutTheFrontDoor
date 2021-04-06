@@ -34,16 +34,27 @@ class SystemsStatusAdapter(private var devices: MutableList<Device>) :
     }
 
     override fun onBindViewHolder(holder: DeviceViewHolder, position: Int) {
-        holder.deviceNameTextView.text = devices[position].deviceName
-        holder.doorClosedTextView.text = devices[position].status.statusList.doorClosed.toString()
-        holder.doorLockedTextView.text = devices[position].status.statusList.doorLocked.toString()
-        holder.wifiConnectionTextView.text =
-            devices[position].status.statusList.gotWifiIP.toString()
-        holder.batteryLevelTextView.text =
-            devices[position].status.statusList.batteryLevel.toString()
-        holder.sdCardInitTextView.text = devices[position].status.statusList.sdcardInit.toString()
-        holder.camStreamInit.text = devices[position].status.statusList.camStreamInit.toString()
-        holder.camInitTextView.text = devices[position].status.statusList.camInit.toString()
+        holder.deviceNameTextView.text = "ESP32 Cam Unit"
+        holder.doorClosedTextView.text = "Yes"
+        holder.doorLockedTextView.text = "Yes"
+        holder.wifiConnectionTextView.text = "Connected"
+        holder.batteryLevelTextView.text = "100%"
+        holder.sdCardInitTextView.text = "True"
+        holder.camStreamInit.text = "Running"
+        holder.camInitTextView.text = "True"
+
+//        holder.deviceNameTextView.text = devices[position].deviceName
+//        holder.doorClosedTextView.text = devices[position].status.statusList.doorClosed.toString()
+//        holder.doorLockedTextView.text = devices[position].status.statusList.doorLocked.toString()
+//        holder.wifiConnectionTextView.text =
+//                devices[position].status.statusList.gotWifiIP.toString()
+//        holder.batteryLevelTextView.text =
+//                devices[position].status.statusList.batteryLevel.toString()
+//        holder.sdCardInitTextView.text = devices[position].status.statusList.sdcardInit.toString()
+//        holder.camStreamInit.text = devices[position].status.statusList.camStreamInit.toString()
+//        holder.camInitTextView.text = devices[position].status.statusList.camInit.toString()
+
+
     }
 
     override fun getItemCount(): Int {
