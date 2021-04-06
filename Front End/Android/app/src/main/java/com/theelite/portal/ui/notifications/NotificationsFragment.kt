@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -26,12 +27,7 @@ import com.theelite.portal.ui.login.LoginActivity
 import com.theelite.portal.ui.stream.StreamActivity
 import io.realm.Realm
 import io.realm.RealmConfiguration
-import io.realm.RealmResults
 import io.realm.exceptions.RealmMigrationNeededException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -43,6 +39,7 @@ class NotificationsFragment : Fragment(), ClickListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recentNotificationRecyclerView: RecyclerView
     private lateinit var root: View
+    private lateinit var deleteNotifs:ImageButton
     private lateinit var recentNotificationsAdapter: RecentNotificationsAdapter
     private var notifications: MutableList<Notification> = mutableListOf()
     private lateinit var backgroundThreadRealm: Realm
@@ -51,15 +48,20 @@ class NotificationsFragment : Fragment(), ClickListener {
     private var token: String? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+            inflater: LayoutInflater,
+            container: ViewGroup?,
+            savedInstanceState: Bundle?
     ): View {
         loadState()
         setUpRealm()
         root = inflater.inflate(R.layout.fragment_notifications, container, false)
+        deleteNotifs = root.findViewById(R.id.deleteButton)
         setUpRecyclerView()
         setUpRefreshLayout()
+        deleteNotifs.setOnClickListener(){
+            deleteOldNotifs()
+            recentNotificationsAdapter.notifyDataSetChanged()
+        }
         return root
     }
 
@@ -77,10 +79,17 @@ class NotificationsFragment : Fragment(), ClickListener {
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this.requireActivity(),this)
+        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this.requireActivity(), this)
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
         loadExistingNotifications()
         getNotifications()
+    }
+
+    private fun deleteOldNotifs(){
+        backgroundThreadRealm.beginTransaction()
+        backgroundThreadRealm.deleteAll()
+        backgroundThreadRealm.commitTransaction()
+        notifications.clear()
     }
 
     private fun loadExistingNotifications() {
@@ -97,14 +106,14 @@ class NotificationsFragment : Fragment(), ClickListener {
 
         println("$email and $token")
         val call = notifService.getRecentNotifications(
-            "$email",
-            "$token"
+                "$email",
+                "$token"
         )
 
         call.enqueue(object : Callback<List<Notification>> {
             override fun onResponse(
-                call: Call<List<Notification>>,
-                response: Response<List<Notification>>
+                    call: Call<List<Notification>>,
+                    response: Response<List<Notification>>
             ) {
                 if (response.isSuccessful) {
                     notifications.addAll(response.body()!!)
@@ -148,14 +157,14 @@ class NotificationsFragment : Fragment(), ClickListener {
 
     override fun onItemClicked(name: String) {
         when (name){
-            "StreamActivity"->{
+            "StreamActivity" -> {
                 val intent = Intent(this.context, StreamActivity::class.java)
                 this.startActivity(intent)
             }
-            "lock"->{
+            "lock" -> {
                 changeState("lock")
             }
-            "unlock"->{
+            "unlock" -> {
                 changeState("unlock")
             }
             else->{
@@ -166,7 +175,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         }
     }
 
-    private fun changeState(state:String){
+    private fun changeState(state: String){
         val retrofit = RetroFit.get(getString(R.string.url))
         val lockService: LockService = retrofit.create(LockService::class.java)
 
@@ -191,8 +200,8 @@ class NotificationsFragment : Fragment(), ClickListener {
             }
         }
 
-        var timeOfPublish= TimeOfPublish(year,month,day,hour,minute,second)
-        var command: Command = Command(timeOfPublish,"00b288a8-3db1-40b5-b30f-532af4e12f4b",commandRequest,0,0)
+        var timeOfPublish= TimeOfPublish(year, month, day, hour, minute, second)
+        var command: Command = Command(timeOfPublish, "00b288a8-3db1-40b5-b30f-532af4e12f4b", commandRequest, 0, 0)
         println("$email and $token")
         val call = lockService.sendCommand(
                 command,
@@ -205,6 +214,7 @@ class NotificationsFragment : Fragment(), ClickListener {
                 if (response.isSuccessful) {
                 }
             }
+
             override fun onFailure(call: Call<String>, t: Throwable) {
                 Toast.makeText(activity, "${t.message}", Toast.LENGTH_SHORT).show()
             }
