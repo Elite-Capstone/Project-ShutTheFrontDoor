@@ -68,22 +68,14 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
         view.setTag(R.layout.recent_notifications_w_actions, "recent")
         val MAX_DURATION: Long = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)
         val now = Date()
-        val duration: Long = now.getTime() - dataSet[viewType].date.getTime()
+        val duration: Long = now.time - dataSet[viewType].date.time
 
-//        = Minutes.minutesBetween(new DateTime(previous), new DateTime())
-//            .isGreaterThan(Minutes.minutes(20));
         if (duration >= MAX_DURATION) {
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_no_actions, parent, false)
             view.setTag(R.layout.recent_notifications_no_actions, "old")
         }
-        /*if (viewType % 2 == 0) {
-            println("View type $viewType is even")
-
-
-        } */
         else {
-            println("View type $viewType is odd")
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_w_actions, parent, false)
             view.setTag(R.layout.recent_notifications_w_actions, "recent")
@@ -95,10 +87,10 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         loadState()
         if (lockState){
-            holder.recentNotificationsWActionsLockButton?.setText("Unlock")
+            holder.recentNotificationsWActionsLockButton?.text = "Unlock"
         }
         else{
-            holder.recentNotificationsWActionsLockButton?.setText("Lock")
+            holder.recentNotificationsWActionsLockButton?.text = "Lock"
         }
         holder.titleTextView.text = dataSet[position].notification
         holder.descriptionTextView.text = dataSet[position].doorId
