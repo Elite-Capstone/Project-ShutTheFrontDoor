@@ -39,7 +39,7 @@ class NotificationsFragment : Fragment(), ClickListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recentNotificationRecyclerView: RecyclerView
     private lateinit var root: View
-    private lateinit var deleteNotifs:ImageButton
+    private lateinit var deleteNotifs: ImageButton
     private lateinit var recentNotificationsAdapter: RecentNotificationsAdapter
     private var notifications: MutableList<Notification> = mutableListOf()
     private lateinit var backgroundThreadRealm: Realm
@@ -48,9 +48,9 @@ class NotificationsFragment : Fragment(), ClickListener {
     private var token: String? = null
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         loadState()
         setUpRealm()
@@ -58,9 +58,9 @@ class NotificationsFragment : Fragment(), ClickListener {
         deleteNotifs = root.findViewById(R.id.deleteButton)
         setUpRecyclerView()
         setUpRefreshLayout()
-        deleteNotifs.setOnClickListener(){
+        deleteNotifs.setOnClickListener() {
             deleteOldNotifs()
-            recentNotificationsAdapter.notifyDataSetChanged()
+            forceReloadAdapter()
         }
         return root
     }
@@ -86,7 +86,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         getNotifications()
     }
 
-    private fun deleteOldNotifs(){
+    private fun deleteOldNotifs() {
         backgroundThreadRealm.beginTransaction()
         backgroundThreadRealm.deleteAll()
         backgroundThreadRealm.commitTransaction()
@@ -105,7 +105,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         val retrofit = RetroFit.get(getString(R.string.url))
         val notifService: NotificationService = retrofit.create(NotificationService::class.java)
 
-        println("$email and $token")
+//        println("$email and $token")
         val call = notifService.getRecentNotifications(
             email!!,
             token!!
@@ -129,8 +129,8 @@ class NotificationsFragment : Fragment(), ClickListener {
 
         call.enqueue(object : Callback<List<Notification>> {
             override fun onResponse(
-                    call: Call<List<Notification>>,
-                    response: Response<List<Notification>>
+                call: Call<List<Notification>>,
+                response: Response<List<Notification>>
             ) {
 
                 if (response.isSuccessful && response.body() != null && response.body()!!
