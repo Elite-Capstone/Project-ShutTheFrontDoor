@@ -1,6 +1,7 @@
 package com.theelite.portal.ui.stream
 
 import android.os.Bundle
+import android.view.MenuItem
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,16 @@ class StreamActivity : AppCompatActivity() {
 
     override fun onBackPressed() {
         super.onBackPressed()
+        this.stopEverything()
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        println("Pressed on back arrow from Device Status Settings")
+        stopEverything()
+        return true
+    }
+
+    private fun stopEverything() {
         this.webView.stopLoading()
         this.finish()
     }
