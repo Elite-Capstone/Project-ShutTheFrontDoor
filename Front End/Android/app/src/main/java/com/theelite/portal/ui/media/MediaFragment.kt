@@ -10,29 +10,32 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
 import com.theelite.portal.request.MediaService
-import com.theelite.portal.request.NotificationService
 import com.theelite.portal.request.RetroFit
-import com.theelite.portal.ui.ClickListener
+import com.theelite.portal.ui.MediaClickListener
 import com.theelite.portal.ui.adapters.VideoDownloadAdapter
 import com.theelite.portal.ui.login.LoginActivity
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.Exception
 
 
-class MediaFragment : Fragment(), ClickListener {
+class MediaFragment : Fragment(), MediaClickListener {
 
     private lateinit var root: View
     private lateinit var videoAdapter: VideoDownloadAdapter
     private lateinit var nameList: MutableList<String>
     private lateinit var videoRecyclerView: RecyclerView
-
+    private lateinit var mediaService: MediaService
     private lateinit var newNames: List<String>
 
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
@@ -51,6 +54,7 @@ class MediaFragment : Fragment(), ClickListener {
         videoRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
         setUpRefreshLayout()
+        initRetrofit()
         loadState()
         nameList = mutableListOf()
         getFileNames()
@@ -60,10 +64,30 @@ class MediaFragment : Fragment(), ClickListener {
 
     }
 
-    override fun onItemClicked(name: String) {
+    private fun initRetrofit() {
+        val retrofit = RetroFit.get(getString(R.string.url))
+        mediaService = retrofit.create(MediaService::class.java)
+    }
+
+    override fun toDownload(name: String) {
         val i = Intent(Intent.ACTION_VIEW)
         i.data = Uri.parse(name)
         requireActivity().startActivity(i)
+    }
+
+    override fun toDelete(name: String, position: Int) {
+        nameList.remove(name)
+        videoAdapter.notifyItemRemoved(position)
+        GlobalScope.launch(Dispatchers.IO) {
+            try {
+                val response = mediaService.deleteFile(name).execute()
+                if (response.isSuccessful) {
+                    println("Response to delete is successful\n${response.body()}")
+                }
+            } catch (e: Exception) {
+                println(e.message)
+            }
+        }
     }
 
     private fun setUpRefreshLayout() {
@@ -74,13 +98,9 @@ class MediaFragment : Fragment(), ClickListener {
     }
 
     private fun getFileNames() {
-        val retrofit = RetroFit.get(getString(R.string.url))
-        val mediaService: MediaService = retrofit.create(MediaService::class.java)
-
-
         val call = mediaService.getFileNames(
-            "$email",
-            "$token"
+            email!!,
+            token!!
         )
 
         call.enqueue(object : Callback<List<String>> {
@@ -90,9 +110,10 @@ class MediaFragment : Fragment(), ClickListener {
             ) {
                 if (response.isSuccessful && response.body() != null) {
                     println(response.body()?.toString())
-                    newNames = findRedundant((response.body() as MutableList<String>?)!!)
-                    nameList.addAll(newNames)
-                    videoAdapter.notifyDataSetChanged()
+                    nameList = (response.body() as MutableList<String>?)!!
+                    videoAdapter = VideoDownloadAdapter(nameList, this@MediaFragment)
+                    videoRecyclerView.adapter = videoAdapter
+                    println("NameList is now ${nameList.size}")
                 }
                 if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }

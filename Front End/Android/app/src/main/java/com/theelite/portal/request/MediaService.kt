@@ -15,6 +15,6 @@ interface MediaService {
     fun downloadFile(@Path("filename") filename: String): Call<ResponseBody>
 
     @DELETE("file/delete/{filename}")
-    fun deleteFile(@Path("filename") filename: String): Call<Void>
+    fun deleteFile(@Path("filename") filename: String): Call<String>
 
 }
