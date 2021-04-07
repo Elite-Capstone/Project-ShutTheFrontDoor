@@ -72,9 +72,13 @@ public class StorageService {
 
     public String deleteFile(String fileName) {
         if (fileNameExists(fileName)) {
+            try {
             s3Client.deleteObject(bucketName, fileName);
-            mediaDirectoryService.deleteFilename(fileName);
+            mediaDirectoryService.deleteFilename(fileName).execute();
             return fileName + " removed ...";
+            } catch (Exception e){
+                System.out.println(e.getMessage());
+            }
         }
         return "Did not remove";
     }
