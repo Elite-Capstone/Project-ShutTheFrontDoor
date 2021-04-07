@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.Exception
 
 
 class NotificationsFragment : Fragment(), ClickListener {
@@ -167,12 +168,17 @@ class NotificationsFragment : Fragment(), ClickListener {
     private fun getButtonText() {
         if (notifications.isNotEmpty()) {
             forceReloadAdapter("updating!")
-            lifecycleScope.launch(Dispatchers.IO) {
-                delay(1000 * 5)
-                var myText = getText()
-                lifecycleScope.launch(Dispatchers.Main) {
-                    forceReloadAdapter(myText)
+            try {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    delay(1000 * 5)
+                    var myText = getText()
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        forceReloadAdapter(myText)
+                    }
                 }
+            }
+            catch (e:Exception){
+                println("Error accessing notification")
             }
         }
     }
