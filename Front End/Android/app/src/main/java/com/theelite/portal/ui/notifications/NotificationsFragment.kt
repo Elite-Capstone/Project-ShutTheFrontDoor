@@ -229,7 +229,6 @@ class NotificationsFragment : Fragment(), ClickListener {
                 0,
                 0
             )
-        println("$email and $token")
         val call = lockService.sendCommand(
             command,
             email!!,
