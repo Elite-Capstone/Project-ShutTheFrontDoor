@@ -27,7 +27,7 @@
 
 #define TIMER_DIVIDER 16
 #define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER)
-#define MOTOR_AUTOLOCK_TIMER 60 // 5min,  *TIMER_SCALE to use in setting timer values
+#define MOTOR_AUTOLOCK_TIMER 10 // 5min,  *TIMER_SCALE to use in setting timer values
 #define CAM_SERVER_TIMER 60    // 5min
 
 
@@ -87,7 +87,7 @@ bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level) {
 // Door is closed when Reed switch is open, i.e. the line is 
 // still pulled up by the resistor
 bool get_door_is_closed(void) {
-    if (get_reedsw_pos() == SW_CLOSED)
+    if (get_reedsw_pos() == SW_OPEN)
         return true;
     else return false;
 }
@@ -309,6 +309,12 @@ stfd_lock_err_t check_motor_fault_cond(void) {
     return LOCK_OK;
 }
 
+void gpio_begin_stream(void) {
+    gpio_set_level(GPIO_OUTPUT_STREAM, 1);
+    vTaskDelay(500 / portTICK_RATE_MS);
+    gpio_set_level(GPIO_OUTPUT_STREAM, 0);
+}
+
 static void start_auto_timer(timer_group_t group_num, timer_idx_t timer_num, uint64_t load_val) {
     double counter_time = 0;
     timer_get_counter_time_sec(group_num, timer_num, &counter_time);
@@ -323,6 +329,10 @@ static void start_auto_timer(timer_group_t group_num, timer_idx_t timer_num, uin
 
 void stfd_start_autolock_timer(void) {
     start_auto_timer(autotimer_group, lock_timer_num, MOTOR_AUTOLOCK_TIMER);
+}
+
+void stfd_stop_autolock_timer(void) {
+    timer_pause(autotimer_group, lock_timer_num);
 }
 
 void stfd_start_camserver_timer(void) {
@@ -557,9 +567,21 @@ static void gpio_setup_output(void) {
     {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_MOTOR_IN2);
     }
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_DISABLE, 
+        GPIO_OUTPUT_STREAM_PIN_SEL, 
+        GPIO_MODE_OUTPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_STREAM);
+    }
+
     //Initialize to 0
     ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN1_PIN_SEL, 0));
     ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN2_PIN_SEL, 0));
+    ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_STREAM_PIN_SEL, 0));
 
 #elif CONFIG_ESP32_CAM_MCU
     if( stfd_gpio_config(
@@ -605,10 +627,6 @@ void timer_init_setup(timer_isr_t isr_handler) {
     };
     single_timer_setup(timer_config, isr_handler, autotimer_group, lock_timer_num, MOTOR_AUTOLOCK_TIMER, 0x00000000ULL);
     single_timer_setup(timer_config, isr_handler, autotimer_group, camserver_timer_num, CAM_SERVER_TIMER, 0x00000000ULL);
-}
-
-void stfd_autolock_timer_stop(void) {
-    timer_pause(autotimer_group, lock_timer_num);
 }
 
 static void check_efuse(void)

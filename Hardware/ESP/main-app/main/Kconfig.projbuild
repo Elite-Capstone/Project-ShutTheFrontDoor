@@ -711,6 +711,75 @@ menu "Project ShutTheFrontDoor Configuration"
                     bool "GPIO 39"
             endchoice
 
+            choice GPIO_OUTPUT_STREAM
+                prompt "GPIO Output Stream"
+                depends on MAIN_MCU
+                default GPIO_OUTPUT_2_STREAM
+                help 
+                    The selected GPIO will trigger the ESP32-CAM Stream
+
+                config GPIO_OUTPUT_0_STREAM
+                    bool "GPIO 0"
+                config GPIO_OUTPUT_2_STREAM
+                    bool "GPIO 2"
+                config GPIO_OUTPUT_4_STREAM
+                    bool "GPIO 4"
+                config GPIO_OUTPUT_5_STREAM
+                    bool "GPIO 5"
+                config GPIO_OUTPUT_6_STREAM
+                    bool "GPIO 6"
+                config GPIO_OUTPUT_7_STREAM
+                    bool "GPIO 7"
+                config GPIO_OUTPUT_8_STREAM
+                    bool "GPIO 8"
+                config GPIO_OUTPUT_9_STREAM
+                    bool "GPIO 9"
+                config GPIO_OUTPUT_10_STREAM
+                    bool "GPIO 10"
+                config GPIO_OUTPUT_11_STREAM
+                    bool "GPIO 11"
+                config GPIO_OUTPUT_12_STREAM
+                    bool "GPIO 12"
+                config GPIO_OUTPUT_13_STREAM
+                    bool "GPIO 13"
+                config GPIO_OUTPUT_14_STREAM
+                    bool "GPIO 14"
+                config GPIO_OUTPUT_15_STREAM
+                    bool "GPIO 15"
+                config GPIO_OUTPUT_16_STREAM
+                    bool "GPIO 16"
+                config GPIO_OUTPUT_17_STREAM
+                    bool "GPIO 17"
+                config GPIO_OUTPUT_18_STREAM
+                    bool "GPIO 18"
+                config GPIO_OUTPUT_19_STREAM
+                    bool "GPIO 19"
+                config GPIO_OUTPUT_21_STREAM
+                    bool "GPIO 21"
+                config GPIO_OUTPUT_22_STREAM
+                    bool "GPIO 22"
+                config GPIO_OUTPUT_23_STREAM
+                    bool "GPIO 23"
+                config GPIO_OUTPUT_25_STREAM
+                    bool "GPIO 25"
+                config GPIO_OUTPUT_26_STREAM
+                    bool "GPIO 26"
+                config GPIO_OUTPUT_27_STREAM
+                    bool "GPIO 27"
+                config GPIO_OUTPUT_32_STREAM
+                    bool "GPIO 32"
+                config GPIO_OUTPUT_33_STREAM
+                    bool "GPIO 33"
+                config GPIO_OUTPUT_34_STREAM
+                    bool "GPIO 34"
+                config GPIO_OUTPUT_35_STREAM
+                    bool "GPIO 35"
+                config GPIO_OUTPUT_36_STREAM
+                    bool "GPIO 36"
+                config GPIO_OUTPUT_39_STREAM
+                    bool "GPIO 39"
+            endchoice
+
             choice GPIO_OUTPUT_CONFIRM_UPLOAD
                 prompt "GPIO confirm output signal"
                 depends on ESP32_CAM_MCU

@@ -42,7 +42,8 @@
 #endif /* CONFIG INIT_SDCARD */
 
 #define GPIO_TASK 1
-#define MQTT_TASK 1
+#define MQTT_TASK 0
+#define STREAM_TASK 1
 
 static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
@@ -153,10 +154,21 @@ static void task_listener(void* arg) {
 
 #if MQTT_TASK
         if (!mcu_tl.mqtt_task_created && mcu_tl.mqtt_task_init) {
-            // Start Google IoT Cloud comms
+            // Start MQTT broker
             ESP_LOGI(TAG, "Creating MQTT task");
             xTaskCreate(&mqtt_task, "mqtt_task", 4096, NULL, 10, NULL);
             mcu_tl.mqtt_task_created = true;
+        }
+#endif
+
+#if STREAM_TASK
+        if (!mcu_tl.stream_task_created && mcu_tl.stream_task_init) {
+            ESP_LOGI(TAG, "Creating Stream task");
+            init_camera(mcu_c, mcu_s, STREAM);
+            stream_httpd = startStreamServer(mcu_c->device_ip);
+            gpio_blink(1);
+            mcu_s->cam_server_init = true;
+            mcu_tl.stream_task_created = true;
         }
 #endif
     }
@@ -180,7 +192,7 @@ static void gpio_trig_task(void* arg)
             mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
 
             if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
-                gpio_blink(1);
+                //gpio_blink(1);
                 exec_gpio_task(mcu_c);
             }
             else {
@@ -190,13 +202,14 @@ static void gpio_trig_task(void* arg)
     }
 }
 
+#if MQTT_TASK
 /**
  * @brief Task used to communicate with Google IoT Core
  */
 static void mqtt_task(void* pvParameters) {
     stfd_mqtt_init(mcu_mqtt);
     while(mcu_tl.mqtt_task_init) {
-        
+      
         if (mcu_mqtt->cmd_info.exec_cmd) {
             switch (mcu_mqtt->cmd_info.cmd) {
                 case (mcu_cmd_type_t) MCU_GETSTATUS:
@@ -235,7 +248,7 @@ static void mqtt_task(void* pvParameters) {
                         // else {
                         //     stopStreamServer(&stream_httpd);
                         //     mcu_c->cam_server_init = false;
-                        
+                        //
                         //     if (esp_camera_deinit() != ESP_OK)
                         //         ESP_LOGE(TAG, "Camera De-Init Failed");
                         //     else
@@ -255,6 +268,7 @@ static void mqtt_task(void* pvParameters) {
     ESP_LOGI(TAG, "Deleting MQTT task");
     vTaskDelete(NULL);
 }
+#endif /* MQTT_TASK */
 
 
 /**
@@ -269,7 +283,7 @@ void exec_gpio_task(mcu_content_t* mcu_c) {
         case (mcu_content_type_t) STREAM:
             if (!mcu_tl.stream_task_created) {
                 ESP_LOGI(TAG, "Starting Stream from GPIO");
-                stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
+                //stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
                 mcu_tl.stream_task_init = true;
             }
             else {
@@ -295,7 +309,7 @@ void app_main(void) {
     if (INIT_SDCARD)
         init_sdcard(mcu_s);
     gpio_init_setup(gpio_isr_handler);
-    init_camera(mcu_c, mcu_s, STREAM);
+    //init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c, mcu_s);
     // if (iotc_init(mcu_c->device_path) == ESP_OK) {
     //     mcu_s->iotc_core_init = true;
