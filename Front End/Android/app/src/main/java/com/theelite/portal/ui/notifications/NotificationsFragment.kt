@@ -198,8 +198,8 @@ class NotificationsFragment : Fragment(), ClickListener {
     }
 
     private fun sendCommand(command: String) {
-        val retrofit = RetroFit.get(getString(R.string.url))
-        val lockService: LockService = retrofit.create(LockService::class.java)
+//        val retrofit = RetroFit.get(getString(R.string.url))
+//        val lockService: LockService = retrofit.create(LockService::class.java)
 
         val command =
             Command(
