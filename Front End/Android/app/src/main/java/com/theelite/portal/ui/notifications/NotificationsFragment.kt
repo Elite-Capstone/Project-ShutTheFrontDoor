@@ -103,7 +103,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         println("Notifications is ${notifications.size}")
         orderNotifications()
         recentNotificationsAdapter?.notifyDataSetChanged()
-        getButtonText()
+        getButtonText(0)
     }
 
     private fun getNotifications() {
@@ -130,7 +130,7 @@ class NotificationsFragment : Fragment(), ClickListener {
                     }
 
                     orderNotifications()
-                    getButtonText()
+                    getButtonText(0)
                 }
                 if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }
@@ -164,11 +164,11 @@ class NotificationsFragment : Fragment(), ClickListener {
         notifications.sortByDescending { it.date }
     }
 
-    private fun getButtonText() {
+    private fun getButtonText(time: Long) {
         if (notifications.isNotEmpty()) {
             forceReloadAdapter("updating!")
             lifecycleScope.launch(Dispatchers.IO) {
-                delay(1000 * 5)
+                delay(1000 * time)
                 var myText = getText()
                 lifecycleScope.launch(Dispatchers.Main) {
                     forceReloadAdapter(myText)
@@ -216,7 +216,7 @@ class NotificationsFragment : Fragment(), ClickListener {
         GlobalScope.launch(Dispatchers.IO) {
             deviceService.sendCommand(command, email!!, token!!).execute()
         }
-        getButtonText()
+        getButtonText(5)
     }
 
     private fun forceReloadAdapter(text: String) {
