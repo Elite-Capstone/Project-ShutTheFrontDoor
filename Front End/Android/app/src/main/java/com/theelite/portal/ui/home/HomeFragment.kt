@@ -102,6 +102,7 @@ class HomeFragment : Fragment() {
                 0
             )
             Toast.makeText(requireContext(), "Sending Command", Toast.LENGTH_LONG).show()
+            lockButton.text = "Updating!"
             GlobalScope.launch {
                 sendCommand(command)
                 delay(1000 * 5)
