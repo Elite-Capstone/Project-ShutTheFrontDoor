@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Observer
+import androidx.lifecycle.lifecycleScope
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.theelite.portal.Objects.Command
 import com.theelite.portal.Objects.Device
@@ -21,6 +22,7 @@ import com.theelite.portal.request.DeviceService
 import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.login.LoginActivity
 import com.theelite.portal.ui.stream.StreamActivity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -79,7 +81,7 @@ class HomeFragment : Fragment() {
 
     private fun watchStream() {
         val intent = Intent(this.context, StreamActivity::class.java)
-        GlobalScope.launch {
+        lifecycleScope.launch(Dispatchers.IO) {
             val command = Command(
                 null,
                 devices[0].deviceId,
@@ -103,7 +105,7 @@ class HomeFragment : Fragment() {
             )
             Toast.makeText(requireContext(), "Sending Command", Toast.LENGTH_LONG).show()
             lockButton.text = "Updating!"
-            GlobalScope.launch {
+            lifecycleScope.launch(Dispatchers.IO) {
                 sendCommand(command)
                 delay(1000 * 5)
                 setLockButton()

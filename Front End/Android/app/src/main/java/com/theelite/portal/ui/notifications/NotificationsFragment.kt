@@ -10,6 +10,7 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
@@ -164,12 +165,14 @@ class NotificationsFragment : Fragment(), ClickListener {
     }
 
     private fun getButtonText() {
-        forceReloadAdapter("updating!")
-        GlobalScope.launch {
-            delay(1000 * 5)
-            var myText = getText()
-            GlobalScope.launch(Dispatchers.Main) {
-                forceReloadAdapter(myText)
+        if (notifications.isNotEmpty()) {
+            forceReloadAdapter("updating!")
+            lifecycleScope.launch(Dispatchers.IO) {
+                delay(1000 * 5)
+                var myText = getText()
+                lifecycleScope.launch(Dispatchers.Main) {
+                    forceReloadAdapter(myText)
+                }
             }
         }
     }
