@@ -22,6 +22,7 @@ import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.login.LoginActivity
 import com.theelite.portal.ui.stream.StreamActivity
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -62,7 +63,7 @@ class HomeFragment : Fragment() {
         })
 
         streamButton.setOnClickListener() {
-            onItemClicked("stream")
+            watchStream()
         }
         lockButton.setOnClickListener() {
             sendCommandToFirstDevice()
@@ -76,14 +77,24 @@ class HomeFragment : Fragment() {
         deviceService = retrofit.create(DeviceService::class.java);
     }
 
-    fun onItemClicked(click: String) {
+    private fun watchStream() {
         val intent = Intent(this.context, StreamActivity::class.java)
+        GlobalScope.launch {
+            val command = Command(
+                null,
+                devices[0].deviceId,
+                "Stream camera",
+                0,
+                0
+            )
+            sendCommand(command)
+        }
         this.startActivity(intent)
     }
 
     private fun sendCommandToFirstDevice() {
         if (devices != null && devices.size > 0) {
-            var command = Command(
+            val command = Command(
                 null,
                 devices[0].deviceId,
                 if (devices[0].status?.statusList?.doorLocked!!) "Unlock door" else "Lock door",
@@ -93,6 +104,7 @@ class HomeFragment : Fragment() {
             Toast.makeText(requireContext(), "Sending Command", Toast.LENGTH_LONG).show()
             GlobalScope.launch {
                 sendCommand(command)
+                delay(1000 * 5)
                 setLockButton()
             }
         }
