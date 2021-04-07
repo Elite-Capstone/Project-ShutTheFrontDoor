@@ -16,19 +16,13 @@ import androidx.lifecycle.Observer
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.theelite.portal.Objects.Command
 import com.theelite.portal.Objects.Device
-import com.theelite.portal.Objects.TimeOfPublish
 import com.theelite.portal.R
 import com.theelite.portal.request.DeviceService
-import com.theelite.portal.request.LockService
 import com.theelite.portal.request.RetroFit
 import com.theelite.portal.ui.login.LoginActivity
 import com.theelite.portal.ui.stream.StreamActivity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import java.util.*
 
 class HomeFragment : Fragment() {
 
@@ -72,14 +66,6 @@ class HomeFragment : Fragment() {
         }
         lockButton.setOnClickListener() {
             sendCommandToFirstDevice()
-//            if (lockState) {
-//                lockButton.text = "Lock"
-//                onItemClicked("unlock")
-//
-//            } else {
-//                lockButton.text = "Unlock"
-//                onItemClicked("lock")
-//            }
         }
         return root
 
@@ -91,12 +77,8 @@ class HomeFragment : Fragment() {
     }
 
     fun onItemClicked(click: String) {
-//        when (click) {
-//            "stream" -> {
         val intent = Intent(this.context, StreamActivity::class.java)
         this.startActivity(intent)
-//            }
-//        }
     }
 
     private fun sendCommandToFirstDevice() {
@@ -108,7 +90,7 @@ class HomeFragment : Fragment() {
                 0,
                 0
             )
-
+            Toast.makeText(requireContext(), "Sending Command", Toast.LENGTH_LONG).show()
             GlobalScope.launch {
                 sendCommand(command)
                 setLockButton()
@@ -120,54 +102,6 @@ class HomeFragment : Fragment() {
         deviceService.sendCommand(command, email!!, token!!).execute()
     }
 
-//    private fun changeState(state: String) {
-//        val retrofit = RetroFit.get(getString(R.string.url))
-//        val lockService: LockService = retrofit.create(LockService::class.java)
-//
-//        var commandRequest: String = ""
-//
-//        val c = Calendar.getInstance()
-//
-//        val year = c.get(Calendar.YEAR)
-//        val month = c.get(Calendar.MONTH)
-//        val day = c.get(Calendar.DAY_OF_MONTH)
-//
-//        val hour = c.get(Calendar.HOUR_OF_DAY)
-//        val minute = c.get(Calendar.MINUTE)
-//        val second = c.get(Calendar.SECOND)
-//
-//        when (state) {
-//            "lock" -> {
-//                commandRequest = "Lock door"
-//            }
-//            "unlock" -> {
-//                commandRequest = "Unlock door"
-//            }
-//        }
-//
-//        var timeOfPublish = TimeOfPublish(year, month, day, hour, minute, second)
-//        var command: Command =
-//            Command(timeOfPublish, devices[0].deviceId, commandRequest, 0, 0)
-//
-//        val call = lockService.sendCommand(
-//            command,
-//            "$email",
-//            "$token"
-//        )
-//
-//        call.enqueue(object : Callback<String> {
-//            override fun onResponse(call: Call<String>, response: Response<String>) {
-//                if (response.isSuccessful) {
-//                    saveState()
-//                }
-//            }
-//
-//            override fun onFailure(call: Call<String>, t: Throwable) {
-//                Toast.makeText(activity, "${t.message}", Toast.LENGTH_SHORT).show()
-//            }
-//        })
-//    }
-
     private fun loadState() {
         val sharedPreferences: SharedPreferences = this.requireActivity()
             .getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
@@ -175,14 +109,6 @@ class HomeFragment : Fragment() {
         email = sharedPreferences.getString(LoginActivity.EMAIL, null)
         token = sharedPreferences.getString(LoginActivity.TOKEN, null)
     }
-
-//    private fun saveState() {
-//        val sharedPreferences: SharedPreferences = this.requireActivity()
-//            .getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
-//        val editor: SharedPreferences.Editor = sharedPreferences.edit()
-//        editor.putBoolean(LoginActivity.DOORSTATE, lockState)
-//        editor.apply()
-//    }
 
     private fun setLockButton() {
         GlobalScope.launch {
