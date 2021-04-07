@@ -26,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.lang.Exception
 
 class HomeFragment : Fragment() {
 
@@ -81,15 +82,20 @@ class HomeFragment : Fragment() {
 
     private fun watchStream() {
         val intent = Intent(this.context, StreamActivity::class.java)
-        lifecycleScope.launch(Dispatchers.IO) {
-            val command = Command(
-                null,
-                devices[0].deviceId,
-                "Stream camera",
-                0,
-                0
-            )
-            sendCommand(command)
+        try {
+            lifecycleScope.launch(Dispatchers.IO) {
+                val command = Command(
+                        null,
+                        devices[0].deviceId,
+                        "Stream camera",
+                        0,
+                        0
+                )
+                sendCommand(command)
+            }
+        }
+        catch (e: Exception){
+            println("Error Watching Stream")
         }
         this.startActivity(intent)
     }
@@ -105,10 +111,15 @@ class HomeFragment : Fragment() {
             )
             Toast.makeText(requireContext(), "Sending Command", Toast.LENGTH_LONG).show()
             lockButton.text = "Updating!"
-            lifecycleScope.launch(Dispatchers.IO) {
-                sendCommand(command)
-                delay(1000 * 5)
-                setLockButton()
+            try {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    sendCommand(command)
+                    delay(1000 * 5)
+                    setLockButton()
+                }
+            }
+            catch (e : Exception){
+                println("Error Watching Stream")
             }
         }
     }
