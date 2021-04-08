@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginStart="@dimen/activity_horizontal_margin"
@@ -9,7 +8,6 @@
     android:layout_marginTop="@dimen/activity_vertical_margin"
     android:layout_marginEnd="@dimen/activity_horizontal_margin"
     android:layout_marginRight="@dimen/activity_horizontal_margin"
-    android:layout_marginBottom="@dimen/activity_vertical_margin"
     android:scrollbarSize="@dimen/scrollbar_size">
 
     <androidx.cardview.widget.CardView
@@ -17,67 +15,208 @@
         android:layout_height="wrap_content"
         app:cardCornerRadius="@dimen/activity_card_corner_radius">
 
+
         <LinearLayout
-            android:id="@+id/systemStatusLinearLayout"
+            android:id="@+id/statusSingleDeviceLinearLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingStart="15dp"
-            android:paddingLeft="@dimen/card_horizontal_padding"
-            android:paddingTop="@dimen/card_vertical_padding"
-            android:paddingRight="@dimen/card_horizontal_padding"
-            android:paddingBottom="@dimen/card_vertical_padding">
+            android:paddingBottom="10dp">
 
+            <!--Device Name-->
             <TextView
-                android:id="@+id/systemStatusTitleLabel"
+                android:id="@+id/deviceNameLabel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingBottom="@dimen/card_vertical_padding"
-                android:text="@string/smart_door_system_name"
-                android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+                android:padding="15dp"
+                android:text="@string/device_name"
+                android:textStyle="bold"
                 android:textSize="@dimen/card_title_size" />
 
-            <TextView
-                android:id="@+id/systemStatusDescriptionLabel"
+            <!--Door Locked-->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingBottom="@dimen/card_vertical_padding"
-                android:text="@string/smart_door_status_summary"
-                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textSize="@dimen/card_subtitle_size" />
+                android:orientation="horizontal"
+                android:paddingBottom="10dp">
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/systemStatusRecyclerView"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent" />
+                <TextView
+                    android:id="@+id/doorLockedLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/door_locked"
+                    android:textSize="@dimen/card_body_size" />
 
-            <TextView
-                android:id="@+id/systemStatusBarcodeLabel"
+                <TextView
+                    android:id="@+id/doorLockedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/battery_device_name"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
+
+            <!--Door Closed-->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/card_vertical_padding"
-                android:layout_marginBottom="@dimen/card_vertical_padding"
-                android:text="@string/system_barcode_name"
-                android:textAppearance="@style/TextAppearance.AppCompat.Caption"
-                android:textSize="@dimen/card_subtitle_size" />
+                android:orientation="horizontal"
+                android:paddingBottom="10dp">
 
-            <ImageView
-                android:id="@+id/systemBarcodeImageView"
+                <TextView
+                    android:id="@+id/doorClosedLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/door_closed"
+                    android:textSize="@dimen/card_body_size" />
+
+                <TextView
+                    android:id="@+id/doorClosedValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/device_description"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
+
+            <!--Battery Level-->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:adjustViewBounds="true"
-                android:contentDescription="@string/system_barcode_name"
-                app:srcCompat="@drawable/template_barcode" />
+                android:orientation="horizontal"
+                android:paddingBottom="10dp">
 
-            <!--            <ImageView-->
-<!--                android:id="@+id/deviceStatusBarcodeImageView"-->
-<!--                android:layout_width="match_parent"-->
-<!--                android:layout_height="55dp"-->
-<!--                android:layout_gravity="center_horizontal|top"-->
-<!--                android:adjustViewBounds="true"-->
-<!--                android:contentDescription="@string/system_barcode_name"-->
-<!--                />-->
+                <TextView
+                    android:id="@+id/batteryLevelLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/battery_level"
+                    android:textSize="@dimen/card_body_size" />
+
+                <TextView
+                    android:id="@+id/batteryLevelValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/device_description"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
+
+
+            <!--Wifi-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/wifiLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/connected_to_wifi"
+                    android:textSize="@dimen/card_body_size" />
+
+                <TextView
+                    android:id="@+id/wifiValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/device_description"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
+
+            <!--Cam Init-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:paddingBottom="10dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/camLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/camera_ready"
+                    android:textSize="@dimen/card_body_size" />
+
+                <TextView
+                    android:id="@+id/camInitValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/camera_ready"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
+
+            <!--CamStream Init-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:paddingBottom="10dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/camStreamLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/camera_stream"
+                    android:textSize="@dimen/card_body_size" />
+
+                <TextView
+                    android:id="@+id/camStreamInitValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/device_description"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
+
+            <!--SD Card Init-->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:paddingBottom="10dp"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/sdCardLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/sd_card_ready"
+                    android:textSize="@dimen/card_body_size" />
+
+                <TextView
+                    android:id="@+id/sdCardValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15sp"
+                    android:layout_marginLeft="15sp"
+                    android:text="@string/device_description"
+                    android:textSize="@dimen/card_body_size" />
+            </LinearLayout>
 
         </LinearLayout>
+
     </androidx.cardview.widget.CardView>
 </FrameLayout>

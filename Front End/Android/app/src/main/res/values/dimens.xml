@@ -6,6 +6,7 @@
     <dimen name="recycler_view_margin_bottom">55dp</dimen>
     <dimen name="button_height">35dp</dimen>
     <dimen name="general_padding">15dp</dimen>
+    <dimen name="help_padding">25dp</dimen>
     <dimen name="card_horizontal_padding">10dp</dimen>
     <dimen name="card_vertical_padding">5dp</dimen>
     <dimen name="activity_card_corner_radius">4dp</dimen>
@@ -16,6 +17,6 @@
     <dimen name="card_title_size_float">24.0</dimen>
     <dimen name="card_subtitle_size">16sp</dimen>
     <dimen name="card_subtitle_size_float">18.0</dimen>
-    <dimen name="card_body_size">16sp</dimen>
+    <dimen name="card_body_size">17sp</dimen>
     <dimen name="card_body_size_float">14.0</dimen>
 </resources>

@@ -3,6 +3,7 @@
     package="com.theelite.portal">
 
     <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/doorhub_logo"
@@ -11,6 +12,7 @@
         android:supportsRtl="true"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
+
 
         <!--Login Activity -->
         <activity
@@ -59,6 +61,28 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".MainActivity" />
         </activity>
+
+        <activity android:name=".ui.stream.StreamActivity"
+            android:label="Stream"
+            android:theme="@style/AppTheme.WActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+        <activity android:name=".ui.settings.HelpActivity"
+            android:label="Help Page"
+            android:theme="@style/AppTheme.WActionBar"
+            >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".MainActivity" />
+        </activity>
+
+
+
     </application>
 
 </manifest>
+

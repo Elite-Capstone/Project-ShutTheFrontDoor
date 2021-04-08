@@ -7,6 +7,6 @@ import retrofit2.http.Path
 
 interface NotificationService {
 
-    @GET("notif/getRecent/{accId}/{email}")
-    fun getRecentNotifications(@Path("accId") accId: String, @Path("email") email: String) : Call<List<Notification>>
+    @GET("notif/getRecent/{email}/{token}")
+    fun getRecentNotifications(@Path("email") email: String, @Path("token") token: String) : Call<List<Notification>>
 }

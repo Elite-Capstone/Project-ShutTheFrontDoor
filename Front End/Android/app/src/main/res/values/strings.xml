@@ -4,6 +4,7 @@
     <string name="title_home">Home</string>
     <string name="title_settings">Settings</string>
     <string name="title_notifications">Notifications</string>
+    <string name="title_media">Media</string>
     <string name="username_hint">Username</string>
     <string name="email_hint">Email</string>
     <string name="password_hint">Password</string>
@@ -32,8 +33,14 @@
     <!-- Programmatically selected Display Strings -->
     <string name="registration_message">Welcome to Doorhub!</string>
     <string name="login_message1">Welcome back!</string>
-    <string name="login_message2">Welcome home!</string>
+    <string name="login_message2">#Vegan</string>
     <string name="login_message3">Now\'s the time to go to the washroom</string>
+    <string name="login_message4">Here to make your life easier!</string>
+    <string name="login_message5">Jarvis, here to help you!</string>
+    <string name="login_message6">Error 404! Kidding, everything\'s fine!</string>
+    <string name="login_message7">Don\'t worry, everything is fine… I swear.</string>
+    <string name="login_message8">Don\'t forget your mask!</string>
+    <string name="login_message9">Don\'t forget to wash your hands!</string>
     <string name="smart_door_status_summary">Fully operational</string>
 
     <!-- Programmatically used strings -->
@@ -41,5 +48,19 @@
     <string name="notifications_title">Notifications</string>
     <string name="firstname_hint">First Name</string>
     <string name="lastname_hint">Last Name</string>
+    <string name="remember_me">Remember Me</string>
+    <string name="door_closed">Door Closed</string>
+    <string name="door_locked">Door Locked</string>
+    <string name="battery_level">Battery Level</string>
+    <string name="connected_to_wifi">Connected to Wifi</string>
+    <string name="camera_stream">Camera Stream</string>
+    <string name="camera_ready">Camera Ready</string>
+    <string name="sd_card_ready">SD Card Ready</string>
+    <string name="mediaTitle">Account Media</string>
+    <string name="downloadVideo">Download</string>
+    <string name="videoName">"Video Name "</string>
+    <string name="open_stream">Open Stream</string>
+    <string name="stream">Stream</string>
+    <string name="help_page">Help Page</string>
 
 </resources>

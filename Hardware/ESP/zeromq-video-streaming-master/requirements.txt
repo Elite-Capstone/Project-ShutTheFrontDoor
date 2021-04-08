@@ -1,0 +1,6 @@
+imutils==0.5.2
+pyzmq==18.0.2
+redis==3.2.1
+
+numpy~=1.20.1
+opencv-python~=4.5.1.48

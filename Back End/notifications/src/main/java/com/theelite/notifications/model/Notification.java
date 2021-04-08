@@ -17,4 +17,10 @@ public class Notification {
     private Date date;
     private UUID doorId;
     private UUID accountId;
+
+    public Notification(String notification, String doorId) {
+        this.date = new Date();
+        this.notification = notification;
+        this.doorId = UUID.fromString(doorId);
+    }
 }

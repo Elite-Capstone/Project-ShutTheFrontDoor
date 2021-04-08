@@ -34,6 +34,11 @@ public class NotificationController {
         return service.deleteDoorIdAsTopic(doorId);
     }
 
+    @DeleteMapping("deleteTopics")
+    public void deleteTopics(@RequestBody List<String> topics){
+        service.deleteTopics(topics);
+    }
+
     @GetMapping("newConsumerGroup/{consuGroup}")
     public boolean addAccountAsNewConsumerGroup(@PathVariable String consuGroup) {
         System.out.println("Received Request to create ConsumerGroup " + consuGroup);

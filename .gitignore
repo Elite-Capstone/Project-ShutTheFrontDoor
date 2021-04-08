@@ -38,6 +38,7 @@ captures/
 
 # IntelliJ
 *.iml
+.idea/
 .idea/workspace.xml
 .idea/tasks.xml
 .idea/gradle.xml
@@ -210,7 +211,7 @@ nodes_modules/
 Front End/Web/Portal/.vscode/
 *.mvn/
 *.idea/
-
+**.idea/
 Hardware/ESP/esp-idf
 
 Hardware/ESP/main-app_deprecated/
@@ -218,6 +219,9 @@ Hardware/ESP/main-app_deprecated/
 Hardware/ESP/main-app/sdkconfig
 
 Hardware/ESP/main-app/sdkconfig.old
+
+**sdkconfig
+**sdkconfig.old
 
 Back End/users/target/
 
@@ -229,4 +233,32 @@ Back End/file-storage-service/target/
 Hardware/ESP/esp32-cam/.vscode/
 
 *.vscode/
+**.vscode/
+
+Back End/devices/target/
+
+Back End/file-storage-service/src/main/resources/META-INF/
+
 *.paw
+Back End/users/paho451302729116159-tcplocalhost1883/.lck
+*.lck
+Back End/mqttKafkaBridge/target/
+Hardware/ESP/arduino-esp32-master/
+Hardware/ESP/nabto-esp32cam/
+Hardware/ESP/esp32-cam/
+Hardware/ESP/esp32-opencv-master/
+Hardware/ESP/esp32-cam-webserver/
+Hardware/ESP/http_client/
+Hardware/ESP/examples/
+**esp-google-iot/
+**esp32_camera
+
+
+
+Hardware/ESP/main-app/components/esp32-camera
+
+Hardware/ESP/cam-app/components/esp32-camera/
+
+Hardware/ESP/cam-app/components/esp-google-iot/
+
+Hardware/ngrok.exe

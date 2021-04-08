@@ -1,0 +1,9 @@
+Manufacturer=Espressif Systems
+PartNumber=ESP32-SOLO-1
+PartCategory=Integrated Circuit
+PackageCategory=Other
+PinCount=39
+Version=1.5
+Released=2019-06-30 16:44:29
+Downloaded=2020-12-18 23:17:32
+3D=N

@@ -2,18 +2,13 @@ package com.theelite.portal
 
 import android.os.Bundle
 import androidx.activity.viewModels
-import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager.findFragment
-import androidx.fragment.app.findFragment
 import androidx.navigation.findNavController
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
-import com.theelite.portal.ui.home.HomeFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.theelite.portal.ui.home.HomeViewModel
-import kotlinx.android.synthetic.main.activity_main.*
+
 
 class MainActivity : AppCompatActivity() {
 
@@ -35,6 +30,7 @@ class MainActivity : AppCompatActivity() {
         val appBarConfiguration = AppBarConfiguration(
             setOf(
                 R.id.navigation_home,
+                R.id.navigation_media,
                 R.id.navigation_notifications,
                 R.id.navigation_settings
             )
@@ -47,4 +43,41 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         homeViewModel.setGreeting(intent.extras?.get("Home_Greeting").toString())
     }
+
+    /*fun sendGet(view: View) {
+       // val retrofit = RetroFit.get(getString(R.string.url))
+
+        val gson = GsonBuilder()
+            .setLenient()
+            .create()
+
+        val retrofit: Retrofit = Retrofit.Builder()
+            .baseUrl("http://34.122.235.66/")
+            //.addConverterFactory(BitmapFactory.create())
+            .build()
+
+        val mediaService = retrofit.create(mediaInt::class.java)
+
+        val call = mediaService.getMovies()
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (response.isSuccessful) {
+                    println("File Downloaded!")
+                    if (response.body() != null) {
+                        // display the image data in a ImageView or save it
+                        val bm = BitmapFactory.decodeStream(response.body()!!.byteStream())
+                       findViewById<ImageView>(R.id.image1).setImageBitmap(bm)
+                    }
+
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                println("Failure" + t.message)
+            }
+        })
+
+    }*/
+
+
 }

@@ -1,13 +1,11 @@
 package com.theelite.portal.ui.adapters
 
-import android.content.Intent
-import android.net.Uri
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
@@ -16,16 +14,19 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>, var context: ClickListener) :
+class RecentNotificationsAdapter(
+    private val dataSet: MutableList<Notification>,
+    var context: Context,
+    var onClickContext: ClickListener, var buttonAction: String
+) :
     RecyclerView.Adapter<RecentNotificationsAdapter.ViewHolder>() {
 
-
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-
         val titleTextView: TextView
         val descriptionTextView: TextView
         val dateTextView: TextView
         val recentNotificationsWActionsPeekButton: Button?
+        val recentNotificationsWActionsLockButton: Button?
 
         init {
             if (view.getTag(R.layout.recent_notifications_w_actions) == "recent") {
@@ -33,13 +34,18 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
                 descriptionTextView =
                     view.findViewById(R.id.recentNotificationsWActionsDescriptionLabel)
                 dateTextView = view.findViewById(R.id.recentNotificationsWActionsDateLabel)
-                recentNotificationsWActionsPeekButton = view.findViewById(R.id.recentNotificationsWActionsPeekButton)
+                recentNotificationsWActionsPeekButton =
+                    view.findViewById(R.id.recentNotificationsWActionsPeekButton)
+                recentNotificationsWActionsLockButton =
+                    view.findViewById(R.id.recentNotificationsWActionsDoorButton)
+
             } else {
                 titleTextView = view.findViewById(R.id.recentNotificationsNoActionsTitleLabel)
                 descriptionTextView =
                     view.findViewById(R.id.recentNotificationsNoActionsDescriptionLabel)
                 dateTextView = view.findViewById(R.id.recentNotificationsNoActionsDateLabel)
                 recentNotificationsWActionsPeekButton = null
+                recentNotificationsWActionsLockButton = null
             }
         }
 
@@ -52,28 +58,18 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view: View
 
-        println("View type $viewType is odd")
         view = LayoutInflater.from(parent.context)
             .inflate(R.layout.recent_notifications_w_actions, parent, false)
         view.setTag(R.layout.recent_notifications_w_actions, "recent")
         val MAX_DURATION: Long = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)
         val now = Date()
-        val duration: Long = now.getTime() - dataSet[viewType].date.getTime()
+        val duration: Long = now.time - dataSet[viewType].date.time
 
-//        = Minutes.minutesBetween(new DateTime(previous), new DateTime())
-//            .isGreaterThan(Minutes.minutes(20));
         if (duration >= MAX_DURATION) {
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_no_actions, parent, false)
             view.setTag(R.layout.recent_notifications_no_actions, "old")
-        }
-        /*if (viewType % 2 == 0) {
-            println("View type $viewType is even")
-
-
-        } */
-        else {
-            println("View type $viewType is odd")
+        } else {
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_w_actions, parent, false)
             view.setTag(R.layout.recent_notifications_w_actions, "recent")
@@ -81,12 +77,17 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
         return ViewHolder(view)
     }
 
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        holder.recentNotificationsWActionsLockButton?.text = buttonAction
         holder.titleTextView.text = dataSet[position].notification
-        holder.descriptionTextView.text = dataSet[position].notification
+        holder.descriptionTextView.text = dataSet[position].doorId
         holder.dateTextView.text = dataSet[position].date.toString()
         holder.recentNotificationsWActionsPeekButton?.setOnClickListener {
-            context.onItemClicked("http://192.168.1.19/stream")
+            onClickContext.onItemClicked("StreamActivity")
+        }
+        holder.recentNotificationsWActionsLockButton?.setOnClickListener() {
+            onClickContext.onItemClicked(buttonAction)
         }
     }
 

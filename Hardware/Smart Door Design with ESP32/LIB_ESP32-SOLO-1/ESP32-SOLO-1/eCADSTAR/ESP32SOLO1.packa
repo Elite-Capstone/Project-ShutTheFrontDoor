@@ -1,0 +1,13 @@
+(unit MM)
+
+(package "ESP32-SOLO-1"
+    (type UNDEF)
+    (uver 2)
+    (cuser "SamacSys")
+    (uuser "SamacSys")
+    (utime 2019-06-30-16:42:00)
+    (mountForm default
+        (footprintRef "ESP32SOLO1")
+        (spec "System")
+    )
+)

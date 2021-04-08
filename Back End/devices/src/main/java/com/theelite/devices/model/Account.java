@@ -16,5 +16,5 @@ import java.util.UUID;
 public class Account {
     @Id
     private UUID accountId;
-    private UUID[] deviceIds;
+    private String[] deviceIds;
 }

@@ -6,16 +6,21 @@
         android:icon="@drawable/ic_home_black_24dp"
         android:title="@string/title_home" />
 
-
-
     <item
         android:id="@+id/navigation_notifications"
         android:icon="@drawable/ic_notifications_black_24dp"
         android:title="@string/title_notifications" />
 
     <item
+        android:id="@+id/navigation_media"
+        android:icon="@drawable/ic_baseline_cloud_24"
+        android:title="@string/title_media" />
+
+    <item
         android:id="@+id/navigation_settings"
         android:icon="@drawable/settings_black_24dp"
         android:title="@string/title_settings" />
+
+
 
 </menu>
