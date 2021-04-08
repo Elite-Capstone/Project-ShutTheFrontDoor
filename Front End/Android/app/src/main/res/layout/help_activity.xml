@@ -2,21 +2,22 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <ScrollView
-        android:layout_width="411dp"
-        android:layout_height="652dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:paddingBottom="20dp"
+        >
 
 
         <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:paddingEnd="12dp"
             android:paddingStart="12dp"
             android:orientation="vertical">
@@ -45,10 +46,10 @@
                     <TextView
                         android:id="@+id/textView3"
                         android:layout_width="match_parent"
-                        android:layout_height="fill_parent"
+                        android:layout_height="wrap_content"
                         android:text="Welcome to DoorHub's help guide!\n\n
 You can navigate to various tabs within the application using the bottom menu tab selection."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -85,7 +86,7 @@ You can navigate to various tabs within the application using the bottom menu ta
                         android:text="Home Page: Here you can control the locking status of your door as well as use the live camera feed feature.\n\n
 By clicking the &quot;lock/unlock&quot; button, you can change the state of your door.\n\n
 By clicking the &quot;open stream&quot; button, you will be redirected to the live stream of your door."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -122,7 +123,7 @@ By clicking the &quot;open stream&quot; button, you will be redirected to the li
 By clicking the &quot;peak&quot; button, on a recent notification, you will be redirected to the current live stream of your door.\n\n
 By clicking the &quot;lock/unlock&quot; button, you can change the state of your door.\n\n
 You can also swipe downward to refresh the page to check for new notifications Older notifications will not have the control buttons as stated above."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -159,7 +160,7 @@ You can also swipe downward to refresh the page to check for new notifications O
 By clicking the download button, you will be able to save the media file to your device's local storage.\n\n
 The user can view saved files as they wish.\n\n
 You can also swipe downward to refresh the page to check for new media files."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -193,7 +194,7 @@ You can also swipe downward to refresh the page to check for new media files."
                         android:layout_width="match_parent"
                         android:layout_height="fill_parent"
                         android:text="Settings Page: Here the user can view associated account information, as well as log out from the application."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -228,7 +229,7 @@ You can also swipe downward to refresh the page to check for new media files."
                         android:layout_height="fill_parent"
                         android:text="Stream Window: Here the user can view the live stream associated to their door.\n\n
 This window can be accessed with the help of the notifications page or the home page."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -264,7 +265,7 @@ This window can be accessed with the help of the notifications page or the home 
                         android:text="Login Pages: Here the user can log into their associated family account.\n\n
 A user also has the option to make use of the &quot;Remember Me&quot; slider, to make logging in less tedious.\n\n
 The user will be remembered until they decide to log out."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />
@@ -282,7 +283,8 @@ The user will be remembered until they decide to log out."
                 android:layout_marginRight="@dimen/general_padding"
                 android:layout_marginTop="@dimen/help_padding"
                 android:scrollbarSize="@dimen/scrollbar_size"
-                app:cardCornerRadius="@dimen/activity_card_corner_radius">
+                app:cardCornerRadius="@dimen/activity_card_corner_radius"
+                >
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -300,7 +302,7 @@ The user will be remembered until they decide to log out."
                         android:layout_width="match_parent"
                         android:layout_height="fill_parent"
                         android:text="Register Page: Here a user can sign up to the service and create an account by providing appropriate credentials."
-                        android:textSize="24dp"
+                        android:textSize="20dp"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toBottomOf="parent" />

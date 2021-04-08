@@ -64,7 +64,7 @@
 
         <activity android:name=".ui.stream.StreamActivity"
             android:label="Stream"
-            android:theme="@style/AppTheme"
+            android:theme="@style/AppTheme.WActionBar"
             >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

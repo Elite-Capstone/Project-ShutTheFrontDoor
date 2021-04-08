@@ -1,31 +1,25 @@
 package com.theelite.portal.ui.adapters
 
 import android.content.Context
-import android.content.Intent
-import android.content.SharedPreferences
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.theelite.portal.Objects.Notification
 import com.theelite.portal.R
 import com.theelite.portal.ui.ClickListener
-import com.theelite.portal.ui.login.LoginActivity
 import java.util.*
 import java.util.concurrent.TimeUnit
 
 
-class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>, var context:Context,var onClickContext:ClickListener) :
+class RecentNotificationsAdapter(
+    private val dataSet: MutableList<Notification>,
+    var context: Context,
+    var onClickContext: ClickListener, var buttonAction: String
+) :
     RecyclerView.Adapter<RecentNotificationsAdapter.ViewHolder>() {
-
-    private var lockState: Boolean = false
-    private var email: String? = null
-    private var token: String? = null
-
-
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val titleTextView: TextView
@@ -40,8 +34,10 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
                 descriptionTextView =
                     view.findViewById(R.id.recentNotificationsWActionsDescriptionLabel)
                 dateTextView = view.findViewById(R.id.recentNotificationsWActionsDateLabel)
-                recentNotificationsWActionsPeekButton = view.findViewById(R.id.recentNotificationsWActionsPeekButton)
-                recentNotificationsWActionsLockButton = view.findViewById(R.id.recentNotificationsWActionsDoorButton)
+                recentNotificationsWActionsPeekButton =
+                    view.findViewById(R.id.recentNotificationsWActionsPeekButton)
+                recentNotificationsWActionsLockButton =
+                    view.findViewById(R.id.recentNotificationsWActionsDoorButton)
 
             } else {
                 titleTextView = view.findViewById(R.id.recentNotificationsNoActionsTitleLabel)
@@ -62,28 +58,18 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         var view: View
 
-        println("View type $viewType is odd")
         view = LayoutInflater.from(parent.context)
             .inflate(R.layout.recent_notifications_w_actions, parent, false)
         view.setTag(R.layout.recent_notifications_w_actions, "recent")
         val MAX_DURATION: Long = TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES)
         val now = Date()
-        val duration: Long = now.getTime() - dataSet[viewType].date.getTime()
+        val duration: Long = now.time - dataSet[viewType].date.time
 
-//        = Minutes.minutesBetween(new DateTime(previous), new DateTime())
-//            .isGreaterThan(Minutes.minutes(20));
         if (duration >= MAX_DURATION) {
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_no_actions, parent, false)
             view.setTag(R.layout.recent_notifications_no_actions, "old")
-        }
-        /*if (viewType % 2 == 0) {
-            println("View type $viewType is even")
-
-
-        } */
-        else {
-            println("View type $viewType is odd")
+        } else {
             view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.recent_notifications_w_actions, parent, false)
             view.setTag(R.layout.recent_notifications_w_actions, "recent")
@@ -93,55 +79,19 @@ class RecentNotificationsAdapter(private val dataSet: MutableList<Notification>,
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        loadState()
-        if (lockState){
-            holder.recentNotificationsWActionsLockButton?.setText("Unlock")
-        }
-        else{
-            holder.recentNotificationsWActionsLockButton?.setText("Lock")
-        }
+        holder.recentNotificationsWActionsLockButton?.text = buttonAction
         holder.titleTextView.text = dataSet[position].notification
         holder.descriptionTextView.text = dataSet[position].doorId
         holder.dateTextView.text = dataSet[position].date.toString()
         holder.recentNotificationsWActionsPeekButton?.setOnClickListener {
             onClickContext.onItemClicked("StreamActivity")
         }
-        holder.recentNotificationsWActionsLockButton?.setOnClickListener(){
-            if (lockState){
-                holder.recentNotificationsWActionsLockButton.text = "Lock"
-                notifyDataSetChanged()
-                lockState = false
-                saveState()
-                onClickContext.onItemClicked("unlock")
-
-            }
-            else{
-                holder.recentNotificationsWActionsLockButton.text = "Unlock"
-                notifyDataSetChanged()
-                lockState = true
-                saveState()
-                onClickContext.onItemClicked("lock")
-            }
+        holder.recentNotificationsWActionsLockButton?.setOnClickListener() {
+            onClickContext.onItemClicked(buttonAction)
         }
     }
 
     override fun getItemCount(): Int {
         return dataSet.size
     }
-
-    private fun loadState() {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
-        lockState = sharedPreferences.getBoolean(LoginActivity.DOORSTATE, false)
-        email = sharedPreferences.getString(LoginActivity.EMAIL, null)
-        token = sharedPreferences.getString(LoginActivity.TOKEN, null)
-    }
-
-    private fun saveState() {
-        val sharedPreferences: SharedPreferences = context.getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
-        val editor: SharedPreferences.Editor = sharedPreferences.edit()
-        editor.putBoolean(LoginActivity.DOORSTATE, lockState)
-        editor.apply()
-    }
-
-
 }

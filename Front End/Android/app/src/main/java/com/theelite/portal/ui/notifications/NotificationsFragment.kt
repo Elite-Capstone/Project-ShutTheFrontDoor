@@ -2,7 +2,6 @@ package com.theelite.portal.ui.notifications
 
 import android.content.Intent
 import android.content.SharedPreferences
-import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,13 +10,14 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.theelite.portal.Objects.Command
 import com.theelite.portal.Objects.Notification
-import com.theelite.portal.Objects.TimeOfPublish
 import com.theelite.portal.R
+import com.theelite.portal.request.DeviceService
 import com.theelite.portal.request.LockService
 import com.theelite.portal.request.NotificationService
 import com.theelite.portal.request.RetroFit
@@ -28,10 +28,14 @@ import com.theelite.portal.ui.stream.StreamActivity
 import io.realm.Realm
 import io.realm.RealmConfiguration
 import io.realm.exceptions.RealmMigrationNeededException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.*
+import java.lang.Exception
 
 
 class NotificationsFragment : Fragment(), ClickListener {
@@ -39,18 +43,19 @@ class NotificationsFragment : Fragment(), ClickListener {
     private lateinit var swipeRefreshLayout: SwipeRefreshLayout
     private lateinit var recentNotificationRecyclerView: RecyclerView
     private lateinit var root: View
-    private lateinit var deleteNotifs:ImageButton
+    private lateinit var deleteNotifs: ImageButton
     private lateinit var recentNotificationsAdapter: RecentNotificationsAdapter
     private var notifications: MutableList<Notification> = mutableListOf()
     private lateinit var backgroundThreadRealm: Realm
+    private lateinit var deviceService: DeviceService
 
     private var email: String? = null
     private var token: String? = null
 
     override fun onCreateView(
-            inflater: LayoutInflater,
-            container: ViewGroup?,
-            savedInstanceState: Bundle?
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
     ): View {
         loadState()
         setUpRealm()
@@ -58,9 +63,9 @@ class NotificationsFragment : Fragment(), ClickListener {
         deleteNotifs = root.findViewById(R.id.deleteButton)
         setUpRecyclerView()
         setUpRefreshLayout()
-        deleteNotifs.setOnClickListener(){
+        deleteNotifs.setOnClickListener() {
             deleteOldNotifs()
-            recentNotificationsAdapter.notifyDataSetChanged()
+            forceReloadAdapter("lock")
         }
         return root
     }
@@ -75,19 +80,18 @@ class NotificationsFragment : Fragment(), ClickListener {
 
 
     private fun setUpRecyclerView() {
-        notifications = java.util.ArrayList()
+        notifications = mutableListOf()
         recentNotificationRecyclerView = root.findViewById(R.id.recentNotificationsRecyclerView)
         recentNotificationRecyclerView.layoutManager =
             LinearLayoutManager(this.context, RecyclerView.VERTICAL, false)
-
-        recentNotificationsAdapter = RecentNotificationsAdapter(notifications, this.requireActivity(),this)
-
+        recentNotificationsAdapter =
+            RecentNotificationsAdapter(notifications, this.requireActivity(), this, "lock")
         recentNotificationRecyclerView.adapter = recentNotificationsAdapter
         loadExistingNotifications()
         getNotifications()
     }
 
-    private fun deleteOldNotifs(){
+    private fun deleteOldNotifs() {
         backgroundThreadRealm.beginTransaction()
         backgroundThreadRealm.deleteAll()
         backgroundThreadRealm.commitTransaction()
@@ -99,33 +103,35 @@ class NotificationsFragment : Fragment(), ClickListener {
         notifications.addAll(backgroundThreadRealm.where(Notification::class.java).findAllAsync())
         println("Notifications is ${notifications.size}")
         orderNotifications()
-        if (recentNotificationsAdapter != null) recentNotificationsAdapter.notifyDataSetChanged()
+        recentNotificationsAdapter?.notifyDataSetChanged()
+        getButtonText()
     }
 
     private fun getNotifications() {
         val retrofit = RetroFit.get(getString(R.string.url))
         val notifService: NotificationService = retrofit.create(NotificationService::class.java)
 
-        println("$email and $token")
         val call = notifService.getRecentNotifications(
-                "$email",
-                "$token"
+            email!!,
+            token!!
         )
 
         call.enqueue(object : Callback<List<Notification>> {
             override fun onResponse(
-                    call: Call<List<Notification>>,
-                    response: Response<List<Notification>>
+                call: Call<List<Notification>>,
+                response: Response<List<Notification>>
             ) {
-                if (response.isSuccessful) {
+
+                if (response.isSuccessful && response.body() != null && response.body()!!
+                        .isNotEmpty()
+                ) {
                     notifications.addAll(response.body()!!)
-//                    GlobalScope.launch(context = Dispatchers.IO) {
-                    backgroundThreadRealm.executeTransactionAsync { transactionRealm ->
-                        transactionRealm.insert(response.body()!!)
-//                        }
+                    backgroundThreadRealm.executeTransactionAsync {
+                        it.insert(response.body()!!)
                     }
+
                     orderNotifications()
-                    recentNotificationsAdapter.notifyDataSetChanged()
+                    getButtonText()
                 }
                 if (swipeRefreshLayout.isRefreshing) swipeRefreshLayout.isRefreshing = false
             }
@@ -140,8 +146,8 @@ class NotificationsFragment : Fragment(), ClickListener {
     }
 
     private fun setUpRealm() {
-        Realm.init(this.activity)
-        val realmName: String = "DoorhubNotifications"
+        Realm.init(this.requireActivity())
+        val realmName = "DoorhubNotifications"
         try {
             val config = RealmConfiguration.Builder().name(realmName)
                 .deleteRealmIfMigrationNeeded()
@@ -150,6 +156,8 @@ class NotificationsFragment : Fragment(), ClickListener {
         } catch (e: RealmMigrationNeededException) {
             println(e.message)
         }
+        val retrofit = RetroFit.get(getString(R.string.url))
+        deviceService = retrofit.create(DeviceService::class.java)
     }
 
 
@@ -157,80 +165,77 @@ class NotificationsFragment : Fragment(), ClickListener {
         notifications.sortByDescending { it.date }
     }
 
+    private fun getButtonText() {
+        if (notifications.isNotEmpty()) {
+            forceReloadAdapter("updating!")
+            try {
+                lifecycleScope.launch(Dispatchers.IO) {
+                    delay(1000 * 5)
+                    var myText = getText()
+                    lifecycleScope.launch(Dispatchers.Main) {
+                        forceReloadAdapter(myText)
+                    }
+                }
+            }
+            catch (e:Exception){
+                println("Error accessing notification")
+            }
+        }
+    }
+
+    private suspend fun getText(): String {
+        val response = deviceService.getDevices(email!!, token!!).execute()
+        if (response.isSuccessful && response.body() != null && response.body()!![0].status?.statusList != null) return if (response.body()!![0].status?.statusList?.doorLocked!!) "unlock" else "lock"
+        return "unlock"
+    }
+
     override fun onItemClicked(name: String) {
-        when (name){
+        when (name) {
             "StreamActivity" -> {
                 val intent = Intent(this.context, StreamActivity::class.java)
                 this.startActivity(intent)
             }
             "lock" -> {
-                changeState("lock")
+                sendCommand("Lock door")
             }
             "unlock" -> {
-
-                changeState("unlock")
+                sendCommand("Unlock door")
             }
-            else->{
-                val i = Intent(Intent.ACTION_VIEW)
-                i.data = Uri.parse(name)
-                requireActivity().startActivity(i)
+            else -> {
             }
         }
     }
 
+    private fun sendCommand(command: String) {
+//        val retrofit = RetroFit.get(getString(R.string.url))
+//        val lockService: LockService = retrofit.create(LockService::class.java)
 
-    private fun changeState(state: String){
-
-        val retrofit = RetroFit.get(getString(R.string.url))
-        val lockService: LockService = retrofit.create(LockService::class.java)
-
-        var commandRequest:String = ""
-
-        val c = Calendar.getInstance()
-
-        val year = c.get(Calendar.YEAR)
-        val month = c.get(Calendar.MONTH)
-        val day = c.get(Calendar.DAY_OF_MONTH)
-
-        val hour = c.get(Calendar.HOUR_OF_DAY)
-        val minute = c.get(Calendar.MINUTE)
-        val second = c.get(Calendar.SECOND)
-
-        when (state){
-            "lock" -> {
-                commandRequest = "Lock door"
-            }
-            "unlock" -> {
-                commandRequest = "Unlock door"
-            }
-        }
-
-
-        var timeOfPublish= TimeOfPublish(year, month, day, hour, minute, second)
-        var command: Command = Command(timeOfPublish, "00b288a8-3db1-40b5-b30f-532af4e12f4b", commandRequest, 0, 0)
-
-        println("$email and $token")
-        val call = lockService.sendCommand(
+        val command =
+            Command(
+                null,
+                "00b288a8-3db1-40b5-b30f-532af4e12f4b",
                 command,
-                "$email",
-                "$token"
-        )
+                0,
+                0
+            )
 
-        call.enqueue(object : Callback<String> {
-            override fun onResponse(call: Call<String>, response: Response<String>) {
-                if (response.isSuccessful) {
-                }
-            }
+        GlobalScope.launch(Dispatchers.IO) {
+            deviceService.sendCommand(command, email!!, token!!).execute()
+        }
+        getButtonText()
+    }
 
-            override fun onFailure(call: Call<String>, t: Throwable) {
-                Toast.makeText(activity, "${t.message}", Toast.LENGTH_SHORT).show()
-            }
-        })
+    private fun forceReloadAdapter(text: String) {
+        recentNotificationRecyclerView.adapter =
+            RecentNotificationsAdapter(notifications, requireContext(), this, text)
     }
 
     private fun loadState() {
         val sharedPreferences: SharedPreferences = this.requireActivity()
-            .getSharedPreferences(LoginActivity.SHARED_PREFS, AppCompatActivity.MODE_PRIVATE)
+            .getSharedPreferences(
+                LoginActivity.SHARED_PREFS,
+                AppCompatActivity.MODE_PRIVATE
+            )
         email = sharedPreferences.getString(LoginActivity.EMAIL, null)
         token = sharedPreferences.getString(LoginActivity.TOKEN, null)
     }
