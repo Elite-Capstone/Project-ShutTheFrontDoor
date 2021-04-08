@@ -7,6 +7,9 @@
     Desc;       This file contains the gpio setup and interrupts
 */
 
+#ifndef STFD_GPIO_C_
+#define STFD_GPIO_C_
+
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -21,8 +24,12 @@
 
 #define MOTOR_FAULT_COND_CNT 10
 #define MOTOR_FULL_CYCLE_MS 2600
-#define MOTOR_AUTOLOCK_TIMER 100000//1000000 // 5min = 300 sec -- 300 sec * 80 MHz / 24000 = 1 000 000 ticks
-#define TIMER_DIVIDER 24000
+
+#define TIMER_DIVIDER 16
+#define TIMER_SCALE (TIMER_BASE_CLK / TIMER_DIVIDER)
+#define MOTOR_AUTOLOCK_TIMER 10 // 5min,  *TIMER_SCALE to use in setting timer values
+#define CAM_SERVER_TIMER 60    // 5min
+
 
 static const char* TAG = "stfd_gpio";
 
@@ -32,6 +39,36 @@ static const adc_atten_t      battery_adc_atten     = ADC_ATTEN_DB_11;
 static const adc_unit_t       bat_monitor_unit      = BATTERY_ADC_UNIT;
 static const adc_channel_t    bat_monitor_channel   = BATTERY_ADC_CH;
 static esp_adc_cal_characteristics_t* bat_monitor_chars = NULL;
+
+const timer_group_t autotimer_group       = TIMER_GROUP_0;
+const timer_idx_t   lock_timer_num        = TIMER_0;
+const timer_idx_t   camserver_timer_num   = TIMER_1;
+
+const uint32_t adc_val[99] = {
+    0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 
+    250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 
+    500, 525, 550, 575, 600, 625, 650, 675, 700, 725,
+    750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 
+    1000, 1025, 1050, 1075, 1100, 1125, 1150, 1175, 1200, 1225,
+    1250, 1275, 1300, 1325, 1350, 1375, 1400, 1425, 1450, 1475,
+    1500, 1525, 1550, 1575, 1600, 1625, 1650, 1675, 1700, 1725,
+    1750, 1775, 1800, 1825, 1850, 1875, 1900, 1925, 1950, 1975,
+    2000, 2025, 2050, 2075, 2100, 2125, 2150, 2175, 2200, 2225,
+    2250, 2275, 2300, 2325, 2350, 2375, 2400, 2425, 2450
+};
+
+const uint32_t bat_val[100] = {
+    100, 99, 98, 97, 96, 95, 94, 93, 92, 91,
+    90, 89, 88, 87, 86, 85, 84, 83, 82, 81,
+    80, 79, 78, 77, 76, 75, 74, 73, 72, 71,
+    70, 69, 68, 67, 66, 65, 64, 63, 62, 61,
+    60, 59, 58, 57, 56, 55, 54, 53, 52, 51,
+    50, 49, 48, 47, 46, 45, 44, 43, 42, 41,
+    40, 39, 38, 37, 36, 35, 34, 33, 32, 31,
+    30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
+    20, 19, 18, 17, 16, 15, 14, 13, 12, 11,
+    10, 9, 8, 7, 6, 5, 4, 3, 2, 1
+};
 
 // Forward Declaration of local functions
 static void check_efuse(void);
@@ -47,18 +84,50 @@ bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level) {
         return gpio_get_level(io_num) == (uint8_t) sg_level;
 }
 
-nsw_pos_t get_nsw_pos(void) {
+// Door is closed when Reed switch is open, i.e. the line is 
+// still pulled up by the resistor
+bool get_door_is_closed(void) {
+    if (get_reedsw_pos() == SW_OPEN)
+        return true;
+    else return false;
+}
+
+bool get_door_is_locked(void) {
+    if (get_nsw_pos() == SW_CLOSED)
+        return true;
+    else return false; // if (get_nsw_pos() == NSW_CLOSED);
+}
+
+// Locked position is closed N-switch
+// Unlocked is open N-switch
+sw_pos_t get_nsw_pos(void) {
+    
     if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_HIGH) {
         ESP_LOGI(TAG, "N-switch is open");
-        return NSW_OPEN;
+        return SW_OPEN;
     }
     else if (gpio_get_level(GPIO_INPUT_NSW) == SIGNAL_LOW) {
         ESP_LOGI(TAG, "N-switch is closed");
-        return NSW_CLOSED;
+        return SW_CLOSED;
     }
     else {
         ESP_LOGW(TAG, "N-switch position unknown");
-        return NSW_UNKOWN;
+        return SW_UNKNOWN;
+    }
+}
+
+sw_pos_t get_reedsw_pos(void) {
+    if (gpio_get_level(GPIO_INPUT_REEDSW_STATUS) == SIGNAL_HIGH) {
+        ESP_LOGI(TAG, "Reed switch is open");
+        return SW_OPEN;
+    }
+    else if (gpio_get_level(GPIO_INPUT_REEDSW_STATUS) == SIGNAL_LOW) {
+        ESP_LOGI(TAG, "Reed switch is closed");
+        return SW_CLOSED;
+    }
+    else {
+        ESP_LOGW(TAG, "Reed switch position unknown");
+        return SW_UNKNOWN;
     }
 }
 
@@ -84,11 +153,11 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
             break;
         case GPIO_INPUT_DRBELL_NOTIF:
             mcu_content->content_type = DRBELL;
-            mcu_content->trig_signal  = SIGNAL_LOW;
+            mcu_content->trig_signal  = SIGNAL_HIGH;
             break;
         case GPIO_INPUT_REEDSW_STATUS:
             mcu_content->content_type = REEDSW;
-            mcu_content->trig_signal  = SIGNAL_LOW;
+            mcu_content->trig_signal  = SIGNAL_ANY;
             break;
         case GPIO_INPUT_MOTOR_FAULT:
             mcu_content->content_type = MTR_CTRL;
@@ -109,6 +178,30 @@ void get_io_type(uint32_t io_num, mcu_content_t* mcu_content) {
     }
 }
 
+mcu_content_type_t return_io_type(uint32_t io_num) {
+    switch(io_num) {
+        case GPIO_INPUT_MS:
+            return MS;
+        case GPIO_INPUT_NSW:
+            return NSW;
+        case GPIO_INPUT_BATTERY:
+            return BATTERY;
+        case GPIO_INPUT_DRBELL_NOTIF:
+            return DRBELL;
+        case GPIO_INPUT_REEDSW_STATUS:
+           return REEDSW;
+        case GPIO_INPUT_MOTOR_FAULT:
+            return MTR_CTRL;
+        case GPIO_OUTPUT_MOTOR_IN1:
+        case GPIO_OUTPUT_MOTOR_IN2:
+            return MTR_CTRL;
+        case GPIO_INPUT_BOOT:
+            return STANDBY;
+        default:
+            return INVALID;
+    }
+}
+
 static void exec_brake_motor(void) {
     // Braking
     gpio_set_level(GPIO_OUTPUT_MOTOR_IN1, 1);
@@ -124,9 +217,9 @@ void exec_toggle_motor(void) {
     int lock = 1;
 
     // If initially locked, start by unlocking
-    if (get_nsw_pos() == NSW_CLOSED)
+    if (get_nsw_pos() == SW_CLOSED)
         lock = 0;
-    else if (get_nsw_pos() == NSW_OPEN)
+    else if (get_nsw_pos() == SW_OPEN)
         lock = 1;
     else {
         ESP_LOGE(TAG, "Unknown N-switch position, will not operate toggle");
@@ -150,17 +243,17 @@ void exec_toggle_motor(void) {
 }
 
 stfd_lock_err_t exec_operate_lock(bool lock) {
-    int operation_cnt = 0;
-    nsw_pos_t old_pos = get_nsw_pos();
+    //int operation_cnt = 0;
+    sw_pos_t old_pos = get_nsw_pos();
     /*
     When the door is already locked (bolt out), the N-switch is in closed position, right at the end
     WHen the door is unlocked (bolt in), the N-switch is in open position for most the rotation
     */
-    if (old_pos == NSW_UNKOWN)
+    if (old_pos == SW_UNKNOWN)
         return LOCK_POS_UNKNOWN;
-    else if (lock && (old_pos == NSW_CLOSED))
+    else if (lock && (old_pos == SW_CLOSED))
         return LOCK_ALREADY_CLOSED;
-    else if (!lock && (old_pos == NSW_OPEN))
+    else if (!lock && (old_pos == SW_OPEN))
         return LOCK_ALREADY_OPEN;
     else if (lock) {
         // CW
@@ -216,18 +309,55 @@ stfd_lock_err_t check_motor_fault_cond(void) {
     return LOCK_OK;
 }
 
-void stfd_start_autolock_timer(void) {
-    uint64_t counter_time = 0;
-    timer_get_counter_value(TIMER_GROUP_0, TIMER_0, &counter_time);
+void gpio_begin_stream(void) {
+    gpio_set_level(GPIO_OUTPUT_STREAM, 1);
+    vTaskDelay(500 / portTICK_RATE_MS);
+    gpio_set_level(GPIO_OUTPUT_STREAM, 0);
+}
+
+static void start_auto_timer(timer_group_t group_num, timer_idx_t timer_num, uint64_t load_val) {
+    double counter_time = 0;
+    timer_get_counter_time_sec(group_num, timer_num, &counter_time);
     if (counter_time > 0) {
-        timer_pause(TIMER_GROUP_0, TIMER_0);
+        ESP_LOGI(TAG, "Timer reset at %f", counter_time);
     }
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, MOTOR_AUTOLOCK_TIMER);
-    timer_start(TIMER_GROUP_0, TIMER_0);
+    timer_pause(group_num, timer_num);
+    timer_set_counter_value(group_num, timer_num, load_val * TIMER_SCALE);
+    timer_set_alarm(group_num, timer_num, TIMER_ALARM_EN);
+    timer_start(group_num, timer_num);
+}
+
+void stfd_start_autolock_timer(void) {
+    start_auto_timer(autotimer_group, lock_timer_num, MOTOR_AUTOLOCK_TIMER);
+}
+
+void stfd_stop_autolock_timer(void) {
+    timer_pause(autotimer_group, lock_timer_num);
+}
+
+void stfd_start_camserver_timer(void) {
+    start_auto_timer(autotimer_group, camserver_timer_num, CAM_SERVER_TIMER);
 }
 
 uint32_t get_battery_level(void) {
-    return get_adc_reading(bat_monitor_unit, bat_monitor_channel);
+    uint32_t adc_mV = get_adc_reading(bat_monitor_unit, bat_monitor_channel);
+    // If battery is full
+    if (adc_mV == adc_val[0]) {
+        ESP_LOGI(TAG, "Battery full charge");
+        return bat_val[0];
+    }
+    else if (adc_mV > adc_val[98]) {
+        ESP_LOGW(TAG, "Battery is completely discharged!");
+        return 0;
+    }
+    for (uint16_t i = 1; i < sizeof(adc_val)/sizeof(uint32_t); i++) {
+        if (adc_mV > adc_val[i-1] && adc_mV <= adc_val[i]) {
+            ESP_LOGI(TAG, "Battery voltage is : %i", bat_val[i]);
+            return bat_val[i];
+        }
+    }
+    ESP_LOGW(TAG, "Could not read battery voltage properly");
+    return 0;
 }
 
 uint32_t get_adc_reading(adc_unit_t unit, adc_channel_t channel) {
@@ -312,7 +442,7 @@ static void gpio_setup_input(gpio_isr_t isr_handler) {
     }
     // REEDSW
     if( stfd_gpio_config(
-        GPIO_PIN_INTR_POSEDGE, 
+        GPIO_PIN_INTR_ANYEDGE, 
         GPIO_INPUT_REEDSW_PIN_SEL, 
         GPIO_MODE_INPUT, 
         GPIO_PULLDOWN_DISABLE, 
@@ -437,9 +567,21 @@ static void gpio_setup_output(void) {
     {
         ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_MOTOR_IN2);
     }
+    if( stfd_gpio_config(
+        GPIO_PIN_INTR_DISABLE, 
+        GPIO_OUTPUT_STREAM_PIN_SEL, 
+        GPIO_MODE_OUTPUT, 
+        GPIO_PULLDOWN_DISABLE, 
+        GPIO_PULLUP_DISABLE
+        ) != ESP_OK)
+    {
+        ESP_LOGE(TAG, "GPIO %i config failed", GPIO_OUTPUT_STREAM);
+    }
+
     //Initialize to 0
     ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN1_PIN_SEL, 0));
     ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_MOTOR_IN2_PIN_SEL, 0));
+    ESP_ERROR_CHECK(gpio_set_level((gpio_num_t) GPIO_OUTPUT_STREAM_PIN_SEL, 0));
 
 #elif CONFIG_ESP32_CAM_MCU
     if( stfd_gpio_config(
@@ -465,17 +607,26 @@ void gpio_init_setup(gpio_isr_t isr_handler) {
     gpio_setup_output();
 }
 
+// The timer value input is in seconds
+static void single_timer_setup(timer_config_t timer_config, timer_isr_t isr_handler, timer_group_t timer_group, timer_idx_t timer_idx, uint64_t timer_val, uint64_t alarm_val) {
+    timer_init(timer_group, timer_idx, &timer_config);
+    timer_set_counter_value(timer_group, timer_idx, timer_val * TIMER_SCALE);
+    timer_set_alarm_value(timer_group, timer_idx, alarm_val * TIMER_SCALE);
+    timer_enable_intr(timer_group, timer_idx);
+    timer_isr_register(timer_group, timer_idx, isr_handler, (void *) timer_idx, ESP_INTR_FLAG_IRAM, NULL);   
+}
+
 void timer_init_setup(timer_isr_t isr_handler) {
     ESP_LOGI(TAG, "Timer setup...");
     timer_config_t timer_config = {
         .divider     = TIMER_DIVIDER,
         .counter_en  = TIMER_PAUSE,
         .counter_dir = TIMER_COUNT_DOWN,
-        .auto_reload = TIMER_AUTORELOAD_DIS
+        .alarm_en    = TIMER_ALARM_EN,
+        .auto_reload = TIMER_AUTORELOAD_DIS,
     };
-    timer_init(TIMER_GROUP_0, TIMER_0, &timer_config);
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, MOTOR_AUTOLOCK_TIMER);
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, &isr_handler, (void *) TIMER_0, 0, NULL);
+    single_timer_setup(timer_config, isr_handler, autotimer_group, lock_timer_num, MOTOR_AUTOLOCK_TIMER, 0x00000000ULL);
+    single_timer_setup(timer_config, isr_handler, autotimer_group, camserver_timer_num, CAM_SERVER_TIMER, 0x00000000ULL);
 }
 
 static void check_efuse(void)
@@ -514,3 +665,5 @@ static void print_char_val_type(esp_adc_cal_value_t val_type)
         printf("Characterized using Default Vref\n");
     }
 }
+
+#endif /* STFD_GPIO_C_ */

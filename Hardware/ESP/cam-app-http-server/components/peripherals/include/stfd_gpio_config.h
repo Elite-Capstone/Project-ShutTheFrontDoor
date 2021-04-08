@@ -507,7 +507,7 @@
     #define BATTERY_ADC_CH 3
     #define BATTERY_ADC_UNIT 1
     #else
-    #define GPIO_INPUT_BATTERY 36
+    #define GPIO_INPUT_BATTERY 27
     #define BATTERY_ADC_CH 7
     #define BATTERY_ADC_UNIT 2
     #endif /* CONFIG_GPIO_INPUT_BATTERY */
@@ -772,73 +772,8 @@
     #define GPIO_OUTPUT_MOTOR_IN2 32
     #endif /* CONFIG_GPIO_OUTPUT_MOTOR_IN2 */
 
-    #if CONFIG_GPIO_OUTPUT_0_STREAM
-    #define GPIO_OUTPUT_STREAM 0
-    #elif CONFIG_GPIO_OUTPUT_2_STREAM
-    #define GPIO_OUTPUT_STREAM 2
-    #elif CONFIG_GPIO_OUTPUT_4_STREAM
-    #define GPIO_OUTPUT_STREAM 4
-    #elif CONFIG_GPIO_OUTPUT_5_STREAM
-    #define GPIO_OUTPUT_STREAM 5
-    #elif CONFIG_GPIO_OUTPUT_6_STREAM
-    #define GPIO_OUTPUT_STREAM 6
-    #elif CONFIG_GPIO_OUTPUT_7_STREAM
-    #define GPIO_OUTPUT_STREAM 7
-    #elif CONFIG_GPIO_OUTPUT_8_STREAM
-    #define GPIO_OUTPUT_STREAM 8
-    #elif CONFIG_GPIO_OUTPUT_9_STREAM
-    #define GPIO_OUTPUT_STREAM 9
-    #elif CONFIG_GPIO_OUTPUT_10_STREAM
-    #define GPIO_OUTPUT_STREAM 10
-    #elif CONFIG_GPIO_OUTPUT_11_STREAM
-    #define GPIO_OUTPUT_STREAM 11
-    #elif CONFIG_GPIO_OUTPUT_12_STREAM
-    #define GPIO_OUTPUT_STREAM 12
-    #elif CONFIG_GPIO_OUTPUT_13_STREAM
-    #define GPIO_OUTPUT_STREAM 13
-    #elif CONFIG_GPIO_OUTPUT_14_STREAM
-    #define GPIO_OUTPUT_STREAM 14
-    #elif CONFIG_GPIO_OUTPUT_15_STREAM
-    #define GPIO_OUTPUT_STREAM 15
-    #elif CONFIG_GPIO_OUTPUT_16_STREAM
-    #define GPIO_OUTPUT_STREAM 16
-    #elif CONFIG_GPIO_OUTPUT_17_STREAM
-    #define GPIO_OUTPUT_STREAM 17
-    #elif CONFIG_GPIO_OUTPUT_18_STREAM
-    #define GPIO_OUTPUT_STREAM 18
-    #elif CONFIG_GPIO_OUTPUT_19_STREAM
-    #define GPIO_OUTPUT_STREAM 19
-    #elif CONFIG_GPIO_OUTPUT_21_STREAM
-    #define GPIO_OUTPUT_STREAM 21
-    #elif CONFIG_GPIO_OUTPUT_22_STREAM
-    #define GPIO_OUTPUT_STREAM 22
-    #elif CONFIG_GPIO_OUTPUT_23_STREAM
-    #define GPIO_OUTPUT_STREAM 23
-    #elif CONFIG_GPIO_OUTPUT_25_STREAM
-    #define GPIO_OUTPUT_STREAM 25
-    #elif CONFIG_GPIO_OUTPUT_26_STREAM
-    #define GPIO_OUTPUT_STREAM 26
-    #elif CONFIG_GPIO_OUTPUT_27_STREAM
-    #define GPIO_OUTPUT_STREAM 27
-    #elif CONFIG_GPIO_OUTPUT_32_STREAM
-    #define GPIO_OUTPUT_STREAM 32
-    #elif CONFIG_GPIO_OUTPUT_33_STREAM
-    #define GPIO_OUTPUT_STREAM 33
-    #elif CONFIG_GPIO_OUTPUT_34_STREAM
-    #define GPIO_OUTPUT_STREAM 34
-    #elif CONFIG_GPIO_OUTPUT_35_STREAM
-    #define GPIO_OUTPUT_STREAM 35
-    #elif CONFIG_GPIO_OUTPUT_36_STREAM
-    #define GPIO_OUTPUT_STREAM 36
-    #elif CONFIG_GPIO_OUTPUT_39_STREAM
-    #define GPIO_OUTPUT_STREAM 39
-    #else
-    #define GPIO_OUTPUT_STREAM 2
-    #endif /* CONFIG_GPIO_OUTPUT_STREAM */
-
     #define GPIO_OUTPUT_MOTOR_IN1_PIN_SEL   (1ULL<<GPIO_OUTPUT_MOTOR_IN1)
     #define GPIO_OUTPUT_MOTOR_IN2_PIN_SEL   (1ULL<<GPIO_OUTPUT_MOTOR_IN2)
-    #define GPIO_OUTPUT_STREAM_PIN_SEL   (1ULL<<GPIO_OUTPUT_STREAM)
 
 #endif /* MAIN_MCU specific GPIOs */
 
@@ -867,7 +802,7 @@
 #endif /* ESP32_CAM_MCU specific GPIOs */
 
 #if CONFIG_MAIN_MCU
-#define NUM_GPIO 10
+#define NUM_GPIO 9
 #elif CONFIG_ESP32_CAM_MCU
 #define NUM_GPIO 6
 #else
@@ -889,7 +824,6 @@ static const uint8_t gpio_array[NUM_GPIO] = {
     GPIO_INPUT_NSW,
     GPIO_OUTPUT_MOTOR_IN1,
     GPIO_OUTPUT_MOTOR_IN2,
-    GPIO_OUTPUT_STREAM,
 #elif CONFIG_ESP32_CAM_MCU
     GPIO_INPUT_PIC,
     GPIO_OUTPUT_CONFIRM_UPLOAD,
@@ -987,10 +921,6 @@ static void check_single_gpio_assignment(uint8_t _gpio, char* _err) {
         strcat(err, "Motor CCW (In 2) & ");
         cnt++;
     }
-    if(_gpio == GPIO_OUTPUT_STREAM) {
-        strcat(err, "Output Stream & ");
-        cnt++;
-    }
 #elif CONFIG_ESP32_CAM_MCU
     if(_gpio == GPIO_INPUT_PIC) {
         strcat(err, "Picture & ");
@@ -1047,13 +977,3 @@ static void gpio_overlap_check(const char* TAG) {
         ESP_LOGE(TAG, "%s %s", GPIO_MULTA_ERR_MSG, err);
         */
 }
-
-//================= ADC Array ==================
-/** 
- * ADC values are in inverse order with respect to battery voltage
- * as in a full battery (6V) shows 0 mV, 
- * while an empty battery (4.5V) shows 2450+ mV
- */
-extern const uint32_t adc_val[99];
-
-extern const uint32_t bat_val[100];

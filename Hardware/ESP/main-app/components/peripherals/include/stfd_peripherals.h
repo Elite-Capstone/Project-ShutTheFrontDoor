@@ -66,10 +66,10 @@ typedef enum {
 } stfd_lock_err_t;
 
 typedef enum {
-    NSW_UNKOWN = -1,
-    NSW_CLOSED = 0,
-    NSW_OPEN   = 1
-} nsw_pos_t;
+    SW_UNKNOWN = -1,
+    SW_CLOSED = 0,
+    SW_OPEN   = 1
+} sw_pos_t;
 
 typedef struct {
     bool save_to_sdcard;
@@ -93,10 +93,14 @@ typedef struct {
     bool door_is_locked;
     bool door_is_closed;
     uint32_t bat_level;
-
+    bool dbell_ongoing;
     // bool iotc_core_init;
     // bool iotc_server_online;
 } mcu_status_t;
+
+extern const timer_group_t autotimer_group;
+extern const timer_idx_t   lock_timer_num;
+extern const timer_idx_t   camserver_timer_num;
 
 uint32_t getDefaultScanListSize(void);
 wifi_scan_method_t getDefaultScanMethod(void);
@@ -174,11 +178,33 @@ bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level);
 //bool trig_motor_gpio(uint32_t io_num, uint8_t sg_level);
 
 /**
- * @brief Returns the current position of the N-switch read by its GPIO
+ * @brief Returns the position of the door corresponding the the position
+ *        of the Reed switch
+ */
+bool get_door_is_closed(void);
+
+/**
+ * @brief Returns the position of the lock as locked/unlocked
+ */
+bool get_door_is_locked(void);
+
+/**
+ * @brief Returns the current position of the N-Switch read by its GPIO
+ *        An open N-switch indicates an unlocked door
+ *        A closed N-switch indicates a locked door
  * 
  * @return The current position of the N-switch
  */
-nsw_pos_t get_nsw_pos(void);
+sw_pos_t get_nsw_pos();
+
+/**
+ * @brief Returns the current position of the Reed Switch read by its GPIO
+ *        An open Reed switch indicates a closed door
+ *        A closed Reed switch indicates an open door
+ * 
+ * @return The current position of the N-switch
+ */
+sw_pos_t get_reedsw_pos();
 
 /**
  * @brief This function sends a signal pulse through the output GPIOs for motor control.
@@ -204,10 +230,10 @@ void exec_toggle_motor(void);
  */
  stfd_lock_err_t check_motor_fault_cond(void);
 
-/**
- * @brief Begins a countdown timer which will lock the door after it has counted down
- */
- void stfd_start_autolock_timer(void);
+ /**
+  * @brief Toggles the output stream GPIO to start streaming on ESP32-CAM
+  */
+ void gpio_begin_stream(void);
 
 /**
  * @brief performs the interrupt task for input gpios (Picutre or Stream)
@@ -217,13 +243,15 @@ void exec_toggle_motor(void);
  */
 void get_io_type(uint32_t io_num, mcu_content_t* mcu_content);
 
+mcu_content_type_t return_io_type(uint32_t io_num);
+
 /**
- * @brief
+ * @brief Returns the battery's actual voltage in % of charge
  */
 uint32_t get_battery_level(void);
 
 /**
- * @brief
+ * @brief Returns the battery's ADC reading in mV (up to 2450 mV)
  */
 uint32_t get_adc_reading(adc_unit_t unit, adc_channel_t channel);
 
@@ -258,6 +286,21 @@ void gpio_init_setup(gpio_isr_t isr_handler);
  * @param isr_handler function that will handle the interrupt events on the timer
  */
 void timer_init_setup(timer_isr_t isr_handler);
+
+/**
+ * @brief Begins a countdown timer which will lock the door after it has counted down
+ */
+ void stfd_start_autolock_timer(void);
+
+/**
+ * @brief Stops the autolock timer. Executes when the door is locked
+ */
+void stfd_stop_autolock_timer(void);
+
+ /**
+  * @brief Begins a countdown timer which will stop the camera stream after times runs out
+  */
+ void stfd_start_camserver_timer(void);
 
 //========== WiFi Scan ==========
 

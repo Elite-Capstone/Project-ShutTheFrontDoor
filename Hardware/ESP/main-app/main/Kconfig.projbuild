@@ -1,51 +1,51 @@
 menu "Project ShutTheFrontDoor Configuration"
 
-        choice MCU_TYPE
-            prompt "Which MCU will this firmware be installed on?"
-            default MAIN_MCU
+    choice MCU_TYPE
+        prompt "Which MCU will this firmware be installed on?"
+        default MAIN_MCU
+        help
+            The selected MCU type will have different functionalities installed
+        
+        config MAIN_MCU
+            bool "Main MCU"
+        config ESP32_CAM_MCU
+            bool "ESP32 CAM"
+    endchoice
+
+    menu "Google IoT Core Configuration"
+
+        config GIOT_PROJECT_ID
+            string "Google Cloud Project ID"
+            default "project_id"
             help
-                The selected MCU type will have different functionalities installed
-            
-            config MAIN_MCU
-                bool "Main MCU"
-            config ESP32_CAM_MCU
-                bool "ESP32 CAM"
-        endchoice
+                Google Cloud project ID
+        
+        config GIOT_LOCATION
+            string "Google Cloud location"
+            default "us-central1"
+            help
+                Google Cloud region
+        
+        config GIOT_REGISTRY_ID
+            string "Google IoT Core Registry ID"
+            default "registry_id"
+            help
+                Google IoT Core registry id
+        
+        config GIOT_DEVICE_ID
+            string "Google IoT Core Device ID"
+            default "device_id"
+            help
+                Google IoT Core device id
+        
+        config GIOT_DEBUG_OUTPUT
+            bool "Enable debugging"
+            help
+                Select this option to enable debugging support
+        
+    endmenu
 
-        menu "Google IoT Core Configuration"
-
-            config GIOT_PROJECT_ID
-                string "Google Cloud Project ID"
-                default "project_id"
-                help
-                    Google Cloud project ID
-            
-            config GIOT_LOCATION
-                string "Google Cloud location"
-                default "us-central1"
-                help
-                    Google Cloud region
-            
-            config GIOT_REGISTRY_ID
-                string "Google IoT Core Registry ID"
-                default "registry_id"
-                help
-                    Google IoT Core registry id
-            
-            config GIOT_DEVICE_ID
-                string "Google IoT Core Device ID"
-                default "device_id"
-                help
-                    Google IoT Core device id
-            
-            config GIOT_DEBUG_OUTPUT
-                bool "Enable debugging"
-                help
-                    Select this option to enable debugging support
-            
-        endmenu
-    
-        menu "GPIO Configuration"
+    menu "GPIO Configuration"
 
         menu "Input Configuration"
 
@@ -326,7 +326,7 @@ menu "Project ShutTheFrontDoor Configuration"
             choice GPIO_INPUT_BATTERY
                 prompt "GPIO for Battery voltage"
                 depends on MAIN_MCU
-                default GPIO_INPUT_27_BATTERY
+                default GPIO_INPUT_36_BATTERY
                 help 
                     The GPIO will be an ADC which will detect the current voltage level of the battery
 
@@ -708,6 +708,75 @@ menu "Project ShutTheFrontDoor Configuration"
                 config GPIO_OUTPUT_36_MOTOR_IN2
                     bool "GPIO 36"
                 config GPIO_OUTPUT_39_MOTOR_IN2
+                    bool "GPIO 39"
+            endchoice
+
+            choice GPIO_OUTPUT_STREAM
+                prompt "GPIO Output Stream"
+                depends on MAIN_MCU
+                default GPIO_OUTPUT_2_STREAM
+                help 
+                    The selected GPIO will trigger the ESP32-CAM Stream
+
+                config GPIO_OUTPUT_0_STREAM
+                    bool "GPIO 0"
+                config GPIO_OUTPUT_2_STREAM
+                    bool "GPIO 2"
+                config GPIO_OUTPUT_4_STREAM
+                    bool "GPIO 4"
+                config GPIO_OUTPUT_5_STREAM
+                    bool "GPIO 5"
+                config GPIO_OUTPUT_6_STREAM
+                    bool "GPIO 6"
+                config GPIO_OUTPUT_7_STREAM
+                    bool "GPIO 7"
+                config GPIO_OUTPUT_8_STREAM
+                    bool "GPIO 8"
+                config GPIO_OUTPUT_9_STREAM
+                    bool "GPIO 9"
+                config GPIO_OUTPUT_10_STREAM
+                    bool "GPIO 10"
+                config GPIO_OUTPUT_11_STREAM
+                    bool "GPIO 11"
+                config GPIO_OUTPUT_12_STREAM
+                    bool "GPIO 12"
+                config GPIO_OUTPUT_13_STREAM
+                    bool "GPIO 13"
+                config GPIO_OUTPUT_14_STREAM
+                    bool "GPIO 14"
+                config GPIO_OUTPUT_15_STREAM
+                    bool "GPIO 15"
+                config GPIO_OUTPUT_16_STREAM
+                    bool "GPIO 16"
+                config GPIO_OUTPUT_17_STREAM
+                    bool "GPIO 17"
+                config GPIO_OUTPUT_18_STREAM
+                    bool "GPIO 18"
+                config GPIO_OUTPUT_19_STREAM
+                    bool "GPIO 19"
+                config GPIO_OUTPUT_21_STREAM
+                    bool "GPIO 21"
+                config GPIO_OUTPUT_22_STREAM
+                    bool "GPIO 22"
+                config GPIO_OUTPUT_23_STREAM
+                    bool "GPIO 23"
+                config GPIO_OUTPUT_25_STREAM
+                    bool "GPIO 25"
+                config GPIO_OUTPUT_26_STREAM
+                    bool "GPIO 26"
+                config GPIO_OUTPUT_27_STREAM
+                    bool "GPIO 27"
+                config GPIO_OUTPUT_32_STREAM
+                    bool "GPIO 32"
+                config GPIO_OUTPUT_33_STREAM
+                    bool "GPIO 33"
+                config GPIO_OUTPUT_34_STREAM
+                    bool "GPIO 34"
+                config GPIO_OUTPUT_35_STREAM
+                    bool "GPIO 35"
+                config GPIO_OUTPUT_36_STREAM
+                    bool "GPIO 36"
+                config GPIO_OUTPUT_39_STREAM
                     bool "GPIO 39"
             endchoice
 

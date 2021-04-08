@@ -42,17 +42,23 @@
 #endif /* CONFIG INIT_SDCARD */
 
 #define GPIO_TASK 1
-#define UDP_STREAM_TASK 1
+#define UDP_STREAM_TASK 0
+#define STREAM_THROUGH_ESP32_CAM 1
 #define MQTT_TASK 1
 
 static const char* TAG = "main";
 static const char* DRBELL_MSG               = "Doorbell pressed - Someone's at the Door!";
-static const char* REEDSW_MSG               = "The Door opened";
+static const char* REEDSW_OPEN_MSG          = "The Door opened";
+static const char* REEDSW_CLOSED_MSG        = "The Door closed";
 static const char* DOOR_UNLOCK_MSG          = "The Door has been unlocked";
 static const char* DOOR_LOCK_MSG            = "The Door has been locked";
 static const char* DOOR_LOCK_UNKNOWN_MSG    = "The Door has been left at an unknown locking position";
+static const char* DOOR_LOCK_WHEN_OPEN      = "Tried locking the Door when it is open!";
 static const char* LOCK_FAULT_MSG           = "There was a problem with the lock - it is being obstructed";
 static const char* AUTOLOCK_MSG             = "Autolocking door";
+static const char* BAD_AUTOLOCK_MSG         = "Something went wrong with autolocking door";
+static const char* STREAM_INIT_MSG          = "Started video streaming the door's view";
+static const char* MS_STREAM_INIT_MSG       = "Someone's at the door. Started video streaming the door's view";
 
 static char* payload = "ESP32 Message";
 
@@ -93,7 +99,8 @@ mcu_status_t _mcu_s = {
     .cam_server_init    = false,
     .door_is_locked     = false,
     .door_is_closed     = false,
-    .bat_level          = 0
+    .bat_level          = 0,
+    .dbell_ongoing      = false
     // .iotc_core_init     = false,
     // .iotc_server_online = false
 };
@@ -126,7 +133,7 @@ static mcu_tasklist_t mcu_tl = {
 
 // Forward Declaration
 void IRAM_ATTR gpio_isr_handler(void* arg);
-void IRAM_ATTR autolock_timer_isr_handler(void* arg);
+void IRAM_ATTR autotimer_isr_handler(void* arg);
 static void exec_gpio_task(mcu_content_t* mcu_c);
 
 static void task_listener(void* arg);
@@ -161,6 +168,16 @@ static void task_listener(void* arg) {
         }
 #endif /* UDP_STREAM_TASK */
 
+#if STREAM_THROUGH_ESP32_CAM
+        if (mcu_tl.stream_task_init) {
+            // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
+            ESP_LOGI(TAG, "Creating Stream task");
+            gpio_begin_stream();
+            mcu_tl.stream_task_created = true;
+            mcu_tl.stream_task_init = false;
+        }
+#endif
+
 #if MQTT_TASK
         if (!mcu_tl.mqtt_task_created && mcu_tl.mqtt_task_init) {
             ESP_LOGI(TAG, "Creating MQTT task");
@@ -168,6 +185,7 @@ static void task_listener(void* arg) {
             mcu_tl.mqtt_task_created = true;
         }
 #endif /* MQTT_TASK */
+        vTaskDelay(500 / portTICK_RATE_MS);
     }
     mcu_tl.gpio_task_created   = false;
     mcu_tl.stream_task_created = false;
@@ -185,7 +203,23 @@ static void mqtt_task(void* pvParameters) {
         if (mcu_mqtt->cmd_info.exec_cmd) {
             switch (mcu_mqtt->cmd_info.cmd) {
                 case (mcu_cmd_type_t) MCU_GETSTATUS:
+                    // Update json_status object
+                    mcu_s->door_is_locked = get_door_is_locked();
+                    mcu_s->door_is_closed = get_door_is_closed();
+                    mcu_s->bat_level = get_battery_level();
+                    
+                    stfd_set_status_json(
+                        &mcu_mqtt->json_status,
+                        mcu_s->got_wifi_ip,
+                        mcu_s->cam_initiated,
+                        mcu_s->sdcard_initiated,
+                        mcu_s->cam_server_init,
+                        mcu_s->door_is_locked,
+                        mcu_s->door_is_closed,
+                        mcu_s->bat_level
+                    );
                     stfd_mqtt_publish_status(mcu_mqtt);
+                    mcu_mqtt->cmd_info.exec_cmd = false;
                     break;
                 case (mcu_cmd_type_t) MCU_GETNOTIF:
                     stfd_mqtt_publish_notif(mcu_mqtt->client, "Notification Message");
@@ -194,21 +228,31 @@ static void mqtt_task(void* pvParameters) {
                     exec_toggle_motor();
                     break;
                 case (mcu_cmd_type_t) LOCK_DOOR:
-                    exec_operate_lock(true);
+                    mcu_s->door_is_closed = get_door_is_closed();
+                    if (mcu_s->door_is_closed)
+                        exec_operate_lock(true);
+                    else
+                        stfd_mqtt_publish_notif(mcu_mqtt->client, DOOR_LOCK_WHEN_OPEN);
                     break;
                 case (mcu_cmd_type_t) UNLOCK_DOOR:
                     exec_operate_lock(false);
                     break;
                 case (mcu_cmd_type_t) STREAM_CAM:
+                    stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
+                    mcu_s->cam_initiated = true;
                     mcu_tl.stream_task_init = true;
                     break;
                 default:
                     ESP_LOGW(TAG, "Invalid command type received from MQTT");
                     break;
             }
-            mcu_mqtt->cmd_info.exec_cmd = false;
+            // If a MQTT task was executed, the GET_STATUS task must be executed right after,
+            // unless the task is itself a GET_STATUS
+            if (mcu_mqtt->cmd_info.exec_cmd == true) {
+                mcu_mqtt->cmd_info.cmd = MCU_GETSTATUS;
+            }
         }
-        vTaskDelay(2000 / portTICK_RATE_MS);
+        vTaskDelay(1000 / portTICK_RATE_MS);
     }
     stfd_mqtt_close_client(mcu_mqtt);
     mcu_tl.mqtt_task_created = false;
@@ -316,21 +360,30 @@ void IRAM_ATTR gpio_isr_handler(void* arg) {
  */
 static void gpio_trig_task(void* arg)
 {
+    BaseType_t gotFromQueue;
     uint32_t io_num;
     mcu_c->save_to_sdcard = IMAGE_TO_SDCARD;
     mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
     for(;;) {
-        if (xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY)) {
+        gotFromQueue = xQueueReceive(gpio_evt_queue, &io_num, portMAX_DELAY);
+        if (gotFromQueue == pdTRUE && !mcu_s->dbell_ongoing) {
             printf("GPIO[%d] intr, val: %d\n", io_num, gpio_get_level(io_num));
             get_io_type(io_num, mcu_c);
+
+            if (mcu_c->content_type == DRBELL)
+                mcu_s->dbell_ongoing = true;
 
             if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
                 exec_gpio_task(mcu_c);
             }
             else {
                 ESP_LOGI(TAG, "Triggered the wrong input pin or wrong signal level");
-            }   
+            }
         }
+        else if ((gotFromQueue == pdTRUE && return_io_type(io_num) != DRBELL) || gotFromQueue == pdFALSE) {
+            mcu_s->dbell_ongoing = false;
+        }
+        //vTaskDelay(500 / portTICK_RATE_MS);
     }
     mcu_tl.gpio_task_created = false;
     ESP_LOGI(TAG, "Deleting GPIO task");
@@ -368,6 +421,7 @@ static void exec_gpio_task(mcu_content_t* mcu_c) {
         case (mcu_content_type_t) STREAM:
             if (!mcu_tl.stream_task_created) {
                 ESP_LOGI(TAG, "Starting Stream from GPIO");
+                stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
                 mcu_tl.stream_task_init = true;
             }
             else {
@@ -391,29 +445,57 @@ static void exec_gpio_task(mcu_content_t* mcu_c) {
             //         mcu_c->cam_initiated = false;
             // }
             break;
-
+        case (mcu_content_type_t) MS:
+            if (!mcu_tl.stream_task_created) {
+                ESP_LOGI(TAG, "Starting Stream from MS GPIO");
+            }
+            mcu_tl.stream_task_init = true;
+            stfd_mqtt_publish_notif(mcu_mqtt->client, MS_STREAM_INIT_MSG);
+            // else {
+            //     ESP_LOGI(TAG, "Stopping Stream from MS GPIO");
+            //     mcu_tl.stream_task_init = false;
+            // }
+            break;
         case (mcu_content_type_t) DRBELL:
             //http_rest_with_url_notification(DRBELL_MSG);
+            if (!mcu_tl.stream_task_created) {
+                ESP_LOGI(TAG, "Starting Stream from DRBELL GPIO");
+            }
+            mcu_tl.stream_task_init = true;
             stfd_mqtt_publish_notif(mcu_mqtt->client, DRBELL_MSG);
             break;
         case (mcu_content_type_t) REEDSW:
             //http_rest_with_url_notification(REEDSW_MSG);
-            stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_MSG);
+            if (!mcu_tl.stream_task_created) {
+                ESP_LOGI(TAG, "Starting Stream from REEDSW GPIO");
+            }
+            mcu_tl.stream_task_init = true;
+            if (get_reedsw_pos() == SW_CLOSED) {
+                stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_OPEN_MSG);
+                if (mcu_tl.timer_task_created)
+                    stfd_stop_autolock_timer();
+            }
+            else if (get_reedsw_pos() == SW_OPEN) {
+                stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_CLOSED_MSG);
+                if (mcu_tl.timer_task_created)
+                    stfd_start_autolock_timer();
+            }
             break;
         case (mcu_content_type_t) MTR_CTRL:
             if (check_motor_fault_cond() != LOCK_OK)
                 stfd_mqtt_publish_notif(mcu_mqtt->client, LOCK_FAULT_MSG);
             break;
         case (mcu_content_type_t) NSW:
-            if (get_nsw_pos() == NSW_OPEN) {
+            if (get_nsw_pos() == SW_OPEN) {
                 stfd_mqtt_publish_notif(mcu_mqtt->client, DOOR_UNLOCK_MSG);
                 if (!mcu_tl.timer_task_created) {
                     mcu_tl.timer_task_created = true;
-                    xTaskCreate(&autolock_timer_task, "autolock_timer_task", 2048, NULL, 4, NULL);
+                    xTaskCreate(&autolock_timer_task, "autolock_timer_task", 2048, NULL, 10, NULL);
                 }
             }
-            else if (get_nsw_pos() == NSW_CLOSED) {
+            else if (get_nsw_pos() == SW_CLOSED) {
                 stfd_mqtt_publish_notif(mcu_mqtt->client, DOOR_LOCK_MSG);
+                stfd_stop_autolock_timer();
                 mcu_tl.timer_task_created = false;
             }
             else
@@ -428,11 +510,32 @@ static void exec_gpio_task(mcu_content_t* mcu_c) {
         default:
             ESP_LOGE(TAG, "Invalid type detected when executing queue task");
     }
+    mcu_mqtt->cmd_info.cmd = MCU_GETSTATUS;
+    mcu_mqtt->cmd_info.exec_cmd = true;
 }
 
-void IRAM_ATTR autolock_timer_isr_handler(void* arg) {
-    timer_idx_t timer = (timer_idx_t) arg;
+void IRAM_ATTR autotimer_isr_handler(void* arg) {
+    // In the interrupt handler, need to call timer_spinlock_take(..) before handling and call timer_spinlock_give(…) after handling.
+    timer_spinlock_take(autotimer_group);
+    int timer = (int) arg;
+
+    /* Retrieve the interrupt status and the counter value
+    from the timer that reported the interrupt */
+    uint32_t timer_intr = timer_group_get_intr_status_in_isr(autotimer_group);
+
+    /* Clear the interrupt
+    and update the alarm time for the timer with/without reload */
+    if (timer_intr & TIMER_INTR_T0) {
+        // Motor autolock timer interrupt
+        timer_group_clr_intr_status_in_isr(autotimer_group, TIMER_0);
+    } else if (timer_intr & TIMER_INTR_T1) {
+        // ESP32 camera timer interrupt
+        timer_group_clr_intr_status_in_isr(autotimer_group, TIMER_1);
+    }
+
+    /* Now just send the event data back to the main program task */
     xQueueSendFromISR(timer_evt_queue, &timer, NULL);
+    timer_spinlock_give(autotimer_group);
 }
 
 static void autolock_timer_task(void* arg) {
@@ -441,19 +544,24 @@ static void autolock_timer_task(void* arg) {
     ESP_LOGI(TAG, "Autolock timer started");
     while(mcu_tl.timer_task_created) {
         if (xQueueReceive(timer_evt_queue, &timer, portMAX_DELAY)) {
-            if (timer == TIMER_0) {
+            if (timer == lock_timer_num && get_door_is_closed() == SW_OPEN) {
                 stfd_mqtt_publish_notif(mcu_mqtt->client, AUTOLOCK_MSG);
                 if (exec_operate_lock(true) == LOCK_OK)
                     ESP_LOGI(TAG, "Autolock succesfull");
-                else
+                else {
+                    stfd_mqtt_publish_notif(mcu_mqtt->client, BAD_AUTOLOCK_MSG);
                     ESP_LOGE(TAG, "Something went wrong with autolock");
+                }
                 break;
+            }
+            else if (get_door_is_closed() != SW_OPEN) {
+                ESP_LOGI(TAG, "Autolock stopped - Door is open");
             }
             else {
                 ESP_LOGW(TAG, "Wrong timer triggered");
             }
         }
-        vTaskDelay(2000 / portTICK_RATE_MS);
+        ESP_LOGI(TAG, "Waiting on autolock");
     }
     ESP_LOGI(TAG, "Deleting Autolock Timer task");
     mcu_tl.timer_task_created = false;
@@ -467,13 +575,13 @@ void app_main(void) {
 
     //create a queue to handle gpio event from isr
     gpio_evt_queue = xQueueCreate(10, sizeof(uint32_t));
-    timer_evt_queue = xQueueCreate(1, sizeof(bool));
+    timer_evt_queue = xQueueCreate(4, sizeof(timer_idx_t));
 
     // Initialization
     if (INIT_SDCARD)
         init_sdcard(mcu_s);
     gpio_init_setup(gpio_isr_handler);
-    timer_init_setup(autolock_timer_isr_handler);
+    timer_init_setup(autotimer_isr_handler);
     //init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c, mcu_s);
     // if (iotc_init(mcu_c->device_path) == ESP_OK) {
@@ -481,7 +589,7 @@ void app_main(void) {
     // }
 
     // Task listener
-    xTaskCreate(&task_listener, "task_listener", 4096, NULL, portPRIVILEGE_BIT, NULL);
+    xTaskCreate(&task_listener, "task_listener", 4096, NULL, 1, NULL);
     // Initialize the GPIOs and MQTT by default
     mcu_tl.gpio_task_init = true;
     mcu_tl.mqtt_task_init = true;

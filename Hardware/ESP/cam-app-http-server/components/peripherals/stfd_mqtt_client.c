@@ -196,8 +196,6 @@ static esp_err_t mqtt_event_handler_cb(mcu_mqtt_msg_t* mcu_mqtt, esp_mqtt_event_
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
-            stfd_mqtt_close_client(mcu_mqtt);
-            stfd_mqtt_init(mcu_mqtt);
             break;
         case MQTT_EVENT_SUBSCRIBED:
             ESP_LOGI(TAG, "MQTT_EVENT_SUBSCRIBED, msg_id=%d", event->msg_id);
