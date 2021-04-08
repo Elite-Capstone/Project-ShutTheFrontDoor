@@ -5,6 +5,7 @@ import okhttp3.ResponseBody
 import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import retrofit2.converter.scalars.ScalarsConverterFactory
 import java.lang.reflect.Type
 
 
@@ -17,6 +18,7 @@ object RetroFit {
         return Retrofit
             .Builder()
             .baseUrl(url)
+            .addConverterFactory(ScalarsConverterFactory.create())
             .addConverterFactory(NullOnEmptyConverterFactory())
             .addConverterFactory(GsonConverterFactory.create(gson)).build()
     }
