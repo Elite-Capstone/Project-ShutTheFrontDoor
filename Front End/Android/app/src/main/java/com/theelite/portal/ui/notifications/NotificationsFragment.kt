@@ -165,10 +165,9 @@ class NotificationsFragment : Fragment(), ClickListener {
         notifications.sortByDescending { it.date }
     }
 
+    private fun getButtonText(time: Long) {
         if (notifications.isNotEmpty()) {
             forceReloadAdapter("updating!")
-            try {
-                    }
             lifecycleScope.launch(Dispatchers.IO) {
                 delay(1000 * time)
                 var myText = getText()
@@ -176,15 +175,17 @@ class NotificationsFragment : Fragment(), ClickListener {
                     forceReloadAdapter(myText)
                 }
             }
-            catch (e:Exception){
-                println("Error accessing notification")
-            }
         }
     }
 
-    private suspend fun getText(): String {
-        val response = deviceService.getDevices(email!!, token!!).execute()
-        if (response.isSuccessful && response.body() != null && response.body()!![0].status?.statusList != null) return if (response.body()!![0].status?.statusList?.doorLocked!!) "unlock" else "lock"
+    private fun getText(): String {
+        try {
+            val response = deviceService.getDevices(email!!, token!!).execute()
+            if (response.isSuccessful && response.body() != null && response.body()!![0].status?.statusList != null) return if (response.body()!![0].status?.statusList?.doorLocked!!) "unlock" else "lock"
+        } catch (e: Exception) {
+            println("Error when updating text for buttons\n${e.message}")
+        }
+
         return "unlock"
     }
 
@@ -206,8 +207,6 @@ class NotificationsFragment : Fragment(), ClickListener {
     }
 
     private fun sendCommand(command: String) {
-//        val retrofit = RetroFit.get(getString(R.string.url))
-//        val lockService: LockService = retrofit.create(LockService::class.java)
 
         val command =
             Command(
