@@ -42,13 +42,13 @@
 #endif /* CONFIG INIT_SDCARD */
 
 #define GPIO_TASK 1
-#define UDP_STREAM_TASK 1
-#define MQTT_TASK 1
+#define MQTT_TASK 0
+#define STREAM_TASK 1
 
 static const char* TAG = "main";
 static const char* DRBELL_MSG = "Doorbell pressed - Someone's at the Door!";
 static const char* REEDSW_MSG = "The Door opened";
-
+static const char* STREAM_INIT_MSG = "Started video streaming the door's view";
 static const char* payload = "ESP32 Message";
 
 // Holds the task statuses
@@ -123,7 +123,6 @@ void exec_gpio_task(mcu_content_t* mcu_c);
 static void task_listener(void* arg);
 static void gpio_trig_task(void* arg);
 static void mqtt_task(void* pvParameters);
-static void udp_client_task(void *pvParameters);
 
 /**
  * @brief Handler for GPIO interrupts
@@ -153,21 +152,23 @@ static void task_listener(void* arg) {
         }
 #endif
 
-#if UDP_STREAM_TASK
-        if (!mcu_tl.stream_task_created && mcu_tl.stream_task_init) {
-            // Must initialize Wifi with event IP_EVENT_STA_GOT_IP
-            ESP_LOGI(TAG, "Creating UDP Stream task");
-            xTaskCreate(&udp_client_task, "udp_client_task", 4096, NULL, 10, NULL);
-            mcu_tl.stream_task_created = true;
-        }
-#endif
-
 #if MQTT_TASK
         if (!mcu_tl.mqtt_task_created && mcu_tl.mqtt_task_init) {
-            // Start Google IoT Cloud comms
+            // Start MQTT broker
             ESP_LOGI(TAG, "Creating MQTT task");
             xTaskCreate(&mqtt_task, "mqtt_task", 4096, NULL, 10, NULL);
             mcu_tl.mqtt_task_created = true;
+        }
+#endif
+
+#if STREAM_TASK
+        if (!mcu_tl.stream_task_created && mcu_tl.stream_task_init) {
+            ESP_LOGI(TAG, "Creating Stream task");
+            init_camera(mcu_c, mcu_s, STREAM);
+            stream_httpd = startStreamServer(mcu_c->device_ip);
+            gpio_blink(1);
+            mcu_s->cam_server_init = true;
+            mcu_tl.stream_task_created = true;
         }
 #endif
     }
@@ -191,7 +192,7 @@ static void gpio_trig_task(void* arg)
             mcu_c->upload_content = IMAGE_TO_HTTP_UPLOAD;
 
             if (trig_valid_gpio(io_num, mcu_c->trig_signal)) {
-                gpio_blink(1);
+                //gpio_blink(1);
                 exec_gpio_task(mcu_c);
             }
             else {
@@ -201,13 +202,14 @@ static void gpio_trig_task(void* arg)
     }
 }
 
+#if MQTT_TASK
 /**
  * @brief Task used to communicate with Google IoT Core
  */
 static void mqtt_task(void* pvParameters) {
     stfd_mqtt_init(mcu_mqtt);
     while(mcu_tl.mqtt_task_init) {
-        
+      
         if (mcu_mqtt->cmd_info.exec_cmd) {
             switch (mcu_mqtt->cmd_info.cmd) {
                 case (mcu_cmd_type_t) MCU_GETSTATUS:
@@ -237,7 +239,21 @@ static void mqtt_task(void* pvParameters) {
                     //exec_operate_lock(false);
                     break;
                 case (mcu_cmd_type_t) STREAM_CAM:
-                    mcu_tl.stream_task_init = true;
+                    if (!(mcu_s->cam_server_init)) {
+                        stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
+                        init_camera(mcu_c, mcu_s, STREAM);
+                        stream_httpd = startStreamServer(mcu_c->device_ip);
+                        mcu_s->cam_server_init = true;
+                        }
+                        // else {
+                        //     stopStreamServer(&stream_httpd);
+                        //     mcu_c->cam_server_init = false;
+                        //
+                        //     if (esp_camera_deinit() != ESP_OK)
+                        //         ESP_LOGE(TAG, "Camera De-Init Failed");
+                        //     else
+                        //         mcu_c->cam_initiated = false;
+                        //      }
                     break;
                 default:
                     ESP_LOGW(TAG, "Invalid command type received from MQTT");
@@ -252,92 +268,8 @@ static void mqtt_task(void* pvParameters) {
     ESP_LOGI(TAG, "Deleting MQTT task");
     vTaskDelete(NULL);
 }
+#endif /* MQTT_TASK */
 
-/**
- * @brief Task to send a video buffer through UDP.
- *        When the status of cam_server_init is set to false
- *        the server is sent a shut down command through
- *        the message buffer
- */
-static void udp_client_task(void *pvParameters) {
-    int sock;
-#if defined(CONFIG_SERVER_IPV4)
-    struct sockaddr_in dest_addr;
-#elif defined(CONFIG_SERVER_IPV6)
-    struct sockaddr_in6 dest_addr = { 0 };
-#endif
-
-    uint8_t* jpg_buf = NULL;
-    size_t   jpg_buf_len = 0;
-
-    int64_t  last_frame = 0;
-    int64_t  fr_end;
-    int64_t  frame_time = 0;
-
-    if (!(mcu_s->cam_server_init)) {
-        if (init_camera(mcu_c, mcu_s, STREAM) != ESP_OK) {
-            ESP_LOGE(TAG, "Could not initialize during UPD initialization");
-            mcu_s->cam_initiated   = false;
-            mcu_s->cam_server_init = false;
-            return;
-        }
-        mcu_s->cam_initiated   = true;
-        mcu_s->cam_server_init = true;
-    }
-    else {
-        ESP_LOGI(TAG, "Cam already init");
-    }
-
-    while(!mcu_s->got_wifi_ip) {
-        // Loop until condition is met
-        ESP_LOGI(TAG, "Waiting for condition IP_EVENT_STA_GOT_IP");
-        vTaskDelay(1000/portTICK_RATE_MS);
-    }
-
-    for(;;) {
-        if (udp_setup_sock(&sock, (struct sockaddr*) &dest_addr, mcu_c->netif) != ESP_OK)
-            break;
-        while (mcu_tl.stream_task_init) {
-            if(!last_frame) {
-                last_frame = esp_timer_get_time();
-            }
-             if (stfd_get_frame(&jpg_buf, &jpg_buf_len, frame_time) != ESP_OK)
-                 break;
-
-            fr_end = esp_timer_get_time();
-            frame_time = fr_end - last_frame;
-            last_frame = fr_end;
-            frame_time /= 1000;
-
-            // if (udp_send_buf(&sock, (struct sockaddr*) &dest_addr, sizeof(dest_addr) payload, strlen(payload)) != ESP_OK)
-            if (udp_send_buf(&sock, (struct sockaddr*) &dest_addr, sizeof(dest_addr), jpg_buf, jpg_buf_len) != ESP_OK)
-            {
-                ESP_LOGI(TAG, "udp_send_buf failed");
-                vTaskDelete(NULL);
-                break;
-            }
-        }
-
-        vTaskDelay(2000/portTICK_RATE_MS);
-
-        if (sock != -1 && mcu_tl.stream_task_init) {
-            ESP_LOGE(TAG, "Shutting down socket and restarting...");
-            shutdown(sock, 0);
-            close(sock);
-        }
-        else if (!mcu_tl.stream_task_init) {
-            // Stream was manually shut down
-            if (udp_shutdown(&sock, (struct sockaddr*) &dest_addr, sizeof(dest_addr)) != ESP_OK) 
-            {
-                ESP_LOGE(TAG, "Couldn't shut down server-side properly");
-            }
-            break;
-        }
-    }
-    last_frame = 0;
-    mcu_tl.stream_task_created = false;
-    vTaskDelete(NULL);
-}
 
 /**
  * @brief Selects the task to execute (picture or stream) according to the passed camera content
@@ -345,67 +277,19 @@ static void udp_client_task(void *pvParameters) {
  * @param mcu_c Camera current status with its content
  */
 void exec_gpio_task(mcu_content_t* mcu_c) {    
-    camera_fb_t* camera_pic;
-    uint8_t* jpeg_buf = NULL;
-    size_t jpeg_buf_len = 0;
 
     switch (mcu_c->content_type) {
-        case (mcu_content_type_t) PICTURE:
-            init_camera(mcu_c, mcu_s, PICTURE);
-
-            camera_pic = camera_take_picture(mcu_c);
-            convert_to_jpeg(camera_pic, &jpeg_buf, &jpeg_buf_len);
-
-            if (mcu_c->save_to_sdcard && mcu_s->sdcard_initiated)
-                save_image_to_sdcard(jpeg_buf, jpeg_buf_len, mcu_c->pic_counter);
-
-            if (mcu_c->upload_content) {   
-                ESP_LOGI(TAG, "Uploading picture");
-                //ESP_LOGI(TAG, "buffer data\n %s and its length: %i", (const char*) jpeg_buf, jpeg_buf_len);
-                ESP_LOGI(TAG, "buffer length: %i", jpeg_buf_len);
-                http_rest_with_url_upload_picture(jpeg_buf, jpeg_buf_len);
-            }
-            break;
-
+       
         case (mcu_content_type_t) STREAM:
             if (!mcu_tl.stream_task_created) {
                 ESP_LOGI(TAG, "Starting Stream from GPIO");
-                stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
+                //stfd_mqtt_publish_notif(mcu_mqtt->client, STREAM_INIT_MSG);
                 mcu_tl.stream_task_init = true;
             }
             else {
                 ESP_LOGI(TAG, "Stopping Stream from GPIO");
                 mcu_tl.stream_task_init = false;
             }
-
-            // if (!(mcu_s->cam_server_init)) {
-            //     // init_camera(mcu_c, mcu_s, STREAM);
-            //     // stream_httpd = startStreamServer(mcu_c->device_ip);
-            //     // mcu_s->cam_server_init = true;
-            // }
-            //
-            // else {
-            //     stopStreamServer(&stream_httpd);
-            //     mcu_c->cam_server_init = false;
-            //
-            //     if (esp_camera_deinit() != ESP_OK)
-            //         ESP_LOGE(TAG, "Camera De-Init Failed");
-            //     else
-            //         mcu_c->cam_initiated = false;
-            // }
-            break;
-
-        case (mcu_content_type_t) DRBELL:
-            //http_rest_with_url_notification(DRBELL_MSG);
-            stfd_mqtt_publish_notif(mcu_mqtt->client, DRBELL_MSG);
-            break;
-        case (mcu_content_type_t) REEDSW:
-            //http_rest_with_url_notification(REEDSW_MSG);
-            stfd_mqtt_publish_notif(mcu_mqtt->client, REEDSW_MSG);
-            break;
-        case (mcu_content_type_t) STANDBY:
-            ESP_LOGI(TAG, "Standing by... 10sec");
-            vTaskDelay(10000/portTICK_RATE_MS);
             break;
         case (mcu_content_type_t) INVALID:
         default:
@@ -425,7 +309,7 @@ void app_main(void) {
     if (INIT_SDCARD)
         init_sdcard(mcu_s);
     gpio_init_setup(gpio_isr_handler);
-    init_camera(mcu_c, mcu_s, STREAM);
+    //init_camera(mcu_c, mcu_s, STREAM);
     wifi_scan(mcu_c, mcu_s);
     // if (iotc_init(mcu_c->device_path) == ESP_OK) {
     //     mcu_s->iotc_core_init = true;
