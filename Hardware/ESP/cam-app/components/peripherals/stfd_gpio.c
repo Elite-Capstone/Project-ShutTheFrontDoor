@@ -20,8 +20,11 @@ static const char* TAG = "stfd_gpio";
 
 // ===== Peripherals functions =====
 
-bool trig_valid_gpio(uint32_t io_num, uint8_t sg_level) {
-    return gpio_get_level(io_num) == sg_level;
+bool trig_valid_gpio(uint32_t io_num, gpio_sig_level_t sg_level) {
+    if (sg_level == SIGNAL_ANY)
+        return true;
+    else
+        return gpio_get_level(io_num) == (uint8_t) sg_level;
 }
 
 void gpio_blink(uint32_t num_blinks) {

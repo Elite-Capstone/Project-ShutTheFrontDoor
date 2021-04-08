@@ -23,7 +23,10 @@ class VideoDownloadAdapter(val videoList: List<String>, var context: MediaFragme
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bindItems(videoList[position])
         holder.downloadButton.setOnClickListener {
-            context.onItemClicked("http://34.117.160.50/file/download/${videoList[position]}")
+            context.toDownload("http://34.117.160.50/file/download/${videoList[position]}")
+        }
+        holder.deleteButton.setOnClickListener {
+            context.toDelete(videoList[position], position)
         }
     }
 
@@ -36,9 +39,11 @@ class VideoDownloadAdapter(val videoList: List<String>, var context: MediaFragme
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         lateinit var textViewName: TextView
         lateinit var downloadButton: Button
+        lateinit var deleteButton: Button
 
         fun bindItems(videoName: String) {
             textViewName = itemView.findViewById(R.id.videoName) as TextView
+            deleteButton = itemView.findViewById(R.id.deleteVideo)
             downloadButton  = itemView.findViewById(R.id.download) as Button
             textViewName.text = videoName
         }

@@ -507,7 +507,7 @@
     #define BATTERY_ADC_CH 3
     #define BATTERY_ADC_UNIT 1
     #else
-    #define GPIO_INPUT_BATTERY 27
+    #define GPIO_INPUT_BATTERY 36
     #define BATTERY_ADC_CH 7
     #define BATTERY_ADC_UNIT 2
     #endif /* CONFIG_GPIO_INPUT_BATTERY */
@@ -772,8 +772,73 @@
     #define GPIO_OUTPUT_MOTOR_IN2 32
     #endif /* CONFIG_GPIO_OUTPUT_MOTOR_IN2 */
 
+    #if CONFIG_GPIO_OUTPUT_0_STREAM
+    #define GPIO_OUTPUT_STREAM 0
+    #elif CONFIG_GPIO_OUTPUT_2_STREAM
+    #define GPIO_OUTPUT_STREAM 2
+    #elif CONFIG_GPIO_OUTPUT_4_STREAM
+    #define GPIO_OUTPUT_STREAM 4
+    #elif CONFIG_GPIO_OUTPUT_5_STREAM
+    #define GPIO_OUTPUT_STREAM 5
+    #elif CONFIG_GPIO_OUTPUT_6_STREAM
+    #define GPIO_OUTPUT_STREAM 6
+    #elif CONFIG_GPIO_OUTPUT_7_STREAM
+    #define GPIO_OUTPUT_STREAM 7
+    #elif CONFIG_GPIO_OUTPUT_8_STREAM
+    #define GPIO_OUTPUT_STREAM 8
+    #elif CONFIG_GPIO_OUTPUT_9_STREAM
+    #define GPIO_OUTPUT_STREAM 9
+    #elif CONFIG_GPIO_OUTPUT_10_STREAM
+    #define GPIO_OUTPUT_STREAM 10
+    #elif CONFIG_GPIO_OUTPUT_11_STREAM
+    #define GPIO_OUTPUT_STREAM 11
+    #elif CONFIG_GPIO_OUTPUT_12_STREAM
+    #define GPIO_OUTPUT_STREAM 12
+    #elif CONFIG_GPIO_OUTPUT_13_STREAM
+    #define GPIO_OUTPUT_STREAM 13
+    #elif CONFIG_GPIO_OUTPUT_14_STREAM
+    #define GPIO_OUTPUT_STREAM 14
+    #elif CONFIG_GPIO_OUTPUT_15_STREAM
+    #define GPIO_OUTPUT_STREAM 15
+    #elif CONFIG_GPIO_OUTPUT_16_STREAM
+    #define GPIO_OUTPUT_STREAM 16
+    #elif CONFIG_GPIO_OUTPUT_17_STREAM
+    #define GPIO_OUTPUT_STREAM 17
+    #elif CONFIG_GPIO_OUTPUT_18_STREAM
+    #define GPIO_OUTPUT_STREAM 18
+    #elif CONFIG_GPIO_OUTPUT_19_STREAM
+    #define GPIO_OUTPUT_STREAM 19
+    #elif CONFIG_GPIO_OUTPUT_21_STREAM
+    #define GPIO_OUTPUT_STREAM 21
+    #elif CONFIG_GPIO_OUTPUT_22_STREAM
+    #define GPIO_OUTPUT_STREAM 22
+    #elif CONFIG_GPIO_OUTPUT_23_STREAM
+    #define GPIO_OUTPUT_STREAM 23
+    #elif CONFIG_GPIO_OUTPUT_25_STREAM
+    #define GPIO_OUTPUT_STREAM 25
+    #elif CONFIG_GPIO_OUTPUT_26_STREAM
+    #define GPIO_OUTPUT_STREAM 26
+    #elif CONFIG_GPIO_OUTPUT_27_STREAM
+    #define GPIO_OUTPUT_STREAM 27
+    #elif CONFIG_GPIO_OUTPUT_32_STREAM
+    #define GPIO_OUTPUT_STREAM 32
+    #elif CONFIG_GPIO_OUTPUT_33_STREAM
+    #define GPIO_OUTPUT_STREAM 33
+    #elif CONFIG_GPIO_OUTPUT_34_STREAM
+    #define GPIO_OUTPUT_STREAM 34
+    #elif CONFIG_GPIO_OUTPUT_35_STREAM
+    #define GPIO_OUTPUT_STREAM 35
+    #elif CONFIG_GPIO_OUTPUT_36_STREAM
+    #define GPIO_OUTPUT_STREAM 36
+    #elif CONFIG_GPIO_OUTPUT_39_STREAM
+    #define GPIO_OUTPUT_STREAM 39
+    #else
+    #define GPIO_OUTPUT_STREAM 2
+    #endif /* CONFIG_GPIO_OUTPUT_STREAM */
+
     #define GPIO_OUTPUT_MOTOR_IN1_PIN_SEL   (1ULL<<GPIO_OUTPUT_MOTOR_IN1)
     #define GPIO_OUTPUT_MOTOR_IN2_PIN_SEL   (1ULL<<GPIO_OUTPUT_MOTOR_IN2)
+    #define GPIO_OUTPUT_STREAM_PIN_SEL   (1ULL<<GPIO_OUTPUT_STREAM)
 
 #endif /* MAIN_MCU specific GPIOs */
 
@@ -802,7 +867,7 @@
 #endif /* ESP32_CAM_MCU specific GPIOs */
 
 #if CONFIG_MAIN_MCU
-#define NUM_GPIO 9
+#define NUM_GPIO 10
 #elif CONFIG_ESP32_CAM_MCU
 #define NUM_GPIO 6
 #else
@@ -824,6 +889,7 @@ static const uint8_t gpio_array[NUM_GPIO] = {
     GPIO_INPUT_NSW,
     GPIO_OUTPUT_MOTOR_IN1,
     GPIO_OUTPUT_MOTOR_IN2,
+    GPIO_OUTPUT_STREAM,
 #elif CONFIG_ESP32_CAM_MCU
     GPIO_INPUT_PIC,
     GPIO_OUTPUT_CONFIRM_UPLOAD,
@@ -921,6 +987,10 @@ static void check_single_gpio_assignment(uint8_t _gpio, char* _err) {
         strcat(err, "Motor CCW (In 2) & ");
         cnt++;
     }
+    if(_gpio == GPIO_OUTPUT_STREAM) {
+        strcat(err, "Output Stream & ");
+        cnt++;
+    }
 #elif CONFIG_ESP32_CAM_MCU
     if(_gpio == GPIO_INPUT_PIC) {
         strcat(err, "Picture & ");
@@ -984,28 +1054,6 @@ static void gpio_overlap_check(const char* TAG) {
  * as in a full battery (6V) shows 0 mV, 
  * while an empty battery (4.5V) shows 2450+ mV
  */
-extern const uint32_t adc_val[99] = {
-    0, 25, 50, 75, 100, 125, 150, 175, 200, 225, 
-    250, 275, 300, 325, 350, 375, 400, 425, 450, 475, 
-    500, 525, 550, 575, 600, 625, 650, 675, 700, 725,
-    750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 
-    1000, 1025, 1050, 1075, 1100, 1125, 1150, 1175, 1200, 1225,
-    1250, 1275, 1300, 1325, 1350, 1375, 1400, 1425, 1450, 1475,
-    1500, 1525, 1550, 1575, 1600, 1625, 1650, 1675, 1700, 1725,
-    1750, 1775, 1800, 1825, 1850, 1875, 1900, 1925, 1950, 1975,
-    2000, 2025, 2050, 2075, 2100, 2125, 2150, 2175, 2200, 2225,
-    2250, 2275, 2300, 2325, 2350, 2375, 2400, 2425, 2450
-};
+extern const uint32_t adc_val[99];
 
-extern const uint32_t bat_val[99] = {
-    100, 99, 98, 97, 96, 95, 94, 93, 92, 91,
-    90, 89, 88, 87, 86, 85, 84, 83, 82, 81,
-    80, 79, 78, 77, 76, 75, 74, 73, 72, 71,
-    70, 69, 68, 67, 66, 65, 64, 63, 62, 61,
-    60, 59, 58, 57, 56, 55, 54, 53, 52, 51,
-    50, 49, 48, 47, 46, 45, 44, 43, 42, 41,
-    40, 39, 38, 37, 36, 35, 34, 33, 32, 31,
-    30, 29, 28, 27, 26, 25, 24, 23, 22, 21,
-    20, 19, 18, 17, 16, 15, 14, 13, 12, 11,
-    10, 9, 8, 7, 6, 5, 4, 3, 2, 1
-}
+extern const uint32_t bat_val[100];
